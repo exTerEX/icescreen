@@ -1,0 +1,317 @@
+#!/bin/bash
+
+set -euo pipefail
+
+########################################
+# FUNCTIONS
+########################################
+# Usage function (show help).
+
+function version(){
+    printf "ICEscreen version 1.0\n"
+}
+
+function usage(){
+    printf "\nICEscreen version 1.0\n\n"
+    printf "usage: icescreen [-h] [-o OUTDIR] [-n DATASET_NAME] [-j NB_JOBS] [-m MODE] -g GBDIR\n\n"
+    printf "Run ICEscreen\n\n"
+    printf "required named arguments:\n"
+    printf "\t-g, --gbdir  : Path to folder containing genbank files\n\n"
+    printf "optional arguments:\n"
+    printf "\t-h, --help         : Show this message and exit\n"
+    printf "\t-o, --outdir       : Path to where ICEscreen results will be written (default "$HOME")\n"
+    printf "\t-n, --name         : Name of the set of genbank files (default None)\n"
+    printf "\t-j, --jobs         : Maximum number of cores allowed\n"
+    printf "\t-m, --mode         : Search mode for which organism (default \"firmicutes\")\n"
+    printf "\t--galaxy           : [Galaxy admin] Activate parameters to run ICEscreen on Galaxy\n"
+}
+
+# die function (show message then quit).
+function die() {
+    printf '%s\n' "$1" >&2
+    exit 1
+}
+
+# Check if all blast db index files exist, if not remove DONE-flag file
+function check_blast_indexes() {
+    for ext in pin phr psq
+    do
+        if [ ! -f "$1"."$ext" ]
+        then
+            rm -f $2
+        fi
+    done
+}
+
+# Check if all hmm db index files exist, if not remove DONE-flag file
+function check_hmm_indexes() {
+    for ext in h3m h3i h3f h3p
+    do
+        if [ ! -f "$1"."$ext" ]
+        then
+            rm -f $2
+        fi
+    done
+}
+
+########################################
+# VARIABLES INITIALIZATION
+########################################
+
+# Initialize all option variables.
+# This unsures we are not contaminated by variables from the environment.
+galaxy=0
+gbdir=
+outdir=$HOME
+name=
+cores=1
+mode="firmicutes"
+
+########################################
+# ARGUMENTS PARSING
+########################################
+
+# If there is no arguments given, show help.
+if [ $# -eq 0 ]
+then
+    usage
+    exit 0
+fi
+
+# Catch all arguments given and check if they are empty.
+#while :; do
+while test $# -gt 0; do
+    case "$1" in
+        -h|-\?|--help)
+            usage       # Show help.
+            exit 0
+            ;;
+        -v|--version)
+            version       # Show version.
+            exit 0
+            ;;
+        --galaxy)
+            galaxy=1
+            ;;
+        -g|--gbdir)
+            if [ "$2" ]; then
+                gbdir=$2
+                shift
+            else
+                die 'ERROR: '$1' requires a non-empty option argument.'
+            fi
+            ;;
+        --gbdir=?*)
+            gbdir=${1#*=}
+            ;;
+        --gbdir=)
+            die 'ERROR: "--gbdir" requires a non-empty option argument.'
+            ;;
+        -n|--name)
+            if [ "$2" ]; then
+                name=$2
+                shift
+            else
+                die 'ERROR: '$1' requires a non-empty option argument.'
+            fi
+            ;;
+        --name=?*)
+            name=${1#*=}
+            ;;
+        --name=)
+            die 'ERROR: "--outdir" requires a non-empty option argument.'
+            ;;
+        -o|--outdir)
+            if [ "$2" ]; then
+                outdir=$2
+                shift
+            else
+                die 'ERROR: '$1' requires a non-empty option argument.'
+            fi
+            ;;
+        --outdir=?*)
+            outdir=${1#*=}
+            ;;
+        --outdir=)
+            die 'ERROR: "--outdir" requires a non-empty option argument.'
+            ;;
+        -j|--jobs)
+            if [ "$2" ]; then
+                cores=$2
+                shift
+            else
+                die 'ERROR: '$1' requires a non-empty option argument.'
+            fi
+            ;;
+        --jobs=?*)
+            cores=${1#*=}
+            ;;
+        --jobs=)
+            die 'ERROR: "--jobs" requires a non-empty option argument.'
+            ;;
+        -m|--mode)
+            if [ "$2" ]; then
+                mode=$2
+                shift
+            else
+                die 'ERROR: '$1' requires a non-empty option argument.'
+            fi
+            ;;
+        --mode=?*)
+            mode=${1#*=}
+            ;;
+        --mode=)
+            die 'ERROR: "--mode" requires a non-empty option argument.'
+            ;;
+        --)              # End of all options.
+            shift
+            break
+            ;;
+        -?*)
+            printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
+            die
+            ;;
+        *)               # Default case: No more options, so break out of the loop.
+            break
+            ;;
+    esac
+    
+    shift
+done
+
+# Check all required arguments (gbdir).
+# Counter of valid required arguments (must be equal to 1).
+counter=0
+
+if [ -z "$gbdir" ]
+then
+    die 'ERROR: Genbank folder (-g, --gbdir) is required'
+else
+    if [ -d "$gbdir" ]
+    then
+        counter=$((counter+1))
+    else
+        die 'ERROR: Genbank folder '"$gbdir"' does not exist'
+    fi
+fi
+
+# Check if parameters file for a search mode exist
+modepath=$(dirname $(realpath -s $0))"/pipelines/mode/"$mode".yml"
+
+if [ ! -f "$modepath" ];
+then
+    die "ERROR: \"$mode\" mode does not exist.";
+fi
+
+if [[ "$counter" -eq 1 ]]                             # Check if required argument is valid.
+then
+    #echo "All required parameters are valid"
+    if [ -d "$outdir" ]                               # If $outdir is valid, display all arguments that will be used by the program.
+    then
+        # Display input of user
+        printf "Input arguments:\n"
+        printf "\tSearch mode:                          "$mode"\n"
+        printf "\tGenbank folder:                       "$gbdir"\n"
+
+        if [ -z "$name" ]
+        then
+            # If there is no name for the set
+            outdir=$outdir"/ICEscreen_results/"
+        else
+            outdir=$outdir"/ICEscreen_results/"$name
+        fi  
+        printf "\tICEscreen output:                     "$outdir"\n"
+        
+        # Create folder with ICEscreen folder output if it does not already exist
+        # and create a file with the path of source genbank
+        mkdir -p $outdir
+        
+        # Get folder of running script
+        src=$(dirname $(realpath -s $0))
+        
+        mkdir -p $outdir"/genbank"
+        mkdir -p $outdir"/faa"
+        mkdir -p $outdir"/results"
+        for x in ${gbdir%/}"/"*
+        do
+            y=$(basename $x)
+            sanitizedname=$(echo ${y%*.*}.gb | sed -e 's/[^A-Za-z0-9._-]/_/g')
+            if [ ! -f $outdir"/genbank/"$sanitizedname ]
+            then
+                gborig=`realpath $x`
+                ln -s $gborig $outdir"/genbank/"$sanitizedname
+                mkdir -p $outdir"/results/"${sanitizedname%*.*}
+                # Add the config file for each genbank
+                cat "$src/pipelines/icescreen_config_template.yml" <( tail -n+2 $modepath | awk 'BEGIN{print "### PARAMETERS USED ###"}1' | awk 'BEGIN{print "---"}1' ) > $outdir"/results/"${sanitizedname%*.*}"/icescreen.conf"
+                # Initialize config parameters
+                bash $src"/pipelines/edit_configfile.sh" --conffile $outdir"/results/"${sanitizedname%*.*}"/icescreen.conf" \
+                                                         --gbfile $gborig
+            fi
+        done
+        
+#        if [[ "$galaxy" -eq 0 ]]
+#        then
+#            # Activate conda environments
+#            ## Search where is conda
+#            CONDA_BASE=$(conda info --base)
+#            
+#            ## Then source conda.sh
+#            source $CONDA_BASE/etc/profile.d/conda.sh
+#            
+#            ## Now activate environments
+#            conda activate icescreen_env
+#        fi
+
+        if [[ "$galaxy" -eq 0 ]]
+        then
+		CONDA_BASE=$(conda info --base)
+		if [ -d $CONDA_BASE/envs/icescreen_env ]
+		then
+		    ## Then source conda.sh
+		    source $CONDA_BASE/etc/profile.d/conda.sh
+
+		    ## Now activate environments
+		    printf "\nconda activate icescreen_env\n"
+		    conda activate icescreen_env
+		fi
+        fi
+
+        # Check blast database indexes
+        for blastdb in $src/detection_SP/database/blastdb/*faa
+        do
+            dbname=`basename $blastdb`
+            check_blast_indexes ${blastdb%%_DB.faa} $src/detection_SP/database/${dbname%%_DB.faa}_indexes.DONE
+        done
+        
+        # Check hmm database indexes
+        for hmmdb in $src/detection_SP/database/hmmdb/**/*hmm
+        do
+            dbname=`basename $hmmdb`
+            check_hmm_indexes $hmmdb $src/detection_SP/database/${dbname%%.hmm}_indexes.DONE
+        done
+        
+        # Run ICEscreen pipeline
+        snakemake --snakefile "$src/pipelines/icescreen.snakefile" --config rootdir="$src" gbdir="$outdir/genbank" outdir="$outdir" mode="$modepath" -j $cores --nolock
+        
+        # Remove genbank folder
+        rm -rf $outdir"/genbank"
+        
+        CONDA_BASE=$(conda info --base)
+	if [ -d $CONDA_BASE/envs/icescreen_env ]
+	then
+	    ## Then source conda.sh
+	    source $CONDA_BASE/etc/profile.d/conda.sh
+
+	    ## Now activate environments
+	    printf "\nconda deactivate\n"
+	    conda deactivate
+	fi
+	
+	
+    else
+        die 'ERROR: Path for output '"$outdir"' does not exist.'
+    fi
+else
+    die "Not all required parameters are valid."
+fi
+
