@@ -7,11 +7,11 @@
 # Usage function (show help).
 
 function version(){
-    printf "1.0.0\n"
+    printf "1.0.1\n"
 }
 
 function usage(){
-    printf "\nICEscreen version 1.0.0\n\n"
+    printf "\nICEscreen version 1.0.1\n\n"
     printf "usage: icescreen [-h] [-o OUTDIR] [-n DATASET_NAME] [-j NB_JOBS] [-m MODE] -g GBDIR\n\n"
     printf "Run ICEscreen\n\n"
     printf "required named arguments:\n"
