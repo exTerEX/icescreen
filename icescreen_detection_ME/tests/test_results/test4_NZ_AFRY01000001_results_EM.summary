@@ -1,0 +1,44 @@
+##################### Mobile elements detection statistics #####################
+# Number of complete elements
+Complete ICE (4 types of SP): 8
+Complete IME (R+I, R+C+I): 1
+
+# Number of complete modules
+Conjugation module (R+C+V): 0
+Mobilizable element (R+C with size <= 10 CDS): 0
+
+# Number of partial elements
+Partial ICE (at least V): 1
+Other partial element (R+C, R+V, V+C with size > 10 CDS): 3
+
+# Composite elements
+Total nested elements (partial or complete): 8
+Host element: 4
+Guest element: 4
+Element that are both host and guest: 0
+
+################### Signature proteins detection statistics ####################
+# Total SP detected
+Total SP: 53
+Total Integrase: 18
+Total Relaxase: 12
+Total Coupling protein: 14
+Total VirB4: 9
+
+# Unassigned SP
+Unassigned SP: 13
+Unassigned Integrase: 8
+Unassigned Relaxase: 1
+Unassigned Coupling protein: 4
+Unassigned VirB4: 0
+
+############################# Segments statistics ##############################
+Number of segments: 12
+Segment with one element: 3
+Segment with several elements: 5
+Segment with nested elements: 4
+Segment with no element: 4
+
+############################### Parameters used ################################
+Maximum CDS numbers in initial segments: 100
+Maximum CDS numbers in an IME element: 10

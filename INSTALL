@@ -1,13 +1,3 @@
 # How to install ICEsceen locally?
 
-The ICEscreen tool is a pipeline managed by snakemake.
-
-1. Install conda
-
-   See documentation: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html
-
-   Conda version must be **at least 4.10**
-
-2. Install conda environments used by the ICEscreen pipeline:
-
-   ./install_icescreen.sh
+Please see https://icescreen.migale.inrae.fr/ for detailed information.

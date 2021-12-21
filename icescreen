@@ -1,6 +1,5 @@
 #!/bin/bash
-
-set -euo pipefail
+#set -euo pipefail
 
 ########################################
 # FUNCTIONS
@@ -8,18 +7,18 @@ set -euo pipefail
 # Usage function (show help).
 
 function version(){
-    printf "ICEscreen version 1.0\n"
+    printf "1.0.0\n"
 }
 
 function usage(){
-    printf "\nICEscreen version 1.0\n\n"
+    printf "\nICEscreen version 1.0.0\n\n"
     printf "usage: icescreen [-h] [-o OUTDIR] [-n DATASET_NAME] [-j NB_JOBS] [-m MODE] -g GBDIR\n\n"
     printf "Run ICEscreen\n\n"
     printf "required named arguments:\n"
     printf "\t-g, --gbdir  : Path to folder containing genbank files\n\n"
     printf "optional arguments:\n"
     printf "\t-h, --help         : Show this message and exit\n"
-    printf "\t-o, --outdir       : Path to where ICEscreen results will be written (default "$HOME")\n"
+    printf "\t-o, --outdir       : Path to where ICEscreen results will be written (default "${HOME}")\n"
     printf "\t-n, --name         : Name of the set of genbank files (default None)\n"
     printf "\t-j, --jobs         : Maximum number of cores allowed\n"
     printf "\t-m, --mode         : Search mode for which organism (default \"firmicutes\")\n"
@@ -32,27 +31,117 @@ function die() {
     exit 1
 }
 
-# Check if all blast db index files exist, if not remove DONE-flag file
-function check_blast_indexes() {
-    for ext in pin phr psq
-    do
-        if [ ! -f "$1"."$ext" ]
-        then
-            rm -f $2
-        fi
-    done
+
+exit_if_error() {
+  local exit_code=$1
+  shift
+  [[ $exit_code ]] &&               # do nothing if no error code passed
+    ((exit_code != 0)) && {         # do nothing if error code is 0
+      printf 'ERROR: %s\n' "$@" >&2 # we can use better logging here
+      exit "$exit_code"             # we could also check to make sure
+                                    # error code is numeric when passed
+    }
 }
 
-# Check if all hmm db index files exist, if not remove DONE-flag file
-function check_hmm_indexes() {
-    for ext in h3m h3i h3f h3p
-    do
-        if [ ! -f "$1"."$ext" ]
-        then
-            rm -f $2
-        fi
-    done
+
+function install_dependencies(){
+	# Installation of ICEscreen conda environement from YAML
+	conda env remove -n icescreen_env
+	conda env create -f "$(dirname $(readlink -f $0))"/icescreen_envs/icescreen_env.yml
+	exit_if_error $? "conda env create failed"
+	# Uncomment to install locally
+	# conda env create --prefix [PATH TO DIR ENVIRONMENT] -f icescreen_env.yml
+	# If the installation from YAML don't work
+	# conda create --name icescreen_env --file "$(dirname $(readlink -f $0))"/icescreen_envs/spec-file.txt
+	# Last resort... here is how to install from scratch
+	## Create a Python 3.7 environment
+	# conda create -n icescreen_env python=3.7 -y
+	## Install Snakemake v6.0.5 (at least)
+	# conda install -n icescreen_env -c conda-forge -c bioconda snakemake=6.0.5 -y
+	## Install Numpy 1.17.4 (at least)
+	# conda install -n icescreen_env -c conda-forge -c bioconda numpy=1.17.4 -y
+	## Install Pandas 0.25.3
+	# conda install -n icescreen_env -c conda-forge -c bioconda pandas=0.25.3 -y
+	## Install Snakemake v6.0.5 (at least)
+	# conda install -n icescreen_env -c conda-forge -c bioconda snakemake=6.0.5 -y
+	## Install Biopython v1.78 (at least) python library
+	# conda install -n icescreen_env -c conda-forge -c bioconda biopython=1.78 -y
+	## Install HMMER v3.3.2 (at least)
+	# conda install -n icescreen_env -c conda-forge -c bioconda hmmer=3.3.2 -y
+	## Install NCBI BLAST+ suite v2.9.0 (at least)
+	# conda install -n icescreen_env -c conda-forge -c bioconda blast=2.9.0 -y
+	## Install BCBio-GFF
+	# conda install -n icescreen_env -c conda-forge -c bioconda bcbio-gff=0.6.6 -y
+	## Install YAML
+	# conda install -n icescreen_env -c conda-forge -c bioconda yaml=0.2.5 -y
 }
+
+
+function index_genomic_resources(){
+
+	for filename in "${Icescreen_root_dir}"/icescreen_detection_SP/database/blastdb/*.faa "${Icescreen_root_dir}"/icescreen_detection_SP/database/blastdb/*.fa "${Icescreen_root_dir}"/icescreen_detection_SP/database/blastdb/*.fasta; do
+	    echo "${filename}"
+	    if [ -f "${filename}" ]; then
+		dirnameFaaFile=$(dirname "${filename}")
+		titleName=$(basename "${filename}")
+		suffixOutName=$(basename "${filename}" | rev | cut -f 2- -d '.' | rev) # remove extension of the file
+		outName="${dirnameFaaFile}/${suffixOutName}"
+		makeblastdb -in "${filename}" -input_type fasta -dbtype prot -title "${titleName}" -out "${outName}"
+		exit_if_error $? "makeblastdb ${filename} failed"
+	    fi
+	done
+
+
+	for filename in "${Icescreen_root_dir}"/icescreen_detection_SP/database/hmmdb/FP_profiles/*.hmm; do
+	    if [ -f "${filename}" ]; then
+		hmmpress -f "${filename}"
+		exit_if_error $? "hmmpress ${filename} failed"
+	    fi
+	done
+
+
+	for filename in "${Icescreen_root_dir}"/icescreen_detection_SP/database/hmmdb/SP_profiles/*.hmm; do
+	    if [ -f "${filename}" ]; then
+		hmmpress -f "${filename}"
+		exit_if_error $? "hmmpress ${filename} failed"
+	    fi
+	done
+}
+
+
+function test_installation(){
+
+	# skipping test compile makeblastdb
+	ls "${Icescreen_root_dir}/icescreen_detection_SP/database/blastdb/" | grep '.psq' > /dev/null
+	exit_if_error $? "test compile makeblastdb failed"
+
+	# skipping test compile HMMPress
+	ls "${Icescreen_root_dir}/icescreen_detection_SP/database/hmmdb/FP_profiles/" | grep '.h3m' > /dev/null
+	exit_if_error $? "test compile HMMPress FP_profiles failed"
+	ls "${Icescreen_root_dir}/icescreen_detection_SP/database/hmmdb/SP_profiles/" | grep '.h3m' > /dev/null
+	exit_if_error $? "test compile HMMPress SP_profiles failed"
+
+	# skipping test icescreen_detection_ME
+	"${Icescreen_root_dir}/icescreen_detection_ME/runTests.sh" 2>&1 | grep 'Tests successful' > /dev/null
+	exit_if_error $? "test icescreen_detection_ME failed"
+
+	# test most dependencies are installed
+	snakemake --version 2>&1 > /dev/null
+	exit_if_error $? "test dependencies snakemake failed"
+	blastp -version 2>&1 > /dev/null
+	exit_if_error $? "test dependencies blastp failed"
+	phmmer -h 2>&1 > /dev/null
+	exit_if_error $? "test dependencies phmmer failed"
+	pip3 show pandas 2>&1 > /dev/null
+	exit_if_error $? "test dependencies pandas failed"
+	pip3 show biopython 2>&1 > /dev/null
+	exit_if_error $? "test dependencies biopython failed"
+	# testing of bcbio-gff is skipped : from BCBio import GFF ; print(GFF.__version__)
+
+	echo "The installation of ICEscreen is successful"
+	
+}
+
 
 ########################################
 # VARIABLES INITIALIZATION
@@ -62,10 +151,20 @@ function check_hmm_indexes() {
 # This unsures we are not contaminated by variables from the environment.
 galaxy=0
 gbdir=
-outdir=$HOME
+outdir=${HOME}
 name=
 cores=1
-mode="firmicutes"
+mode="firmicutes" # defaut
+
+Icescreen_Executable_Path="${BASH_SOURCE[0]}"
+while [ -h "${Icescreen_Executable_Path}" ]; do # resolve ${Icescreen_Executable_Path} until the file is no longer a symlink
+  Icescreen_root_dir=$( cd -P "$( dirname "${Icescreen_Executable_Path}" )" >/dev/null 2>&1 && pwd )
+  Icescreen_Executable_Path=$(readlink "${Icescreen_Executable_Path}")
+  [[ "${Icescreen_Executable_Path}" != /* ]] && Icescreen_Executable_Path="${Icescreen_root_dir}/${Icescreen_Executable_Path}" # if ${Icescreen_Executable_Path} was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+Icescreen_root_dir=$( cd -P "$( dirname "${Icescreen_Executable_Path}" )" >/dev/null 2>&1 && pwd )
+#echo "${Icescreen_Executable_Path}"
+#echo "${Icescreen_root_dir}"
 
 ########################################
 # ARGUMENTS PARSING
@@ -88,6 +187,18 @@ while test $# -gt 0; do
             ;;
         -v|--version)
             version       # Show version.
+            exit 0
+            ;;
+        --install_dependencies)
+            install_dependencies
+            exit 0
+            ;;
+        --index_genomic_resources)
+            index_genomic_resources
+            exit 0
+            ;;
+        --test_installation)
+            test_installation
             exit 0
             ;;
         --galaxy)
@@ -175,7 +286,7 @@ while test $# -gt 0; do
             break
             ;;
     esac
-    
+
     shift
 done
 
@@ -183,135 +294,117 @@ done
 # Counter of valid required arguments (must be equal to 1).
 counter=0
 
-if [ -z "$gbdir" ]
+if [ -z "${gbdir}" ]
 then
     die 'ERROR: Genbank folder (-g, --gbdir) is required'
 else
-    if [ -d "$gbdir" ]
+    if [ -d "${gbdir}" ]
     then
         counter=$((counter+1))
     else
-        die 'ERROR: Genbank folder '"$gbdir"' does not exist'
+        die 'ERROR: Genbank folder '"${gbdir}"' does not exist'
     fi
 fi
 
 # Check if parameters file for a search mode exist
-modepath=$(dirname $(realpath -s $0))"/pipelines/mode/"$mode".yml"
+#modepath=$(dirname $(realpath -s $0))"/icescreen_pipelines/mode/"${mode}".yml"
+modepath="${Icescreen_root_dir}/icescreen_pipelines/mode/${mode}.yml"
 
-if [ ! -f "$modepath" ];
+
+if [ ! -f "${modepath}" ];
 then
-    die "ERROR: \"$mode\" mode does not exist.";
+    die "ERROR: \"${mode}\" mode does not exist.";
 fi
 
 if [[ "$counter" -eq 1 ]]                             # Check if required argument is valid.
 then
     #echo "All required parameters are valid"
-    if [ -d "$outdir" ]                               # If $outdir is valid, display all arguments that will be used by the program.
+    if [ -d "${outdir}" ]                               # If ${outdir} is valid, display all arguments that will be used by the program.
     then
         # Display input of user
         printf "Input arguments:\n"
-        printf "\tSearch mode:                          "$mode"\n"
-        printf "\tGenbank folder:                       "$gbdir"\n"
+        printf "\tSearch mode:                          "${mode}"\n"
+        printf "\tGenbank folder:                       "${gbdir}"\n"
 
-        if [ -z "$name" ]
+        if [ -z "${name}" ]
         then
             # If there is no name for the set
-            outdir=$outdir"/ICEscreen_results/"
+            outdir="${outdir}/ICEscreen_results/"
         else
-            outdir=$outdir"/ICEscreen_results/"$name
-        fi  
-        printf "\tICEscreen output:                     "$outdir"\n"
-        
+            outdir="${outdir}/ICEscreen_results/${name}"
+        fi
+        printf "\tICEscreen output:                     ${outdir}\n"
+
         # Create folder with ICEscreen folder output if it does not already exist
         # and create a file with the path of source genbank
-        mkdir -p $outdir
-        
+        mkdir -p ${outdir}
+
         # Get folder of running script
-        src=$(dirname $(realpath -s $0))
-        
-        mkdir -p $outdir"/genbank"
-        mkdir -p $outdir"/faa"
-        mkdir -p $outdir"/results"
+        #src=$(dirname $(realpath -s $0))
+
+        mkdir -p "${outdir}/genbank"
+        mkdir -p "${outdir}/faa"
+        mkdir -p "${outdir}/results"
         for x in ${gbdir%/}"/"*
         do
-            y=$(basename $x)
+            y=$(basename ${x})
             sanitizedname=$(echo ${y%*.*}.gb | sed -e 's/[^A-Za-z0-9._-]/_/g')
-            if [ ! -f $outdir"/genbank/"$sanitizedname ]
+            if [ ! -f "${outdir}/genbank/${sanitizedname}" ]
             then
-                gborig=`realpath $x`
-                ln -s $gborig $outdir"/genbank/"$sanitizedname
-                mkdir -p $outdir"/results/"${sanitizedname%*.*}
+                gborig=$(realpath ${x})
+                ln -s "${gborig}" "${outdir}/genbank/${sanitizedname}"
+                mkdir -p "${outdir}/results/${sanitizedname%*.*}"
                 # Add the config file for each genbank
-                cat "$src/pipelines/icescreen_config_template.yml" <( tail -n+2 $modepath | awk 'BEGIN{print "### PARAMETERS USED ###"}1' | awk 'BEGIN{print "---"}1' ) > $outdir"/results/"${sanitizedname%*.*}"/icescreen.conf"
+                cat "${Icescreen_root_dir}/icescreen_pipelines/icescreen_config_template.yml" <( tail -n+2 ${modepath} | awk 'BEGIN{print "### PARAMETERS USED ###"}1' | awk 'BEGIN{print "---"}1' ) > "${outdir}/results/${sanitizedname%*.*}/icescreen.conf"
                 # Initialize config parameters
-                bash $src"/pipelines/edit_configfile.sh" --conffile $outdir"/results/"${sanitizedname%*.*}"/icescreen.conf" \
-                                                         --gbfile $gborig
+                bash "${Icescreen_root_dir}/icescreen_pipelines/edit_configfile.sh" --conffile "${outdir}/results/${sanitizedname%*.*}/icescreen.conf" \
+                                                         --gbfile "${gborig}"
             fi
         done
-        
-#        if [[ "$galaxy" -eq 0 ]]
-#        then
-#            # Activate conda environments
-#            ## Search where is conda
-#            CONDA_BASE=$(conda info --base)
-#            
-#            ## Then source conda.sh
-#            source $CONDA_BASE/etc/profile.d/conda.sh
-#            
-#            ## Now activate environments
-#            conda activate icescreen_env
-#        fi
 
-        if [[ "$galaxy" -eq 0 ]]
+        if [[ "${galaxy}" -eq 0 ]]
         then
 		CONDA_BASE=$(conda info --base)
-		if [ -d $CONDA_BASE/envs/icescreen_env ]
+		if [ -d "${CONDA_BASE}/envs/icescreen_env" ]
 		then
 		    ## Then source conda.sh
-		    source $CONDA_BASE/etc/profile.d/conda.sh
+		    source "${CONDA_BASE}/etc/profile.d/conda.sh"
 
 		    ## Now activate environments
 		    printf "\nconda activate icescreen_env\n"
 		    conda activate icescreen_env
+		    exit_if_error $? "conda activate failed"
 		fi
         fi
 
-        # Check blast database indexes
-        for blastdb in $src/detection_SP/database/blastdb/*faa
-        do
-            dbname=`basename $blastdb`
-            check_blast_indexes ${blastdb%%_DB.faa} $src/detection_SP/database/${dbname%%_DB.faa}_indexes.DONE
-        done
-        
-        # Check hmm database indexes
-        for hmmdb in $src/detection_SP/database/hmmdb/**/*hmm
-        do
-            dbname=`basename $hmmdb`
-            check_hmm_indexes $hmmdb $src/detection_SP/database/${dbname%%.hmm}_indexes.DONE
-        done
-        
-        # Run ICEscreen pipeline
-        snakemake --snakefile "$src/pipelines/icescreen.snakefile" --config rootdir="$src" gbdir="$outdir/genbank" outdir="$outdir" mode="$modepath" -j $cores --nolock
-        
-        # Remove genbank folder
-        rm -rf $outdir"/genbank"
-        
-        CONDA_BASE=$(conda info --base)
-	if [ -d $CONDA_BASE/envs/icescreen_env ]
-	then
-	    ## Then source conda.sh
-	    source $CONDA_BASE/etc/profile.d/conda.sh
 
-	    ## Now activate environments
-	    printf "\nconda deactivate\n"
-	    conda deactivate
-	fi
-	
-	
+        # Run ICEscreen pipeline
+        snakemake --snakefile "${Icescreen_root_dir}/icescreen_pipelines/icescreen.snakefile" --config rootdir="${Icescreen_root_dir}" gbdir="${outdir}/genbank" outdir="${outdir}" mode="${modepath}" -j ${cores} --nolock
+	exit_if_error $? "Running icescreen with snakemake failed"
+
+        # Remove genbank folder
+        rm -rf "${outdir}/genbank"
+
+
+        if [[ "${galaxy}" -eq 0 ]]
+        then
+		CONDA_BASE=$(conda info --base)
+		if [ -d "${CONDA_BASE}/envs/icescreen_env" ]
+		then
+		    ## Then source conda.sh
+		    source "${CONDA_BASE}/etc/profile.d/conda.sh"
+
+		    ## Now deactivate environments
+		    printf "\nconda deactivate\n"
+		    conda deactivate
+		    exit_if_error $? "conda deactivate failed"
+		fi
+        fi
+
+
     else
-        die 'ERROR: Path for output '"$outdir"' does not exist.'
+        die "ERROR: Path for output ${outdir} does not exist."
     fi
 else
-    die "Not all required parameters are valid."
+    die "ERROR: Not all required parameters are valid."
 fi
-

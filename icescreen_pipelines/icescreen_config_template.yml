@@ -1,0 +1,22 @@
+---
+SP_detection:
+    input:
+        genome_genbank:
+    output:
+        detected_sp:
+
+ME_detection:
+    input:
+        detected_sp:
+    output:
+        detected_me:
+        detected_sp_with_me_ids:
+        log_file:
+
+visualization_files:
+    source_sequence_fasta:
+    source_annotation_gff3:
+    icescreen_annotation_gff3:
+    icescreen_annotation_embl:
+    icescreen_annotation_genbank:
+...
