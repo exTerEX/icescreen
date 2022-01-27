@@ -7,22 +7,32 @@
 # Usage function (show help).
 
 function version(){
-    printf "1.0.1\n"
+    printf "1.0.2\n"
 }
 
 function usage(){
-    printf "\nICEscreen version 1.0.1\n\n"
-    printf "usage: icescreen [-h] [-o OUTDIR] [-n DATASET_NAME] [-j NB_JOBS] [-m MODE] -g GBDIR\n\n"
-    printf "Run ICEscreen\n\n"
-    printf "required named arguments:\n"
-    printf "\t-g, --gbdir  : Path to folder containing genbank files\n\n"
-    printf "optional arguments:\n"
-    printf "\t-h, --help         : Show this message and exit\n"
-    printf "\t-o, --outdir       : Path to where ICEscreen results will be written (default "${HOME}")\n"
-    printf "\t-n, --name         : Name of the set of genbank files (default None)\n"
-    printf "\t-j, --jobs         : Maximum number of cores allowed\n"
-    printf "\t-m, --mode         : Search mode for which organism (default \"firmicutes\")\n"
-    printf "\t--galaxy           : [Galaxy admin] Activate parameters to run ICEscreen on Galaxy\n"
+    printf "\nICEscreen version 1.0.2\n\n"
+    printf "Usage for running an analysis with ICEscreen: icescreen [-o OUTDIR] [-n DATASET_NAME] [-j NB_JOBS] [-m MODE] -g GBDIR\n"
+
+    printf "\nShow help:\n"
+    printf "\t-h, --help                 : Show this message and exit\n"
+
+    printf "\nRequired argument for running an analysis:\n"
+    printf "\t-g, --gbdir                : Path to folder containing genbank files\n"
+
+    printf "\nOptional arguments for running an analysis:\n"
+    printf "\t-o, --outdir               : Path to where ICEscreen results will be written (default "${HOME}")\n"
+    printf "\t-n, --name                 : Name of the analysis (default None)\n"
+    printf "\t-j, --jobs                 : Maximum number of processes running in parallel\n"
+    printf "\t-m, --mode                 : Taxonomy of the organisms to analyse (default \"firmicutes\")\n"
+
+    printf "\nArguments for admin:\n"
+    printf "\t--galaxy                   : [Galaxy admin] Activate parameters to run ICEscreen on Galaxy\n"
+    printf "\t--install_dependencies     : [Tool admin] Install or re-install the dependencies of ICEscreen via Conda\n"
+    printf "\t--index_genomic_resources  : [Tool admin] Index or re-index the genomic resources related to the signature proteins used by ICEscreen (proteins fasta via makeblastdb and HMM profiles via hmmpress)\n"
+    printf "\t--test_installation        : [Tool admin] test whether the process of installing ICEscreen was successful. If so, the sentence \"The installation of ICEscreen is successful\" will appear.\n"
+
+
 }
 
 # die function (show message then quit).
@@ -68,7 +78,7 @@ function install_dependencies(){
 	# conda install -n icescreen_env -c conda-forge -c bioconda biopython=1.78 -y
 	## Install HMMER v3.3.2 (at least)
 	# conda install -n icescreen_env -c conda-forge -c bioconda hmmer=3.3.2 -y
-	## Install NCBI BLAST+ suite v2.9.0 (at least)
+	## Install NCBI BLAST+ suite v2.9.0 (at least), but best if >= v2.12 because of change in the blast DB format
 	# conda install -n icescreen_env -c conda-forge -c bioconda blast=2.9.0 -y
 	## Install BCBio-GFF
 	# conda install -n icescreen_env -c conda-forge -c bioconda bcbio-gff=0.6.6 -y
@@ -139,7 +149,7 @@ function test_installation(){
 	# testing of bcbio-gff is skipped : from BCBio import GFF ; print(GFF.__version__)
 
 	echo "The installation of ICEscreen is successful"
-	
+
 }
 
 

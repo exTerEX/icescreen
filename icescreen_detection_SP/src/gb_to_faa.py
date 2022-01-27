@@ -177,6 +177,9 @@ def gb_to_faa(gbfile, faafile, codontable):
     # File out: multifasta
     filout = open(faafile, "w")
 
+    # First order features by location on genome
+    record.features.sort(key=lambda x: int(x.location.start))
+
     # Parsing sequences with SeqIO
     for feature in record.features:
         # Get location (start, end and strand)

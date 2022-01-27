@@ -8,7 +8,7 @@ dependencies:
   - snakemake-minimal >=6.0.5
   - biopython >=1.78
   - bcbio-gff >=0.6.6
-  - blast >=2.9.0
+  - blast >=2.12
   - hmmer >=3.3.2
 
 # OLD dependancies too complicated and unstable because of versions

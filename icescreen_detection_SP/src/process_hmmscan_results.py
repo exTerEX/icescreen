@@ -412,7 +412,7 @@ if __name__ == "__main__":
                 "Profile_description", "Profile_ID", "Profile_name",
                 "Profile_length", "Ali_len_HMM", "Ali_len_CDS",
                 "hmm_coord_from", "hmm_coord_to", "ali_coord_from",
-                "ali_coord_to", "i-Evalue_hmm	", "E-value_hmm", "Score_hmm",
+                "ali_coord_to", "i-Evalue_hmm", "E-value_hmm", "Score_hmm",
                 "Bias_hmm", "#_domain", "of_domain", "Global_score",
                 "Global_bias", "HMM_coverage", "CDS_coverage", "Possible_SP",
                 "i-Evalue_cutoff", "i-Evalue_OK", "CDS_coverage_cutoff",
