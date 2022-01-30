@@ -83,7 +83,6 @@ def get_XerS_annotation(data, tyr):
 
     # Isolate hits of potential XerS proteins
     candidates = tyr[tyr.Query_blast.str.contains("WP_011835230|ACO17137")]
-
     # If there is potential XerS proteins
     if not candidates.empty:
         # Initialize list of verified CDS number
@@ -121,6 +120,11 @@ def get_XerS_annotation(data, tyr):
 
         for cds_num in xers_firmicutes:
             idx = data[data['CDS_num'] == cds_num].index
+            #TODO fix the pandas.errors.InvalidIndexError: Int64Index([0], dtype='int64' error here when scanning the file NZ_CP026548.1.gb
+            #print("HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! idx = "+str(idx) + " ; cds_num = "+ str(cds_num))
+            #print(data.loc[[0]])
+            #data.shape
+            #data.ndim
             data.at[idx, "False_positives"] = "-"
             data.at[idx, "Possible_SP"] = "yes"
 
