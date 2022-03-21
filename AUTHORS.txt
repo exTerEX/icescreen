@@ -1,0 +1,12 @@
+AUTHORS (by alphabetical order)
+
+ - Hélène Chiapello (2)
+ - Charles Coluzzi (1)
+ - Gérard Guédon (1)
+ - Thomas Lacroix (2)
+ - Julie Lao (1,2)
+ - Nathalie Leblond-Bourget (1)
+
+Affiliations:
+ (1) Université de Lorraine, INRAE, DynAMic, F-54000 Nancy, France. 
+ (2) Université Paris-Saclay, INRAE, MaIAGE, 78350 Jouy-en-Josas, France.

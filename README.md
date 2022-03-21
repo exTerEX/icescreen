@@ -1,9 +1,8 @@
-
 ICEscreen is a bioinformatic pipeline for the detection and annotation of ICEs (Integrative and Conjugative Elements) and IMEs (Integrative and Mobilizable Elements) in Firmicutes genomes. 
 
 **Main features of ICEscreen**
 
-- Detection of signature proteins (SPs) of ICEs/IMEs by using blastP on a curated resource.	BlastP allows for an accurate assignment of hits to a given ICE/IME superfamily or family. The curated resource was derived from an analysis of over 120 ICEs and IMEs in Streptococcus genomes by the DINAMIC lab.
+- Detection of signature proteins (SPs) of ICEs/IMEs by using blastP on a curated resource.	BlastP allows for an accurate assignment of hits to a given ICE/IME superfamily or family. The curated resource was derived from an analysis of over 120 ICEs and IMEs in Streptococcus genomes by the DynAMic lab at Nancy.
 - Detection of distant homologs of SPs by using HMM profiles of ICEs/IMEs protein families. The HMM profiles have been either imported from trusted resources or created and curated when needed.
 - Detection of the ICE/IME structures: ICEScreen groups together SPs that belong to the same ICE/IME structures to the best of its ability.
 - Delimitation of the elements at the gene or nucleotide level is not yet implemented and still needs manual curation.

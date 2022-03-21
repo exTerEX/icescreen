@@ -1,0 +1,38 @@
+image: ubuntu:latest
+#image: continuumio/miniconda3
+
+before_script:
+  - apt-get -yq update
+  - apt-get -yq upgrade
+  - apt-get -yq install git wget curl build-essential
+  - mkdir -p ~/miniconda3
+  - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda3/miniconda.sh
+  - chmod +x ~/miniconda3/miniconda.sh
+  - bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3
+  - rm -rf ~/miniconda3/miniconda.sh
+  - ~/miniconda3/bin/conda init bash
+  - source ~/.bashrc
+  - export PATH=~/miniconda/bin:$PATH
+  - source ~/miniconda3/etc/profile.d/conda.sh
+  - conda create -y --name icescreen_env icescreen -c conda-forge -c bioconda
+
+test_install_icescreen:
+  script:
+  - conda activate icescreen_env
+  - icescreen --version
+  - icescreen --test_installation 2>&1 | grep "The installation of ICEscreen is successful" > /dev/null
+  - mkdir -p ~/tmp/test_icescreen
+  - cd ~/tmp/test_icescreen
+  - mkdir genbank_files
+  - i=NC_004668
+  - curl -s  "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&id=${i}&rettype=gbwithparts&retmode=txt" > genbank_files/$i.gbk
+  - i=NZ_CP026548
+  - curl -s  "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&id=${i}&rettype=gbwithparts&retmode=txt" > genbank_files/$i.gbk
+  - icescreen -g ~/tmp/test_icescreen/genbank_files -o ~/tmp/test_icescreen/ --galaxy
+  - head ~/tmp/test_icescreen/ICEscreen_results/results/NC_004668/icescreen_detection_ME/NC_004668_detected_ME.summary 2>&1 | grep "Mobile elements detection statistics" > /dev/null
+  - head ~/tmp/test_icescreen/ICEscreen_results/results/NZ_CP026548/icescreen_detection_ME/NZ_CP026548_detected_ME.summary 2>&1 | grep "Mobile elements detection statistics" > /dev/null
+  - rm -rf ~/tmp/test_icescreen
+  - conda deactivate
+  only:
+  - master
+  - main

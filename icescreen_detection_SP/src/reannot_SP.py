@@ -115,23 +115,20 @@ def get_XerS_annotation(data, tyr):
         # Reannotate data
         for cds_num in xers_streptococcal:
             idx = data[data['CDS_num'] == cds_num].index
-            data.at[idx, "False_positives"] = "Streptococcal XerS"
-            data.at[idx, "Possible_SP"] = "no"
+            data.loc[idx, "False_positives"] = "Streptococcal XerS"
+            data.loc[idx, "Possible_SP"] = "no"
 
         for cds_num in xers_firmicutes:
             idx = data[data['CDS_num'] == cds_num].index
-            #TODO fix the pandas.errors.InvalidIndexError: Int64Index([0], dtype='int64' error here when scanning the file NZ_CP026548.1.gb
-            #print("HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! idx = "+str(idx) + " ; cds_num = "+ str(cds_num))
-            #print(data.loc[[0]])
             #data.shape
             #data.ndim
-            data.at[idx, "False_positives"] = "-"
-            data.at[idx, "Possible_SP"] = "yes"
+            data.loc[idx, "False_positives"] = "-"
+            data.loc[idx, "Possible_SP"] = "yes"
 
         for cds_num in fp:
             idx = data[data['CDS_num'] == cds_num].index
-            data.at[idx, "False_positives"] = "Possible invertase"
-            data.at[idx, "Possible_SP"] = "no"
+            data.loc[idx, "False_positives"] = "Possible invertase"
+            data.loc[idx, "Possible_SP"] = "no"
 
     return(data)
 
@@ -200,7 +197,7 @@ def reannot_XerS(df, tyr):
 
     for i in sec_annot.index:
         for c in cols:
-            df.at[df["CDS_num"] == i, c] = sec_annot.at[i, c]
+            df.loc[df["CDS_num"] == i, c] = sec_annot.loc[i, c]
 
     return(df)
 

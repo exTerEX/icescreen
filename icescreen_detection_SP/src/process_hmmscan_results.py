@@ -146,7 +146,7 @@ def get_hmmscan_df(tsvpath):
                            names=columns_type.keys()
                            )
     except ValueError:
-        data = pd.read_csv(tsvpath, "\t")
+        data = pd.read_csv(tsvpath, sep="\t")
     except KeyError:
         print('ERROR: There is a problem in TSV file header. '
               '(Missing / Misspelled / Additional columns).',

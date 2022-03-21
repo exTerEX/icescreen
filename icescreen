@@ -7,18 +7,18 @@
 # Usage function (show help).
 
 function version(){
-    printf "1.0.3\n"
+    printf "1.0.4\n"
 }
 
 function usage(){
-    printf "\nICEscreen version 1.0.3\n\n"
+    printf "\nICEscreen version 1.0.4\n\n"
     printf "Usage for running an analysis with ICEscreen: icescreen [-o OUTDIR] [-n DATASET_NAME] [-j NB_JOBS] [-m MODE] -g GBDIR\n"
 
     printf "\nShow help:\n"
     printf "\t-h, --help                 : Show this message and exit\n"
 
     printf "\nRequired argument for running an analysis:\n"
-    printf "\t-g, --gbdir                : Path to folder containing genbank files\n"
+    printf "\t-g, --gbdir                : Path to the folder containing the genbank files (Mandatory). Each Genbank file can only contain ONE record, multigenbank files are not supported. Each Genbank file must include the ORIGIN nucleotide sequence at the end\n"
 
     printf "\nOptional arguments for running an analysis:\n"
     printf "\t-o, --outdir               : Path to where ICEscreen results will be written (default "${HOME}")\n"
