@@ -82,7 +82,7 @@ def get_XerS_annotation(data, tyr):
     """
 
     # Isolate hits of potential XerS proteins
-    candidates = tyr[tyr.Query_blast.str.contains("WP_011835230|ACO17137")]
+    candidates = tyr[tyr.Id_of_blast_most_similar_ref_SP.str.contains("WP_011835230|ACO17137")]
     # If there is potential XerS proteins
     if not candidates.empty:
         # Initialize list of verified CDS number
@@ -95,14 +95,14 @@ def get_XerS_annotation(data, tyr):
             cds_num = candidate[0]
             info = candidate[1]
 
-            xers_strep = info[info["Query_blast"] == "ACO17137"]
-            xers_firmi = info[info["Query_blast"] == "WP_011835230"]
+            xers_strep = info[info["Id_of_blast_most_similar_ref_SP"] == "ACO17137"]
+            xers_firmi = info[info["Id_of_blast_most_similar_ref_SP"] == "WP_011835230"]
             if not xers_strep.empty:
                 # If there is an hit with ACO17137 and the %id >= 70
-                if any(xers_strep.Ali_Identity_perc.values >= 70):
+                if any(xers_strep.Blast_ali_identity_perc.values >= 70):
                     xers_streptococcal.append(cds_num)
                 # If %id < 70, it is not a streptococcal XerS
-                elif any(xers_strep.Ali_Identity_perc.values < 70):
+                elif any(xers_strep.Blast_ali_identity_perc.values < 70):
                     # If there is a hit with WP_011835230
                     if not xers_firmi.empty:
                         xers_firmicutes.append(cds_num)
@@ -114,19 +114,19 @@ def get_XerS_annotation(data, tyr):
 
         # Reannotate data
         for cds_num in xers_streptococcal:
-            idx = data[data['CDS_num'] == cds_num].index
+            idx = data[data["CDS_num"] == cds_num].index
             data.loc[idx, "False_positives"] = "Streptococcal XerS"
             data.loc[idx, "Possible_SP"] = "no"
 
         for cds_num in xers_firmicutes:
-            idx = data[data['CDS_num'] == cds_num].index
+            idx = data[data["CDS_num"] == cds_num].index
             #data.shape
             #data.ndim
             data.loc[idx, "False_positives"] = "-"
             data.loc[idx, "Possible_SP"] = "yes"
 
         for cds_num in fp:
-            idx = data[data['CDS_num'] == cds_num].index
+            idx = data[data["CDS_num"] == cds_num].index
             data.loc[idx, "False_positives"] = "Possible invertase"
             data.loc[idx, "Possible_SP"] = "no"
 
@@ -181,7 +181,7 @@ def reannot_XerS(df, tyr):
     """
     # Check if there is XerS as best hit
     # Get index of blast hit with ACO17137
-    idx = df.loc[df["Query_blast"] == "ACO17137"].index
+    idx = df.loc[df["Id_of_blast_most_similar_ref_SP"] == "ACO17137"].index
 
     if len(idx) == 0:
         return(df)

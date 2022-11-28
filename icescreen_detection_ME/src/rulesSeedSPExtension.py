@@ -24,7 +24,11 @@ import icescreen_OO
 def tryAddingSPToConjugaisonModuleEMStructure(
         EMStructureSent,
         SPtoTestForAdd,
-        groupListSPintoICEsIMEsUsingFamilyInfo):
+        groupListSPintoICEsIMEsUsingFamilyInfo,
+        allowCheckingForMultipleDistantRelaxase,
+        allowCheckingForMultipleDistantCoupling,
+        allowCheckingForMultipleDistantVirB4
+        ):
     debugtryAddingSPToConjugaisonModuleEMStructure = False
 
     # consider testing SPtoTestForAdd no matter if it is in conflict or not
@@ -39,18 +43,17 @@ def tryAddingSPToConjugaisonModuleEMStructure(
     # (2) the SPtoTestForAdd is conjugaison module (Relaxase, VirB4, Couplage) && this BasicEMStructure has already at least one of this type of SP registred && the SPtoTestForAdd is not adjacent in the genome to the last SP registred
     elif (SPtoTestForAdd.SPType == "Relaxase"):
         if EMStructureSent.listRelaxase:  # list is not empty
-
             # lastSPAdded = EMStructureSent.listRelaxase[-1]# get the last SP added to this list
             # get the last SP added to this list that is not in conflict
             for lastSPAdded in reversed(EMStructureSent.listRelaxase):
                 if len(lastSPAdded.setICEsIMEsStructureInConflict) != 0:  # in conflict, continue loop
                     continue
                 else:
-
                     if (abs(lastSPAdded.CDSPositionInGenome - SPtoTestForAdd.CDSPositionInGenome) > 2):  # SPs are not adjacent in the genome
                         if debugtryAddingSPToConjugaisonModuleEMStructure:
-                            print("tryAddingSPToConjugaisonModuleEMStructure for {}: SPtoTestForAdd.SPType is relaxase but not adjacent in the genome to already added relaxase(s)".format(SPtoTestForAdd.locusTag))
-                        return False
+                            print("tryAddingSPToConjugaisonModuleEMStructure for {}: SPtoTestForAdd.SPType is relaxase but not adjacent in the genome to already added relaxase(s). allowCheckingForMultipleDistantRelaxase is {}".format(SPtoTestForAdd.locusTag, str(allowCheckingForMultipleDistantRelaxase)))
+                        if not allowCheckingForMultipleDistantRelaxase :
+                            return False
                     break
     elif (SPtoTestForAdd.SPType == "Coupling protein"):
         if EMStructureSent.listCouplingProtein:  # list is not empty
@@ -64,8 +67,10 @@ def tryAddingSPToConjugaisonModuleEMStructure(
                     #    if debugtryAddingSPToConjugaisonModuleEMStructure:
                     #        print("tryAddingSPToConjugaisonModuleEMStructure for {}: SPtoTestForAdd.SPType is Coupling but not adjacent in the genome to already added Coupling(s)".format(SPtoTestForAdd.locusTag))
                     #    return False
-                    return False  # 2 Coupling should be considered 2 different EM regardless of wether they are adjacent in genome or not
-                    break
+                    if debugtryAddingSPToConjugaisonModuleEMStructure:
+                        print("tryAddingSPToConjugaisonModuleEMStructure for {}:  2 Coupling should be considered 2 different EM regardless of wether they are adjacent in genome or not. allowCheckingForMultipleDistantCoupling is {}".format(SPtoTestForAdd.locusTag, str(allowCheckingForMultipleDistantCoupling)))
+                    if not allowCheckingForMultipleDistantCoupling :
+                        return False  # 2 Coupling should be considered 2 different EM regardless of wether they are adjacent in genome or not
     elif (SPtoTestForAdd.SPType == "VirB4"):
         if EMStructureSent.listVirB4:  # list is not empty
             # lastSPAdded = EMStructureSent.listVirB4[-1]# get the last SP added to this list
@@ -78,8 +83,10 @@ def tryAddingSPToConjugaisonModuleEMStructure(
                     #    if debugtryAddingSPToConjugaisonModuleEMStructure:
                     #        print("tryAddingSPToConjugaisonModuleEMStructure for {}: SPtoTestForAdd.SPType is Virb4 but not adjacent in the genome to already added Virb4(s)".format(SPtoTestForAdd.locusTag))
                     #    return False
-                    return False  # 2 virB4 should be considered 2 different EM regardless of wether they are adjacent in genome or not
-                    break
+                    if debugtryAddingSPToConjugaisonModuleEMStructure:
+                        print("tryAddingSPToConjugaisonModuleEMStructure for {}:  2 virB4 should be considered 2 different EM regardless of wether they are adjacent in genome or not. allowCheckingForMultipleDistantVirB4 is {}".format(SPtoTestForAdd.locusTag, str(allowCheckingForMultipleDistantVirB4)))
+                    if not allowCheckingForMultipleDistantVirB4 :
+                        return False  # 2 virB4 should be considered 2 different EM regardless of wether they are adjacent in genome or not
     else:
         raise RuntimeError(
                 "Error in tryAddingSPToConjugaisonModuleEMStructure: unrecognized SPtoTestForAdd.SPType = {}".format(SPtoTestForAdd.SPType))
@@ -181,6 +188,6 @@ def testSPFamilyInfoCompatibilityWithICEsIMEsStructure(
                 "Error in testSPFamilyInfoCompatibilityWithICEsIMEsStructure: unrecognized icescreen_OO.groupListSPintoICEsIMEsUsingFamilyInfo = {}".format(
                         str(groupListSPintoICEsIMEsUsingFamilyInfo)))
 
-    raise RuntimeError(
-            "Error in testSPFamilyInfoCompatibilityWithICEsIMEsStructure: reached the end of the method without any return statement ; locus tag = {} ; ICEsIMEsStructureToTest = {}".format(
-                    SPToTest.locusTag, str(ICEsIMEsStructureToTest.internalIdentifier)))  #
+    # raise RuntimeError(
+    #         "Error in testSPFamilyInfoCompatibilityWithICEsIMEsStructure: reached the end of the method without any return statement ; locus tag = {} ; ICEsIMEsStructureToTest = {}".format(
+    #                 SPToTest.locusTag, str(ICEsIMEsStructureToTest.internalIdentifier)))  #

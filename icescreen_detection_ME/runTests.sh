@@ -48,7 +48,7 @@ then
 fi
 result="$SCRIPT_DIR/results/test1_NC_004668.1_detected_SP_withICEIMEIds.tsv"
 reference="$SCRIPT_DIR/tests/test_results/test1_NC_004668.1_detected_SP_withICEIMEIds.tsv"
-# Check columns: "ICE IME Number","ICE IME Number (To review)","Segment Number","Comment regarding ICE IME structure","hit_blast","hit_HMM","CDS_num","CDS","Query_blast"
+# Check columns: "ICE_IME_id","ICE_IME_id_need_manual_curation","Segment_number","Comments_ICE_IME_structure","Is_hit_blast","Is_hit_HMM","CDS_num","CDS","Id_of_blast_most_similar_ref_SP"
 my_command="diff $result $reference"
 #my_command="diff <(awk '{print \$1,\$2,\$3,\$4,\$5,\$6,\$7,\$8,\$14}' FPAT=\"([^,]+)|(\\\"[^\\\"]+\\\")\" $reference) <(awk '{print \$1,\$2,\$3,\$4,\$5,\$6,\$7,\$8,\$14}' FPAT=\"([^,]+)|(\\\"[^\\\"]+\\\")\" $result)"
 eval $my_command > tmpTestIceScreenOO__.log 2>&1
@@ -57,8 +57,18 @@ then
       die $test_number $my_command
 fi
 
+#Remark: adding diff -I \"Date\" does not work for some reason...
+#Remark: do not work either... my_command="diff <(sed '/Date/d' $SCRIPT_DIR/results/test1_NC_004668.1_results_EM.summary) <(sed '/Date/d' $SCRIPT_DIR/tests/test_results/test1_NC_004668.1_results_EM.summary)"
 my_command="diff $SCRIPT_DIR/results/test1_NC_004668.1_results_EM.summary $SCRIPT_DIR/tests/test_results/test1_NC_004668.1_results_EM.summary"
 $my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="sed '/Date/d' $SCRIPT_DIR/results/test1_NC_004668.1_results_EM.summary > $SCRIPT_DIR/results/test1_NC_004668.1_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="sed '/Date/d' $SCRIPT_DIR/tests/test_results/test1_NC_004668.1_results_EM.summary > $SCRIPT_DIR/tests/test_results/test1_NC_004668.1_results_EM.summary_WITHOUT_DATE"
+#$my_command >> tmpTestIceScreenOO__.log 2>&1
+#my_command="diff $SCRIPT_DIR/results/test1_NC_004668.1_results_EM.summary_WITHOUT_DATE $SCRIPT_DIR/tests/test_results/test1_NC_004668.1_results_EM.summary_WITHOUT_DATE"
+#$my_command >> tmpTestIceScreenOO__.log 2>&1
+#my_command="rm -f $SCRIPT_DIR/results/test1_NC_004668.1_results_EM.summary_WITHOUT_DATE $SCRIPT_DIR/tests/test_results/test1_NC_004668.1_results_EM.summary_WITHOUT_DATE"
+#$my_command >> tmpTestIceScreenOO__.log 2>&1
 if [ -s tmpTestIceScreenOO__.log ]
 then
       die $test_number $my_command
@@ -106,6 +116,14 @@ fi
 
 my_command="diff $SCRIPT_DIR/results/test2_NZ_AP013072_results_EM.summary $SCRIPT_DIR/tests/test_results/test2_NZ_AP013072_results_EM.summary"
 $my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="sed '/Date/d' $SCRIPT_DIR/results/test2_NZ_AP013072_results_EM.summary > $SCRIPT_DIR/results/test2_NZ_AP013072_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="sed '/Date/d' $SCRIPT_DIR/tests/test_results/test2_NZ_AP013072_results_EM.summary > $SCRIPT_DIR/tests/test_results/test2_NZ_AP013072_results_EM.summary_WITHOUT_DATE"
+#$my_command >> tmpTestIceScreenOO__.log 2>&1
+#my_command="diff $SCRIPT_DIR/results/test2_NZ_AP013072_results_EM.summary_WITHOUT_DATE $SCRIPT_DIR/tests/test_results/test2_NZ_AP013072_results_EM.summary_WITHOUT_DATE"
+#$my_command >> tmpTestIceScreenOO__.log 2>&1
+#my_command="rm -f $SCRIPT_DIR/results/test2_NZ_AP013072_results_EM.summary_WITHOUT_DATE $SCRIPT_DIR/tests/test_results/test2_NZ_AP013072_results_EM.summary_WITHOUT_DATE"
+#$my_command >> tmpTestIceScreenOO__.log 2>&1
 if [ -s tmpTestIceScreenOO__.log ]
 then
       die $test_number $my_command
@@ -153,6 +171,14 @@ fi
 
 my_command="diff $SCRIPT_DIR/results/test3_Streptococcus_salivarius_strain_LAB813_results_EM.summary $SCRIPT_DIR/tests/test_results/test3_Streptococcus_salivarius_strain_LAB813_results_EM.summary"
 $my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="sed '/Date/d' $SCRIPT_DIR/results/test3_Streptococcus_salivarius_strain_LAB813_results_EM.summary > $SCRIPT_DIR/results/test3_Streptococcus_salivarius_strain_LAB813_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="sed '/Date/d' $SCRIPT_DIR/tests/test_results/test3_Streptococcus_salivarius_strain_LAB813_results_EM.summary > $SCRIPT_DIR/tests/test_results/test3_Streptococcus_salivarius_strain_LAB813_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="diff $SCRIPT_DIR/results/test3_Streptococcus_salivarius_strain_LAB813_results_EM.summary_WITHOUT_DATE $SCRIPT_DIR/tests/test_results/test3_Streptococcus_salivarius_strain_LAB813_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="rm -f $SCRIPT_DIR/results/test3_Streptococcus_salivarius_strain_LAB813_results_EM.summary_WITHOUT_DATE $SCRIPT_DIR/tests/test_results/test3_Streptococcus_salivarius_strain_LAB813_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
 if [ -s tmpTestIceScreenOO__.log ]
 then
       die $test_number $my_command
@@ -200,6 +226,14 @@ fi
 
 my_command="diff $SCRIPT_DIR/results/test4_NZ_AFRY01000001_results_EM.summary $SCRIPT_DIR/tests/test_results/test4_NZ_AFRY01000001_results_EM.summary"
 $my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="sed '/Date/d' $SCRIPT_DIR/results/test4_NZ_AFRY01000001_results_EM.summary > $SCRIPT_DIR/results/test4_NZ_AFRY01000001_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="sed '/Date/d' $SCRIPT_DIR/tests/test_results/test4_NZ_AFRY01000001_results_EM.summary > $SCRIPT_DIR/tests/test_results/test4_NZ_AFRY01000001_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="diff $SCRIPT_DIR/results/test4_NZ_AFRY01000001_results_EM.summary_WITHOUT_DATE $SCRIPT_DIR/tests/test_results/test4_NZ_AFRY01000001_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="rm -f $SCRIPT_DIR/results/test4_NZ_AFRY01000001_results_EM.summary_WITHOUT_DATE $SCRIPT_DIR/tests/test_results/test4_NZ_AFRY01000001_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
 if [ -s tmpTestIceScreenOO__.log ]
 then
       die $test_number $my_command
@@ -247,6 +281,14 @@ fi
 
 my_command="diff $SCRIPT_DIR/results/test5_NC_022239_results_EM.summary $SCRIPT_DIR/tests/test_results/test5_NC_022239_results_EM.summary"
 $my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="sed '/Date/d' $SCRIPT_DIR/results/test5_NC_022239_results_EM.summary > $SCRIPT_DIR/results/test5_NC_022239_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="sed '/Date/d' $SCRIPT_DIR/tests/test_results/test5_NC_022239_results_EM.summary > $SCRIPT_DIR/tests/test_results/test5_NC_022239_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="diff $SCRIPT_DIR/results/test5_NC_022239_results_EM.summary_WITHOUT_DATE $SCRIPT_DIR/tests/test_results/test5_NC_022239_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="rm -f $SCRIPT_DIR/results/test5_NC_022239_results_EM.summary_WITHOUT_DATE $SCRIPT_DIR/tests/test_results/test5_NC_022239_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
 if [ -s tmpTestIceScreenOO__.log ]
 then
       die $test_number $my_command
@@ -294,6 +336,14 @@ fi
 
 my_command="diff $SCRIPT_DIR/results/test6_medley_results_EM.summary $SCRIPT_DIR/tests/test_results/test6_medley_results_EM.summary"
 $my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="sed '/Date/d' $SCRIPT_DIR/results/test6_medley_results_EM.summary > $SCRIPT_DIR/results/test6_medley_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="sed '/Date/d' $SCRIPT_DIR/tests/test_results/test6_medley_results_EM.summary > $SCRIPT_DIR/tests/test_results/test6_medley_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="diff $SCRIPT_DIR/results/test6_medley_results_EM.summary_WITHOUT_DATE $SCRIPT_DIR/tests/test_results/test6_medley_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="rm -f $SCRIPT_DIR/results/test6_medley_results_EM.summary_WITHOUT_DATE $SCRIPT_DIR/tests/test_results/test6_medley_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
 if [ -s tmpTestIceScreenOO__.log ]
 then
       die $test_number $my_command
@@ -342,6 +392,14 @@ fi
 
 my_command="diff $SCRIPT_DIR/results/test7_NC_015977.1_results_EM.summary $SCRIPT_DIR/tests/test_results/test7_NC_015977.1_results_EM.summary"
 $my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="sed '/Date/d' $SCRIPT_DIR/results/test7_NC_015977.1_results_EM.summary > $SCRIPT_DIR/results/test7_NC_015977.1_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="sed '/Date/d' $SCRIPT_DIR/tests/test_results/test7_NC_015977.1_results_EM.summary > $SCRIPT_DIR/tests/test_results/test7_NC_015977.1_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="diff $SCRIPT_DIR/results/test7_NC_015977.1_results_EM.summary_WITHOUT_DATE $SCRIPT_DIR/tests/test_results/test7_NC_015977.1_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="rm -f $SCRIPT_DIR/results/test7_NC_015977.1_results_EM.summary_WITHOUT_DATE $SCRIPT_DIR/tests/test_results/test7_NC_015977.1_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
 if [ -s tmpTestIceScreenOO__.log ]
 then
       die $test_number $my_command
@@ -390,6 +448,14 @@ fi
 
 my_command="diff $SCRIPT_DIR/results/test8_medley_results_EM.summary $SCRIPT_DIR/tests/test_results/test8_medley_results_EM.summary"
 $my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="sed '/Date/d' $SCRIPT_DIR/results/test8_medley_results_EM.summary > $SCRIPT_DIR/results/test8_medley_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="sed '/Date/d' $SCRIPT_DIR/tests/test_results/test8_medley_results_EM.summary > $SCRIPT_DIR/tests/test_results/test8_medley_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="diff $SCRIPT_DIR/results/test8_medley_results_EM.summary_WITHOUT_DATE $SCRIPT_DIR/tests/test_results/test8_medley_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="rm -f $SCRIPT_DIR/results/test8_medley_results_EM.summary_WITHOUT_DATE $SCRIPT_DIR/tests/test_results/test8_medley_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
 if [ -s tmpTestIceScreenOO__.log ]
 then
       die $test_number $my_command
@@ -437,6 +503,14 @@ fi
 
 my_command="diff $SCRIPT_DIR/results/test9_NZ_LT635479.1_results_EM.summary $SCRIPT_DIR/tests/test_results/test9_NZ_LT635479.1_results_EM.summary"
 $my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="sed '/Date/d' $SCRIPT_DIR/results/test9_NZ_LT635479.1_results_EM.summary > $SCRIPT_DIR/results/test9_NZ_LT635479.1_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="sed '/Date/d' $SCRIPT_DIR/tests/test_results/test9_NZ_LT635479.1_results_EM.summary > $SCRIPT_DIR/tests/test_results/test9_NZ_LT635479.1_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="diff $SCRIPT_DIR/results/test9_NZ_LT635479.1_results_EM.summary_WITHOUT_DATE $SCRIPT_DIR/tests/test_results/test9_NZ_LT635479.1_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="rm -f $SCRIPT_DIR/results/test9_NZ_LT635479.1_results_EM.summary_WITHOUT_DATE $SCRIPT_DIR/tests/test_results/test9_NZ_LT635479.1_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
 if [ -s tmpTestIceScreenOO__.log ]
 then
       die $test_number $my_command
@@ -448,6 +522,67 @@ then
       die $test_number $my_command
 fi
 echo " ** Done with test #$test_number" >&2
+
+
+
+
+
+
+: '
+ - Test 10 : 
+	- What is tested : test10_fragmented_SPs_detected_SP.tsv
+'
+test_number="10"
+echo " ** Starting test #$test_number" >&2
+my_command="python3 $SCRIPT_DIR/src/icescreen_OO.py -c $SCRIPT_DIR/icescreen.conf -i $SCRIPT_DIR/tests/test_files/test10_fragmented_SPs_detected_SP.tsv -o $SCRIPT_DIR/results/test10_fragmented_SPs_results_EM.tsv -m $SCRIPT_DIR/results/test10_fragmented_SPs_detected_SP_withICEIMEIds.tsv -l $SCRIPT_DIR/results/test10_fragmented_SPs_results_EM.log"
+$my_command > tmpTestIceScreenOO__.log 2>&1
+if [ -s tmpTestIceScreenOO__.log ]
+then
+      die $test_number $my_command
+fi
+result="$SCRIPT_DIR/results/test10_fragmented_SPs_results_EM.tsv"
+reference="$SCRIPT_DIR/tests/test_results/test10_fragmented_SPs_results_EM.tsv"
+my_command="diff $result $reference"
+#my_command="diff <(cut -f1,2,3,4,5,6,7,8,9,10,11,12,14,15,16,17,18,19,20 $result) <(cut -f1,2,3,4,5,6,7,8,9,10,11,12,14,15,16,17,18,19,20 $reference)"
+eval $my_command > tmpTestIceScreenOO__.log 2>&1
+if [ -s tmpTestIceScreenOO__.log ]
+then
+      die $test_number $my_command
+fi
+result="$SCRIPT_DIR/results/test10_fragmented_SPs_detected_SP_withICEIMEIds.tsv"
+reference="$SCRIPT_DIR/tests/test_results/test10_fragmented_SPs_detected_SP_withICEIMEIds.tsv"
+my_command="diff $result $reference"
+#my_command="diff <(awk '{print \$1,\$2,\$3,\$4,\$5,\$6,\$7,\$8,\$14}' FPAT=\"([^,]+)|(\\\"[^\\\"]+\\\")\" $reference) <(awk '{print \$1,\$2,\$3,\$4,\$5,\$6,\$7,\$8,\$14}' FPAT=\"([^,]+)|(\\\"[^\\\"]+\\\")\" $result)"
+eval $my_command > tmpTestIceScreenOO__.log 2>&1
+if [ -s tmpTestIceScreenOO__.log ]
+then
+      die $test_number $my_command
+fi
+
+my_command="diff $SCRIPT_DIR/results/test10_fragmented_SPs_results_EM.summary $SCRIPT_DIR/tests/test_results/test10_fragmented_SPs_results_EM.summary"
+$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="sed '/Date/d' $SCRIPT_DIR/results/test10_fragmented_SPs_results_EM.summary > $SCRIPT_DIR/results/test10_fragmented_SPs_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="sed '/Date/d' $SCRIPT_DIR/tests/test_results/test10_fragmented_SPs_results_EM.summary > $SCRIPT_DIR/tests/test_results/test10_fragmented_SPs_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="diff $SCRIPT_DIR/results/test10_fragmented_SPs_results_EM.summary_WITHOUT_DATE $SCRIPT_DIR/tests/test_results/test10_fragmented_SPs_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+#my_command="rm -f $SCRIPT_DIR/results/test10_fragmented_SPs_results_EM.summary_WITHOUT_DATE $SCRIPT_DIR/tests/test_results/test10_fragmented_SPs_results_EM.summary_WITHOUT_DATE"
+#$my_command > tmpTestIceScreenOO__.log 2>&1
+if [ -s tmpTestIceScreenOO__.log ]
+then
+      die $test_number $my_command
+fi
+my_command="rm -f $SCRIPT_DIR/results/test10_fragmented_SPs_results_EM.tsv $SCRIPT_DIR/results/test10_fragmented_SPs_detected_SP_withICEIMEIds.tsv $SCRIPT_DIR/results/test10_fragmented_SPs_results_EM.log $SCRIPT_DIR/results/test10_fragmented_SPs_results_EM.summary"
+$my_command > tmpTestIceScreenOO__.log 2>&1
+if [ -s tmpTestIceScreenOO__.log ]
+then
+      die $test_number $my_command
+fi
+echo " ** Done with test #$test_number" >&2
+
+
+
 
 
 # end of script

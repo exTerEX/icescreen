@@ -24,7 +24,7 @@ from Bio.SeqFeature import SeqFeature, FeatureLocation
 from Bio.SeqRecord import SeqRecord
 from Bio import Seq
 from requests.utils import quote
-
+import commonMethods
 
 def parse_arguments():
     """Parse generate_annotation_files.py script arguments.
@@ -58,7 +58,7 @@ def parse_arguments():
     return(args.spdata, args.medata, args.gbfile, args.output)
 
 
-def get_CDS_dict(record):
+def get_CDS_dict(record, hasMultipleGenomeAccesion):
     """Extract CDS features from Bio.SeqRecord object and return a dictionary
     with extracted Bio.SeqFeature as values and CDS start position as key.
 
@@ -71,14 +71,39 @@ def get_CDS_dict(record):
     # Key: CDS start position, Value: SeqFeature
     CDS_dict = {}
 
+    genomeAccessionIT = record.id
+
     for feature in record.features:
         if feature.type == "CDS":
-            CDS_dict[feature.location.start.real] = feature
+            #CDS_dict[feature.location.start.real] = feature #OLD
 
+            #handling for multigenbank forgenerate_annotation_files, use commonMethods.makeCompositeUniqLocusTag to make a key for the dictionary
+            locus_tagIT = ""
+            if 'locus_tag' in feature.qualifiers:
+                locus_tagIT = commonMethods.search_feature('locus_tag', feature)
+            protein_idIT = ""
+            if 'protein_id' in feature.qualifiers:
+                protein_idIT = commonMethods.search_feature('protein_id', feature)
+            startIT = feature.location.start + 1
+            compositeUniqLocusTagIT = commonMethods.makeCompositeUniqLocusTag(hasMultipleGenomeAccesion, locus_tagIT, protein_idIT, genomeAccessionIT, startIT)
+
+            #CDS_dict[compositeUniqLocusTagIT] = feature
+            if genomeAccessionIT in CDS_dict :
+                CDS_dict_LocusTags = CDS_dict[genomeAccessionIT]
+                if compositeUniqLocusTagIT in CDS_dict_LocusTags:
+                    raise RuntimeError('get_CDS_dict error: key {} is already in CDS_dict_LocusTags'.format(compositeUniqLocusTagIT))
+                else :
+                    CDS_dict_LocusTags[compositeUniqLocusTagIT] = feature
+            else :
+                CDS_dict_LocusTags = {}
+                CDS_dict_LocusTags[compositeUniqLocusTagIT] = feature
+                CDS_dict[genomeAccessionIT] = CDS_dict_LocusTags
+
+    #print(CDS_dict)
     return(CDS_dict)
 
 
-def SP_to_SeqFeature(data, CDS_dict):
+def SP_to_SeqFeature(data, CDS_dict, hasMultipleGenomeAccesion):
     """Create a `Bio.SeqFeature.BioSeqFeature` object from a signature protein
     detected by ICEscreen.
 
@@ -113,28 +138,43 @@ def SP_to_SeqFeature(data, CDS_dict):
 
     featureType = "CDS"
 
-    startPos = int(data["CDS_start"]) - 1
-    endPos = int(data["CDS_end"]) - 1
+    startPos = int(data["CDS_start"])
+    endPos = int(data["CDS_end"]) # endPos = int(data["CDS_end"]) - 1
 
     if data["CDS_strand"] == "+":
-        featureLocation = FeatureLocation(startPos, endPos, strand=1)
+        featureLocation = FeatureLocation( (startPos - 1), endPos, strand=1 )
     else:
-        featureLocation = FeatureLocation(startPos, endPos, strand=-1)
+        featureLocation = FeatureLocation( (startPos - 1), endPos, strand=-1 )
 
     # Parsing of qualifiers of the feature
     myQualifiers = {}
 
     # ID of CDS
-    myQualifiers['origid'] = str(data['CDS']).strip()
+    #data["CDS_locus_tag"] can be empty or - if no locus tag, use commonMethods.makeCompositeUniqLocusTag on all parameter to get the correct locus tag to retrieve
+    locusTagIT = str(data["CDS_locus_tag"])
+    proteinIdIT = str(data["CDS_protein_id"])
+    genomeAccessionIT = str(data["Genome_accession"])
+    #ID_CDS_IT = str(data["CDS_locus_tag"])
+    ID_CDS_IT = commonMethods.makeCompositeUniqLocusTag(hasMultipleGenomeAccesion, locusTagIT, proteinIdIT, genomeAccessionIT, startPos)
+
+
+    #myQualifiers['origid'] = str(data["CDS"]).strip()
+    myQualifiers['origid'] = ID_CDS_IT.strip()
     # Type of SP
     myQualifiers['function'] = functions[data['CDS_Protein_type']]
 
-    all_keys = CDS_dict[startPos].qualifiers.keys()
+    #all_keys = CDS_dict[startPos].qualifiers.keys()
+    all_keys = None
+    if ID_CDS_IT in CDS_dict:
+        all_keys = CDS_dict[ID_CDS_IT].qualifiers.keys()
+    else:
+        raise RuntimeError('SP_to_SeqFeature error: key {} is not in CDS_dict'.format(ID_CDS_IT))
 
     qualifiers_to_test = ["protein_id", "locus_tag", "gene", "codon_start"]
     for qual in qualifiers_to_test:
         if qual in all_keys:
-            myQualifiers[qual] = CDS_dict[startPos].qualifiers[qual][0]
+            #myQualifiers[qual] = CDS_dict[startPos].qualifiers[qual][0]
+            myQualifiers[qual] = CDS_dict[ID_CDS_IT].qualifiers[qual][0]
 
     # Check if gene is pseudogene
     ispseudo = False
@@ -164,18 +204,21 @@ def SP_to_SeqFeature(data, CDS_dict):
     # Add type of SP
     note = f'{note} {data["CDS_Protein_type"]}{status}'
     # Blast result
-    if data["hit_blast"] == 1:
+    if data["Is_hit_blast"] == 1:
         if data["Use_annotation"] == "yes":
             acs = "HIGH"
         else:
             acs = "LOW"
         note = (f'{note}; BlastP result (Annotation confidence: {acs}): '
-                f'{data["Blast_description"]} '
-                f'[Hit with {data["Query_blast"]}; ' + "Identity:{0:.2f}%; ".format(data["Ali_Identity_perc"]) + "E-value:{0:.3g}; ".format(data["E-value_blast"]) + "Query coverage:" + "{0:.2f}%]".format(data["Query_blast_coverage"]))
+                f'{data["Description_of_blast_most_similar_ref_SP"]} '
+                # f'[Hit with {data["Id_of_blast_most_similar_ref_SP"]}; ' + "Identity:{0:.2f}%; ".format(data["Blast_ali_identity_perc"]) + "E-value:{0:.3g}; ".format(data["Blast_ali_E-value"]) + "Query coverage:" + "{0:.2f}%]".format(data["Blast_ali_coverage_most_similar_ref_SP"])) #OLD
+                f'[Hit with {data["Id_of_blast_most_similar_ref_SP"]}; ' + "Identity:{0:.2f}%; ".format(data["Blast_ali_identity_perc"]) + "E-value:{:.2e}; ".format(data["Blast_ali_E-value"]) + "Query coverage:" + "{0:.2f}%]".format(data["Blast_ali_coverage_most_similar_ref_SP"]))
     # HMM result
-    if data["hit_HMM"] == 1:
-        note = (f'{note}; Hmmscan result: {data["Profile_description"]} '
-                f'[Hit with {data["Profile_name"]} HMM profile; ' + f'E-value:{0:.3g}; '.format(data["E-value_hmm"]) + f'i-Evalue:{0:.3g}]'.format(data["i-Evalue_hmm"]))
+    if data["Is_hit_HMM"] == 1:
+        # print(str(data["CDS_locus_tag"])+"\t"+str(data["HMM_ali_E-value"])) # WP_158394679.1	1.7e-13
+        note = (f'{note}; Hmmscan result: {data["Description_of_matching_HMM_profile"]} '
+                # f'[Hit with {data["Profile_name"]} HMM profile; ' + f'E-value:{0:.3g}; '.format(data["HMM_ali_E-value"]) + f'i-Evalue:{0:.3g}]'.format(data["HMM_ali_i-Evalue"])) #OLD
+                f'[Hit with {data["Profile_name"]} HMM profile; ' + "E-value:{:.2e}; ".format(data["HMM_ali_E-value"]) + "i-Evalue:{:.2e}]".format(data["HMM_ali_i-Evalue"]))
     myQualifiers['note'] = note
 
     # Create feature
@@ -195,20 +238,20 @@ def get_element_type(elm_info):
     """
     elm_type = ""
 
-    if elm_info["category of element"] == "Complete ICE (4 types of SP)":
-        elm_type = f'Putative ICE ({elm_info["category of integrase"]})'
-    elif elm_info["category of element"] == "Complete IME (R+I, R+C+I)":
-        elm_type = f'Putative IME ({elm_info["category of integrase"]})'
-    elif elm_info["category of element"] == "Conjugation module (R+C+V)":
+    if elm_info["Category_of_element"].startswith("Complete ICE"): #== "Complete ICE (4 types of SP)":
+        elm_type = f'Putative ICE ({elm_info["Category_of_integrase"]})'
+    elif elm_info["Category_of_element"].startswith("Complete IME") : #== "Complete IME (R+I, R+C+I)":
+        elm_type = f'Putative IME ({elm_info["Category_of_integrase"]})'
+    elif elm_info["Category_of_element"].startswith("Conjugation module") : # == "Conjugation module (R+C+V)
         elm_type = "Complete conjugation module"
-    elif "Mobilizable element" in elm_info["category of element"]:
+    elif "Mobilizable element" in elm_info["Category_of_element"]: # 
         elm_type = "Complete mobilization module"
-    elif elm_info["category of element"] == "Partial ICE (at least V)":
+    elif elm_info["Category_of_element"].startswith("Partial ICE") : # == "Partial ICE (at least V)"
         elm_type = f'Partial ICE '\
-                   f'({elm_info["category of integrase"]})'
-    elif "Other partial element" in elm_info["category of element"]:
+                   f'({elm_info["Category_of_integrase"]})'
+    elif "Other partial element" in elm_info["Category_of_element"]: # 
         elm_type = f'Partial mobile element '\
-                   f'({elm_info["category of integrase"]})'
+                   f'({elm_info["Category_of_integrase"]})'
 
     return(elm_type)
 
@@ -236,18 +279,38 @@ def get_element_structure(elm_info):
     """
     element_structure = ""
 
-    if (pd.isna(elm_info["host ICE / IME"])) &\
-       (pd.isna(elm_info["guest ICE / IME"])):
+    boolColHost_ICE_IME_idsIsEmpty = False
+    if (pd.isna(elm_info["Host_ICE_IME_ids"])) or elm_info["Host_ICE_IME_ids"] == "-":
+        boolColHost_ICE_IME_idsIsEmpty = True
+    boolColGuest_ICE_IME_idsIsEmpty = False
+    if (pd.isna(elm_info["Guest_ICE_IME_ids"])) or elm_info["Guest_ICE_IME_ids"] == "-":
+        boolColGuest_ICE_IME_idsIsEmpty = True
+
+    if (boolColHost_ICE_IME_idsIsEmpty) &\
+       (boolColGuest_ICE_IME_idsIsEmpty):
         element_structure = "Single"
-    elif (pd.isna(elm_info["host ICE / IME"])) &\
-         (not pd.isna(elm_info["guest ICE / IME"])):
+    elif (boolColHost_ICE_IME_idsIsEmpty) &\
+         (not boolColGuest_ICE_IME_idsIsEmpty):
         element_structure = "Nested (host)"
-    elif (not pd.isna(elm_info["host ICE / IME"])) &\
-         (pd.isna(elm_info["guest ICE / IME"])):
+    elif (not boolColHost_ICE_IME_idsIsEmpty) &\
+         (boolColGuest_ICE_IME_idsIsEmpty):
         element_structure = "Nested (guest)"
-    elif (not pd.isna(elm_info["host ICE / IME"])) &\
-         (not pd.isna(elm_info["guest ICE / IME"])):
+    elif (not boolColHost_ICE_IME_idsIsEmpty) &\
+         (not boolColGuest_ICE_IME_idsIsEmpty):
         element_structure = "Nested (host and guest)"
+
+    # if (pd.isna(elm_info["Host_ICE_IME_ids"])) &\
+    #    (pd.isna(elm_info["Guest_ICE_IME_ids"])):
+    #     element_structure = "Single"
+    # elif (pd.isna(elm_info["Host_ICE_IME_ids"])) &\
+    #      (not pd.isna(elm_info["Guest_ICE_IME_ids"])):
+    #     element_structure = "Nested (host)"
+    # elif (not pd.isna(elm_info["Host_ICE_IME_ids"])) &\
+    #      (pd.isna(elm_info["Guest_ICE_IME_ids"])):
+    #     element_structure = "Nested (guest)"
+    # elif (not pd.isna(elm_info["Host_ICE_IME_ids"])) &\
+    #      (not pd.isna(elm_info["Guest_ICE_IME_ids"])):
+    #     element_structure = "Nested (host and guest)"
 
     return(element_structure)
 
@@ -263,20 +326,27 @@ def get_SP_features(CDS_dict, elm_info):
     :return:         List of signature proteins features of given element
     :rtype:          list of :class:`Bio.SeqFeature.SeqFeature` objects
     """
-    if pd.isna(elm_info["list ordered SPs"]):
+    if pd.isna(elm_info["List_SP_ordered_genomic_position"]):
         return([])
 
-    # SPs of a mobile element are stored in "list ordered SPs" column
-    # each SP is written as following: [protein id]-[start position]
+    # SPs of a mobile element are stored in "List_SP_ordered_genomic_position" column
+    # each SP is written as following: [locus_tag] or [protein id]-[start position] or [genome accnum]-[protein id]-[start position]
     # and each SP are separated by a comma
-    ordered_SPs = elm_info["list ordered SPs"].split(", ")
-    ordered_SPs_start = []
-    for SP_start in ordered_SPs:
-        res = re.match("^([^,]*)-([0-9]*)$", SP_start)
-        ordered_SPs_start.append(int(res.group(2)) - 1)
+    ordered_SPs = elm_info["List_SP_ordered_genomic_position"].split(", ")
+    ordered_SPs_IT = []
+    for SP_IT in ordered_SPs:
+        # can be: CVO91_RS00760-108718 [Pseudo], WP_004195527.1-110065, WP_004195546.1-116277
 
-    return([CDS_dict[x] for x in ordered_SPs_start])
+        # res = re.match("^([^,]*)-([0-9]*)( \[Pseudo\])?$", SP_IT)
+        # if res is None:
+        #     raise RuntimeError('get_SP_features error: CDS {} not matching the regex'.format(str(SP_IT)))
+        # else:
+        #     ordered_SPs_start.append(int(res.group(2)) - 1)
+        
+        SP_IT_no_Pseudo_mention = SP_IT.replace(" [Pseudo]", "")
+        ordered_SPs_IT.append(SP_IT_no_Pseudo_mention)
 
+    return([CDS_dict[x] for x in ordered_SPs_IT])
 
 def get_element_color(elm_info):
     """Specify a color coding based on element information.
@@ -321,7 +391,7 @@ def get_element_color(elm_info):
         elif elm_info["element_structure"] == ("Nested (host and guest)"):
             color = 1
     elif "Partial mobile element" in elm_info["element_type"]:
-        if "no integrase" in elm_info["element_type"]:
+        if "no integrase assigned" in elm_info["element_type"]:
             color = 13
         else:
             color = 9
@@ -363,14 +433,15 @@ def get_element_SP_families(elm_info):
         else:
             return("ND")
 
-    cellName = "ICE SuperFamily From Blast Of SP Conj Module"
+    cellName = "ICE_consensus_superfamily_SP_conj_module"
     blastSuperfamily = get_family(elm_info[cellName])
-    cellName = "ICE Family From Blast Of SP Conj Module"
+    cellName = "ICE_consensus_family_SP_conj_module"
     blastFamily = get_family(elm_info[cellName])
 
-    hmmFamilies = get_family(elm_info["family SP conj module HMM"])
+    hmmFamilies = get_family(elm_info["HMM_family_SP_conj_module"])
 
-    RFamily = get_family(elm_info["IME Family From Blast Of SP Conj Module"])
+    #RFamily = get_family(elm_info["IME SuperFamily From Blast Of SP Conj Module"])
+    RFamily = get_family(elm_info["IME_relaxase_family_domains_blast"])
 
     CFamily = "ND"
     VFamily = "ND"
@@ -415,7 +486,7 @@ def make_element_features(CDS_dict, elm_info):
 
     # Get 1st SP's start index and last SP's end index to get range of element
     element_start_idx = sp_feats[0].location.nofuzzy_start
-    element_end_idx = sp_feats[-1].location.nofuzzy_end
+    element_end_idx = sp_feats[-1].location.nofuzzy_end # change here ?
 
     # Then create Bio.SeqFeature.FeatureLocation object
     element_location = FeatureLocation(element_start_idx,
@@ -440,7 +511,7 @@ def make_element_features(CDS_dict, elm_info):
 
     # Create note
     elm_structure = elm_info["element_structure"]
-    elm_ID = elm_info["ICE IME Number"]
+    elm_ID = elm_info["ICE_IME_id"]
 
     SP_families = get_element_SP_families(elm_info)
 
@@ -526,7 +597,8 @@ def sanitize_seqid(mystring):
     return(reencoded_str)
 
 
-def write_GFF3(myrecord, seq_length, outfile):
+#def write_GFF3(myrecord, seq_length, outfile):
+def write_GFF3(listRecordsToWrite, outfile):
     """Write ICEscreen results as annotation in GFF3 file.
 
     :param myrecord:   Genbank information as Bio.SeqRecord.SeqRecord object
@@ -541,80 +613,85 @@ def write_GFF3(myrecord, seq_length, outfile):
 
     # GFF3 header
     filout.write("##gff-version 3\n")
-    filout.write("##sequence-region {} 1 {}\n".format(myrecord.id,
-                                                      seq_length))
 
-    # GFF3 File structure is as follow:
-    # 9 fields tab separated. All fields must be filled out ('.' if nothing).
-    # (1) seq id: (mandatory) Name of reference sequence
-    # (2) source: (mandatory) Source of annotation
-    # (3) type  : (mandatory) Type of annotation
-    # (4) start : (mandatory) The 1-based begin position of the annotation
-    # (5) end   : (mandatory) The 1-based end position of the annotation
-    # (6) score : (optional ) Score of the annotation (floating point value)
-    # (7) strand: (mandatory) Strand of the annotation '+' and '-' for forward
-    #                         and reverse strand, '.' for features not stranded
-    # (8) phase : (optional ) Shift of feature regarding to the reading frame,
-    #                         one of "0","1","2" and "." for missing/don't care
-    # (9) attributes: (opt  ) A list of key/value attributes (key=value)
-    #                         separated by semicolons.
+    for myrecord in listRecordsToWrite:
 
-    # Build all columns first
-    # 1. seqid
-    seqid = sanitize_seqid(myrecord.id)
+        filout.write("##sequence-region {} 1 {}\n".format(myrecord.id,
+                                                        #seq_length
+                                                        len(myrecord.seq)
+                                                        ))
 
-    # 2. source
-    source = "ICEscreen"
+        # GFF3 File structure is as follow:
+        # 9 fields tab separated. All fields must be filled out ('.' if nothing).
+        # (1) seq id: (mandatory) Name of reference sequence
+        # (2) source: (mandatory) Source of annotation
+        # (3) type  : (mandatory) Type of annotation
+        # (4) start : (mandatory) The 1-based begin position of the annotation
+        # (5) end   : (mandatory) The 1-based end position of the annotation
+        # (6) score : (optional ) Score of the annotation (floating point value)
+        # (7) strand: (mandatory) Strand of the annotation '+' and '-' for forward
+        #                         and reverse strand, '.' for features not stranded
+        # (8) phase : (optional ) Shift of feature regarding to the reading frame,
+        #                         one of "0","1","2" and "." for missing/don't care
+        # (9) attributes: (opt  ) A list of key/value attributes (key=value)
+        #                         separated by semicolons.
 
-    # Other columns
-    strand_dict = {1: "+", -1: "-"}
-    predefined_attributes = ["id", "name", "alias", "parent", "target", "gap",
-                             "derives_from", "note", "dbxref", "ontology_term",
-                             "is_circular"]
+        # Build all columns first
+        # 1. seqid
+        seqid = sanitize_seqid(myrecord.id)
 
-    for feat in myrecord.features:
-        feat_type = feat.type
-        start = feat.location.nofuzzy_start + 1
-        end = feat.location.nofuzzy_end
-        score = "."
-        strand = strand_dict[feat.location.strand]
+        # 2. source
+        source = "ICEscreen"
 
-        if feat.type == "CDS":
-            if "codon_start" in feat.qualifiers.keys():
-                phase = feat.qualifiers["codon_start"]
+        # Other columns
+        strand_dict = {1: "+", -1: "-"}
+        predefined_attributes = ["id", "name", "alias", "parent", "target", "gap",
+                                "derives_from", "note", "dbxref", "ontology_term",
+                                "is_circular"]
+
+        for feat in myrecord.features:
+            feat_type = feat.type
+            start = feat.location.nofuzzy_start + 1
+            end = feat.location.nofuzzy_end
+            score = "."
+            strand = strand_dict[feat.location.strand]
+
+            if feat.type == "CDS":
+                if "codon_start" in feat.qualifiers.keys():
+                    phase = feat.qualifiers["codon_start"]
+                else:
+                    phase = "."
             else:
                 phase = "."
-        else:
-            phase = "."
 
-        attribute_field = []
-        for key, value in feat.qualifiers.items():
-            # There is some predefined attributes in 9th column of GFF3 file
-            # these attributes names are capitalized
-            if key.lower() in predefined_attributes:
-                attribute_key = key.capitalize()
-            else:
-                attribute_key = key
-            attribute_value = []
-            # There are some qualifiers without values (i.e. "pseudo")
-            # if the qualifier exist -> True
-            if value == "":
-                attribute_value = "True"
-            else:
-                # Spaces can be in 9th column of GFF3 file
-                # So encode each chunk of string in %-encoding then concatenate
-                for val in str(value).split(" "):
-                    attribute_value_part = ""
-                    attribute_value_part = attribute_value_part + quote(val)
-                    attribute_value.append(attribute_value_part)
-                attribute_value = " ".join(attribute_value)
+            attribute_field = []
+            for key, value in feat.qualifiers.items():
+                # There is some predefined attributes in 9th column of GFF3 file
+                # these attributes names are capitalized
+                if key.lower() in predefined_attributes:
+                    attribute_key = key.capitalize()
+                else:
+                    attribute_key = key
+                attribute_value = []
+                # There are some qualifiers without values (i.e. "pseudo")
+                # if the qualifier exist -> True
+                if value == "":
+                    attribute_value = "True"
+                else:
+                    # Spaces can be in 9th column of GFF3 file
+                    # So encode each chunk of string in %-encoding then concatenate
+                    for val in str(value).split(" "):
+                        attribute_value_part = ""
+                        attribute_value_part = attribute_value_part + quote(val)
+                        attribute_value.append(attribute_value_part)
+                    attribute_value = " ".join(attribute_value)
 
-            attribute_field.append(attribute_key + "=" + attribute_value)
+                attribute_field.append(attribute_key + "=" + attribute_value)
 
-        attribute_field = ";".join(attribute_field)
+            attribute_field = ";".join(attribute_field)
 
-        filout.write(f'{seqid}\t{source}\t{feat_type}\t{start}\t{end}\t{score}'
-                     f'{strand}\t{phase}\t{attribute_field}')
+            filout.write(f'{seqid}\t{source}\t{feat_type}\t{start}\t{end}\t{score}'
+                        f'{strand}\t{phase}\t{attribute_field}\n')
 
     filout.close()
 
@@ -624,6 +701,7 @@ if __name__ == "__main__":
 
     # Get SeqFeature of all SPs detected
     spdata = pd.read_csv(spPath, sep="\t")
+    #print(str(spdata["CDS"])+"\t"+str(spdata["HMM_ali_E-value"])) # Name: HMM_ali_E-value, Length: 68, dtype: float64 => 4     1.700000e-13 for WP_158394679.1
 
     if len(spdata.index) == 0:
         open(outPath + ".embl", "a").close()
@@ -631,71 +709,89 @@ if __name__ == "__main__":
         open(outPath + ".gb", "a").close()
         sys.exit(0)
 
-    # Get SeqFeature of all CDS of the genbank
-    gbdata = SeqIO.read(gbPath, 'gb')
-    CDS_dict = get_CDS_dict(gbdata)
-    sp_feats = spdata.apply(lambda x: SP_to_SeqFeature(x, CDS_dict),
-                            axis=1).tolist()
+    hasMultipleGenomeAccesion = commonMethods.determineIfResultSPFileHasMultipleGenomeAccesion(spPath)
 
     # Get annotation of mobile elements that have all SPs as "assigned"
     data_tsv = pd.read_csv(mePath, sep="\t")
 
-    if len(data_tsv.index) > 0:
-        data_tsv["element_type"] = data_tsv.apply(get_element_type, axis=1)
-        data_tsv["element_structure"] = data_tsv.apply(get_element_structure,
-                                                       axis=1)
+    # Get SeqFeature of all CDS of the genbank
+    #gbdata = SeqIO.read(gbPath, 'gb')
+    record_iterator = SeqIO.parse(gbPath, "genbank")
+    listRecordsToWrite_embl_gff = []
+    listRecordsToWrite_gb = []
+    for gbdata in record_iterator:
 
-        # Get SeqFeature of detected mobile elements
-        me_feats = data_tsv.apply(lambda x: make_element_features(CDS_dict, x),
-                                  axis=1).to_list()
-        me_feats = [x for x in me_feats if x is not None]
+        genomeAccesionIT = gbdata.id
 
-        # Create SeqRecord with "light" annotation (without FASTA sequence)
-        myrecord = SeqRecord(seq=Seq.Seq(''),
-                             id=gbdata.id,
-                             name=gbdata.name,
-                             description=gbdata.description,
-                             dbxrefs=gbdata.dbxrefs,
-                             features=sp_feats + me_feats,
-                             annotations={"molecule_type": "DNA"})
-    else:
-        # Create SeqRecord with "light" annotation (without FASTA sequence)
-        myrecord = SeqRecord(seq=Seq.Seq(''),
-                             id=gbdata.id,
-                             name=gbdata.name,
-                             description=gbdata.description,
-                             dbxrefs=gbdata.dbxrefs,
-                             features=sp_feats,
-                             annotations={"molecule_type": "DNA"})
+        #https://pandas.pydata.org/docs/getting_started/intro_tutorials/03_subset_data.html
+        spdata_filter_genomeAccesionIT = spdata[spdata["Genome_accession"] == genomeAccesionIT].copy(deep=True) #copy else SettingWithCopyWarning
+        data_tsv_filter_genomeAccesionIT = data_tsv[data_tsv["Genome_accession"] == genomeAccesionIT].copy(deep=True) #copy else SettingWithCopyWarning
 
+        CDS_dict = get_CDS_dict(gbdata, hasMultipleGenomeAccesion)
+        sp_feats = spdata_filter_genomeAccesionIT.apply(lambda x: SP_to_SeqFeature(x, CDS_dict[genomeAccesionIT], hasMultipleGenomeAccesion), axis=1).tolist()
+
+        myrecord_embl_gff = None
+        if len(data_tsv_filter_genomeAccesionIT.index) > 0:
+            data_tsv_filter_genomeAccesionIT["element_type"] = data_tsv_filter_genomeAccesionIT.apply(get_element_type, axis=1)
+            data_tsv_filter_genomeAccesionIT["element_structure"] = data_tsv_filter_genomeAccesionIT.apply(get_element_structure, axis=1)
+
+            # Get SeqFeature of detected mobile elements
+            me_feats = data_tsv_filter_genomeAccesionIT.apply(lambda x: make_element_features(CDS_dict[genomeAccesionIT], x),
+                                    axis=1).to_list()
+            me_feats = [x for x in me_feats if x is not None]
+
+            # Create SeqRecord with "light" annotation (without FASTA sequence)
+            myrecord_embl_gff = SeqRecord(seq=Seq.Seq(''),
+                                id=gbdata.id,
+                                name=gbdata.name,
+                                description=gbdata.description,
+                                dbxrefs=gbdata.dbxrefs,
+                                features=sp_feats + me_feats,
+                                annotations={"molecule_type": "DNA"})
+        else:
+            # Create SeqRecord with "light" annotation (without FASTA sequence)
+            myrecord_embl_gff = SeqRecord(seq=Seq.Seq(''),
+                                id=gbdata.id,
+                                name=gbdata.name,
+                                description=gbdata.description,
+                                dbxrefs=gbdata.dbxrefs,
+                                features=sp_feats,
+                                annotations={"molecule_type": "DNA"})
+        listRecordsToWrite_embl_gff.append(myrecord_embl_gff)
+
+        myrecord_gb = None
+        if data_tsv_filter_genomeAccesionIT.empty is False:
+            # Create SeqRecord with "heavy" annotation (with FASTA sequence)
+            # Sequence of the SeqRecord is extracted from en genbank
+            myrecord_gb = SeqRecord(seq=gbdata.seq,
+                                id=gbdata.id,
+                                name=gbdata.name,
+                                description=gbdata.description,
+                                dbxrefs=gbdata.dbxrefs,
+                                features=gbdata.features + sp_feats + me_feats,
+                                annotations={"molecule_type": "DNA"})
+        else:
+            # Create SeqRecord with "heavy" annotation (with FASTA sequence)
+            # Sequence of the SeqRecord is extracted from en genbank
+            myrecord_gb = SeqRecord(seq=gbdata.seq,
+                                id=gbdata.id,
+                                name=gbdata.name,
+                                description=gbdata.description,
+                                dbxrefs=gbdata.dbxrefs,
+                                features=gbdata.features + sp_feats,
+                                annotations={"molecule_type": "DNA"})
+        listRecordsToWrite_gb.append(myrecord_gb)
+
+
+        
     # Save as EMBL
     with open(outPath + ".embl", "w") as output_handle:
-        SeqIO.write(myrecord, output_handle, "embl")
+        SeqIO.write(listRecordsToWrite_embl_gff, output_handle, "embl")
 
     # And save as GFF3
-    write_GFF3(myrecord, len(gbdata.seq), outPath + ".gff")
-
-    if data_tsv.empty is False:
-        # Create SeqRecord with "heavy" annotation (with FASTA sequence)
-        # Sequence of the SeqRecord is extracted from en genbank
-        myrecord = SeqRecord(seq=gbdata.seq,
-                             id=gbdata.id,
-                             name=gbdata.name,
-                             description=gbdata.description,
-                             dbxrefs=gbdata.dbxrefs,
-                             features=gbdata.features + sp_feats + me_feats,
-                             annotations={"molecule_type": "DNA"})
-    else:
-        # Create SeqRecord with "heavy" annotation (with FASTA sequence)
-        # Sequence of the SeqRecord is extracted from en genbank
-        myrecord = SeqRecord(seq=gbdata.seq,
-                             id=gbdata.id,
-                             name=gbdata.name,
-                             description=gbdata.description,
-                             dbxrefs=gbdata.dbxrefs,
-                             features=gbdata.features + sp_feats,
-                             annotations={"molecule_type": "DNA"})
-
+    #write_GFF3(listRecordsToWrite_embl_gff, len(gbdata.seq), outPath + ".gff")
+    write_GFF3(listRecordsToWrite_embl_gff, outPath + ".gff")
+    
     # Save as genbank
     with open(outPath + ".gb", "w") as output_handle:
-        SeqIO.write(myrecord, output_handle, "gb")
+        SeqIO.write(listRecordsToWrite_gb, output_handle, "gb")

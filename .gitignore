@@ -18,6 +18,10 @@ __pycache__/
 *pin
 *phr
 *psq
+*pdb
+*ptf
+*pto
+*pot
 *h3i
 *h3m
 *h3p
@@ -151,3 +155,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+# libreoffice cache
+*.~lock.*#
+

@@ -54,5 +54,11 @@ if __name__ == "__main__":
         GFF.write(filin, gff_out, include_fasta=False)
 
     with open(fasta_file, "w") as fasta_out:
-        filin = SeqIO.read(gb_file, "genbank")
-        SeqIO.write(filin, fasta_out, "fasta")
+        #filin = SeqIO.read(gb_file, "genbank")
+        #SeqIO.write(filin, fasta_out, "fasta")
+        record_iterator = SeqIO.parse(gb_file, "genbank")
+        listRecordsToWrite = []
+        for gbdata in record_iterator:
+            listRecordsToWrite.append(gbdata)
+        SeqIO.write(listRecordsToWrite, fasta_out, "fasta")
+

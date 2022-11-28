@@ -19,10 +19,22 @@ mode = config["mode"]
 
 # Get genbank names (Must be without spaces)
 gbnames = []
+""" multilines comment
 for gb in glob.glob(os.path.join(gbdir, "*")):
     gbname = os.path.basename(gb)
     gbname = os.path.splitext(gbname)[0]
     gbnames.append(gbname)
+
+"""
+for gb in glob.iglob(os.path.join(gbdir, "*"), recursive=False):
+	if os.path.isfile(gb):
+		gbname = os.path.basename(gb)
+		gbname = os.path.splitext(gbname)[0]
+		gbnames.append(gbname)
+#		print("The file "+ str(gb) +" is registred to be analysed.")
+#	else :
+#		print("Warning : Subdirectory "+ str(gb) +" is ignored, only genbank files at the root of the input genbank directory are analysed.")
+
 
 #--------------------------------- BLAST MODE ---------------------------------#
 

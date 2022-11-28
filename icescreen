@@ -7,11 +7,11 @@
 # Usage function (show help).
 
 function version(){
-    printf "1.0.4\n"
+    printf "1.1.0\n"
 }
 
 function usage(){
-    printf "\nICEscreen version 1.0.4\n\n"
+    printf "\nICEscreen version 1.1.0\n\n"
     printf "Usage for running an analysis with ICEscreen: icescreen [-o OUTDIR] [-n DATASET_NAME] [-j NB_JOBS] [-m MODE] -g GBDIR\n"
 
     printf "\nShow help:\n"
@@ -295,6 +295,9 @@ fi
 #modepath=$(dirname $(realpath -s $0))"/icescreen_pipelines/mode/"${mode}".yml"
 modepath="${Icescreen_root_dir}/icescreen_pipelines/mode/${mode}.yml"
 
+#trim trailing slashes
+gbdir=$(echo "${gbdir}" | sed 's/\/*$//g')
+outdir=$(echo "${outdir}" | sed 's/\/*$//g')
 
 if [ ! -f "${modepath}" ];
 then
@@ -307,14 +310,15 @@ then
     if [ -d "${outdir}" ]                               # If ${outdir} is valid, display all arguments that will be used by the program.
     then
         # Display input of user
-        printf "Input arguments:\n"
+        printf "\nInput arguments:\n"
         printf "\tSearch mode:                          "${mode}"\n"
         printf "\tGenbank folder:                       "${gbdir}"\n"
-
+	
         if [ -z "${name}" ]
         then
             # If there is no name for the set
-            outdir="${outdir}/ICEscreen_results/"
+            # outdir="${outdir}/ICEscreen_results/"
+            outdir="${outdir}/ICEscreen_results"
         else
             outdir="${outdir}/ICEscreen_results/${name}"
         fi
@@ -330,21 +334,29 @@ then
         mkdir -p "${outdir}/genbank"
         mkdir -p "${outdir}/faa"
         mkdir -p "${outdir}/results"
-        for x in ${gbdir%/}"/"*
+        #for x in ${gbdir%/}"/"*
+        printf "\nGenbank file(s) registred to be analysed:\n"
+        for x in ${gbdir}"/"*
         do
-            y=$(basename ${x})
-            sanitizedname=$(echo ${y%*.*}.gb | sed -e 's/[^A-Za-z0-9._-]/_/g')
-            if [ ! -f "${outdir}/genbank/${sanitizedname}" ]
-            then
-                gborig=$(realpath ${x})
-                ln -s "${gborig}" "${outdir}/genbank/${sanitizedname}"
-                mkdir -p "${outdir}/results/${sanitizedname%*.*}"
-                # Add the config file for each genbank
-                cat "${Icescreen_root_dir}/icescreen_pipelines/icescreen_config_template.yml" <( tail -n+2 ${modepath} | awk 'BEGIN{print "### PARAMETERS USED ###"}1' | awk 'BEGIN{print "---"}1' ) > "${outdir}/results/${sanitizedname%*.*}/icescreen.conf"
-                # Initialize config parameters
-                bash "${Icescreen_root_dir}/icescreen_pipelines/edit_configfile.sh" --conffile "${outdir}/results/${sanitizedname%*.*}/icescreen.conf" \
-                                                         --gbfile "${gborig}"
-            fi
+		# exclude subdirectories
+		if [ -f "${x}" ]; then
+			printf "\t- "${x}"\n"
+        
+			y=$(basename ${x})
+			sanitizedname=$(echo ${y%*.*}.gb | sed -e 's/[^A-Za-z0-9._-]/_/g')
+			if [ ! -f "${outdir}/genbank/${sanitizedname}" ]
+			then
+				gborig=$(realpath ${x})
+				ln -s "${gborig}" "${outdir}/genbank/${sanitizedname}"
+				mkdir -p "${outdir}/results/${sanitizedname%*.*}"
+				# Add the config file for each genbank
+				cat "${Icescreen_root_dir}/icescreen_pipelines/icescreen_config_template.yml" <( tail -n+2 ${modepath} | awk 'BEGIN{print "### PARAMETERS USED ###"}1' | awk 'BEGIN{print "---"}1' ) > "${outdir}/results/${sanitizedname%*.*}/icescreen.conf"
+				# Initialize config parameters
+				bash "${Icescreen_root_dir}/icescreen_pipelines/edit_configfile.sh" --conffile "${outdir}/results/${sanitizedname%*.*}/icescreen.conf" --gbfile "${gborig}"
+			fi
+		else
+			printf "\t- WARNING : "${x}" has been skipped\n"
+		fi
         done
 
         if [[ "${galaxy}" -eq 0 ]]

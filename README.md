@@ -22,3 +22,8 @@ The full documentation is available at https://icescreen.migale.inrae.fr.
 **Citation**
 
 ICEscreen is developed by J. Lao, T. Lacroix, C. Coluzzi, G. Guédon, N. Leblond-Bourget and H. Chiapello from the University of Lorraine DynAMic and the INRAE MaIAGE research teams. Thank you for citing our latest publication, see https://icescreen.migale.inrae.fr for details.
+
+**External links**
+
+- Software heritage hal INRAE: https://hal.archives-ouvertes.fr/hal-03610196
+	

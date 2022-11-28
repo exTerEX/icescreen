@@ -32,7 +32,7 @@ import EMStructure
 import rulesAddIntegrases
 from EMTypeStructure import printOverallStatsToSummaryFile
 import rulesMergeICEIMEStructures
-
+import commonMethods
 
 ########
 # GLOBAL VARS #
@@ -57,7 +57,6 @@ segmentIdx2stopGenomicRegion = {}
 
 # locusTag2Comment is a dictionary used to store the comments that will be visible in the output files for each SPs.
 def addCommentToLocusTag2Comment(locusTagSent, commentSent, locusTag2Comment):
-
     if locusTagSent in locusTag2Comment:  # key already there
         commentIT = locusTag2Comment[locusTagSent]
         if commentSent not in commentIT:
@@ -76,7 +75,7 @@ def removeCommentToLocusTag2Comment(locusTagSent, commentSent, locusTag2Comment)
         pass
 
 
-# This method generates the content of the output file (csv file) that is the input file with columns added that reflect the output file (i.e. \"ICE IME Number\" and \"ICE IME Number (To review)\").
+# This method generates the content of the output csv file: input cvs file + information on the ICE or IME structure.
 def printAllICEsIMEsStructureToInputFile(
         listOfListAllICEsIMEsStructure,
         listOfListSPsLonelyIntegrases,
@@ -84,22 +83,36 @@ def printAllICEsIMEsStructureToInputFile(
         modifiedInputFile,
         locusTagIntegrase2Comment,
         locusTagFinalize2Comment,
-        locusTagMerge2Comment):
+        locusTagMerge2Comment,
+        dictIMEICEID2humanReadableIMEICEIIdentifier,
+        hasMultipleGenomeAccesion
+        ):
 
     printSegmentNumber = True
 
-    totalNumberSP = 0
-    totalNumberIntegrase = 0
-    totalNumberUnaffectedIntegrase = 0
-    totalNumberRelaxase = 0
-    totalNumberUnaffectedRelaxase = 0
-    totalNumberCoupling = 0
-    totalNumberUnaffectedCoupling = 0
-    totalNumberVirb4 = 0
-    totalNumberUnaffectedVirb4 = 0
+    # totalNumberSP = 0
+    # totalNumberIntegrase = 0
+    # totalNumberUnaffectedIntegrase = 0
+    # totalNumberRelaxase = 0
+    # totalNumberUnaffectedRelaxase = 0
+    # totalNumberCoupling = 0
+    # totalNumberUnaffectedCoupling = 0
+    # totalNumberVirb4 = 0
+    # totalNumberUnaffectedVirb4 = 0
+    dictGenomeAccnum2totalNumberSP = {}
+    dictGenomeAccnum2totalNumberIntegrase = {}
+    dictGenomeAccnum2totalNumberUnaffectedIntegrase = {}
+    dictGenomeAccnum2totalNumberRelaxase = {}
+    dictGenomeAccnum2totalNumberUnaffectedRelaxase = {}
+    dictGenomeAccnum2totalNumberCoupling = {}
+    dictGenomeAccnum2totalNumberUnaffectedCoupling = {}
+    dictGenomeAccnum2totalNumberVirb4 = {}
+    dictGenomeAccnum2totalNumberUnaffectedVirb4 = {}
+
     dictLocusTagSure2ICEIMEInternalId = {}
     dictLocusTagNotSure2ICEIMEInternalId = {}
     dictLocusTag2segmentNumber = {}
+
 
     for idx, currListAllICEsIMEsStructure in enumerate(listOfListAllICEsIMEsStructure):
         for currICEIMEStructure in currListAllICEsIMEsStructure:
@@ -113,25 +126,44 @@ def printAllICEsIMEsStructureToInputFile(
                     setInternalId.add(currICEIMEStructure.internalIdentifier)
                     dictLocusTagSure2ICEIMEInternalId[currSP.locusTag] = setInternalId
 
-            for currSPLocusTags in currICEIMEStructure.setSPConjModuleLocusTagsToManuallyCheck:
-                dictLocusTag2segmentNumber[currSPLocusTags] = idx + 1
-                if currSPLocusTags in dictLocusTagNotSure2ICEIMEInternalId:
-                    setInternalId = dictLocusTagNotSure2ICEIMEInternalId[currSPLocusTags]
+            # for currSPLocusTags in currICEIMEStructure.setSPConjModuleToManuallyCheck:
+            #     dictLocusTag2segmentNumber[currSPLocusTags] = idx + 1
+            #     if currSPLocusTags in dictLocusTagNotSure2ICEIMEInternalId:
+            #         setInternalId = dictLocusTagNotSure2ICEIMEInternalId[currSPLocusTags]
+            #         setInternalId.add(currICEIMEStructure.internalIdentifier)
+            #     else:
+            #         setInternalId = set()
+            #         setInternalId.add(currICEIMEStructure.internalIdentifier)
+            #         dictLocusTagNotSure2ICEIMEInternalId[currSPLocusTags] = setInternalId
+            for currSPConjModuleToManuallyCheckIT in currICEIMEStructure.setSPConjModuleToManuallyCheck:
+                dictLocusTag2segmentNumber[currSPConjModuleToManuallyCheckIT.locusTag] = idx + 1
+                if currSPConjModuleToManuallyCheckIT.locusTag in dictLocusTagNotSure2ICEIMEInternalId:
+                    setInternalId = dictLocusTagNotSure2ICEIMEInternalId[currSPConjModuleToManuallyCheckIT.locusTag]
                     setInternalId.add(currICEIMEStructure.internalIdentifier)
                 else:
                     setInternalId = set()
                     setInternalId.add(currICEIMEStructure.internalIdentifier)
-                    dictLocusTagNotSure2ICEIMEInternalId[currSPLocusTags] = setInternalId
+                    dictLocusTagNotSure2ICEIMEInternalId[currSPConjModuleToManuallyCheckIT.locusTag] = setInternalId
+            # for currSPLocusTags in currICEIMEStructure.setIntegraseToManuallyCheck:
+            #     dictLocusTag2segmentNumber[currSPLocusTags] = idx + 1
+            #     if currSPLocusTags in dictLocusTagNotSure2ICEIMEInternalId:
+            #         setInternalId = dictLocusTagNotSure2ICEIMEInternalId[currSPLocusTags]
+            #         setInternalId.add(currICEIMEStructure.internalIdentifier)
+            #     else:
+            #         setInternalId = set()
+            #         setInternalId.add(currICEIMEStructure.internalIdentifier)
+            #         dictLocusTagNotSure2ICEIMEInternalId[currSPLocusTags] = setInternalId
+            for currSPIntegraseToManuallyCheckIT in currICEIMEStructure.setIntegraseToManuallyCheck:
+                dictLocusTag2segmentNumber[currSPIntegraseToManuallyCheckIT.locusTag] = idx + 1
+                if currSPIntegraseToManuallyCheckIT.locusTag in dictLocusTagNotSure2ICEIMEInternalId:
+                    setInternalId = dictLocusTagNotSure2ICEIMEInternalId[currSPIntegraseToManuallyCheckIT.locusTag]
+                    setInternalId.add(currICEIMEStructure.internalIdentifier)
+                else:
+                    setInternalId = set()
+                    setInternalId.add(currICEIMEStructure.internalIdentifier)
+                    dictLocusTagNotSure2ICEIMEInternalId[currSPIntegraseToManuallyCheckIT.locusTag] = setInternalId
 
-            for currSPLocusTags in currICEIMEStructure.setIntegraseLocusTagsToManuallyCheck:
-                dictLocusTag2segmentNumber[currSPLocusTags] = idx + 1
-                if currSPLocusTags in dictLocusTagNotSure2ICEIMEInternalId:
-                    setInternalId = dictLocusTagNotSure2ICEIMEInternalId[currSPLocusTags]
-                    setInternalId.add(currICEIMEStructure.internalIdentifier)
-                else:
-                    setInternalId = set()
-                    setInternalId.add(currICEIMEStructure.internalIdentifier)
-                    dictLocusTagNotSure2ICEIMEInternalId[currSPLocusTags] = setInternalId
+
 
     for idx, currListSPsLonelyIntegrases in enumerate(listOfListSPsLonelyIntegrases):
         for currSPLonelyIntegrases in currListSPsLonelyIntegrases:
@@ -140,7 +172,10 @@ def printAllICEsIMEsStructureToInputFile(
     with open(pathInputFile, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter="\t")
         countIterRow = 0
-        idxColCDS = -1
+        #idxColCDS = -1
+        idxColCDS_locus_tag = -1
+        idxColCDS_protein_id = -1
+        idxColGenome_accession = -1
         idxColCDS_start = -1
         idxColCDS_Protein_Type = -1
         for row in reader:
@@ -148,35 +183,70 @@ def printAllICEsIMEsStructureToInputFile(
                 # check header
                 countIterCol = 0
                 for column in row:
-                    if column == "CDS":
-                        idxColCDS = countIterCol
+                    # if column == "CDS":
+                    #     idxColCDS = countIterCol
+                    if column == "CDS_locus_tag":
+                        idxColCDS_locus_tag = countIterCol
+                    elif column == "CDS_protein_id":
+                        idxColCDS_protein_id = countIterCol
+                    elif column == "Genome_accession":
+                        idxColGenome_accession = countIterCol
                     elif column == "CDS_start":
                         idxColCDS_start = countIterCol
                     elif column == "CDS_Protein_type":
                         idxColCDS_Protein_Type = countIterCol
                     countIterCol += 1
                 if printSegmentNumber:
-                    print("ICE IME Number\tICE IME Number (To review)\tSegment Number\tComment regarding ICE IME structure\t" + "\t".join(str(i) for i in row), file=modifiedInputFile)
+                    print("ICE_IME_id\tICE_IME_id_need_manual_curation\tSegment_number\tComments_ICE_IME_structure\t" + "\t".join(str(i) for i in row), file=modifiedInputFile)
                 else:
-                    print("ICE IME Number\tICE IME Number (To review)\tComment regarding ICE IME structure\t" + "\t".join(str(i) for i in row), file=modifiedInputFile)
+                    print("ICE_IME_id\tICE_IME_id_need_manual_curation\tComments_ICE_IME_structure\t" + "\t".join(str(i) for i in row), file=modifiedInputFile)
 
             else:
+                currSPLocusTag = ""
                 currSPProteinId = ""
+                currSPGenomeAccession = ""
                 currSPstart = ""
                 currSPType = ""  # Coupling, Relaxase, Virb4, or integrase
-
-                if idxColCDS >= 0:
-                    parsedCell = row[idxColCDS]
-                    currSPProteinId = parsedCell
+                #geneHasRealLocusTag = False
+                # if idxColCDS >= 0:
+                #     parsedCell = row[idxColCDS]
+                #     currSPProteinId = parsedCell
+                # else:
+                #     raise RuntimeError('printAllICEsIMEsStructureToInputFile error: missing mandatory column \"CDS\"')
+                if idxColCDS_locus_tag >= 0:
+                    parsedCell = row[idxColCDS_locus_tag]
+                    if len(parsedCell) > 0:
+                        currSPLocusTag = parsedCell
+                        #geneHasRealLocusTag = True
                 else:
-                    raise RuntimeError('printAllICEsIMEsStructureToInputFile error: missing mandatory column \"CDS\"')
+                    raise RuntimeError('printAllICEsIMEsStructureToInputFile error: missing mandatory column \"CDS_locus_tag\" in file {}'.format(str(pathInputFile)))
+                if idxColCDS_protein_id >= 0:
+                    parsedCell = row[idxColCDS_protein_id]
+                    if len(parsedCell) > 0:
+                        currSPProteinId = parsedCell
+                else:
+                    raise RuntimeError('printAllICEsIMEsStructureToInputFile error: missing mandatory column \"CDS_protein_id\" in file {}'.format(str(pathInputFile)))
+                if idxColGenome_accession >= 0:
+                    parsedCell = row[idxColGenome_accession]
+                    if len(parsedCell) > 0:
+                        currSPGenomeAccession = parsedCell
+                    else:
+                        raise RuntimeError('printAllICEsIMEsStructureToInputFile error: missing mandatory information on Genome_accession for row {} in file {}'.format(str(row), str(pathInputFile)))
+                else:
+                    raise RuntimeError('printAllICEsIMEsStructureToInputFile error: missing mandatory column \"Genome_accession\" in file {}'.format(str(pathInputFile)))
+
                 if idxColCDS_start >= 0:
                     parsedCell = row[idxColCDS_start]
-                    parsedCell = int(parsedCell)
-                    currSPstart = parsedCell
+                    if len(parsedCell) > 0:
+                        parsedCell = int(parsedCell)
+                        currSPstart = parsedCell
                 else:
                     raise RuntimeError('printAllICEsIMEsStructureToInputFile error: missing mandatory column \"CDS_start\"')
-                currSPLocusTag = currSPProteinId + "-" + str(currSPstart)
+                
+                #currSPLocusTag = currSPProteinId + "-" + str(currSPstart)
+                #if not geneHasRealLocusTag:
+                currSPLocusTag = commonMethods.makeCompositeUniqLocusTag(hasMultipleGenomeAccesion, currSPLocusTag, currSPProteinId, currSPGenomeAccession, currSPstart)
+
                 if idxColCDS_Protein_Type >= 0:
                     parsedCell = row[idxColCDS_Protein_Type]
                     if (parsedCell == "Coupling protein" or parsedCell == "Relaxase" or parsedCell == "VirB4" or parsedCell in setIntegraseNames):  # parsedCell == "IntTyr" or parsedCell == "IntSer" or parsedCell == "DDE"
@@ -192,11 +262,16 @@ def printAllICEsIMEsStructureToInputFile(
                 if currSPLocusTag in dictLocusTagSure2ICEIMEInternalId:
                     currSetInternalId = dictLocusTagSure2ICEIMEInternalId[currSPLocusTag]
                     strSure = " ".join(str(i) for i in sorted(currSetInternalId))
+                for IMEICEIDIT, humanReadableIMEICEIIdentifierIT in dictIMEICEID2humanReadableIMEICEIIdentifier.items():
+                    strSure = strSure.replace(IMEICEIDIT, humanReadableIMEICEIIdentifierIT)
+
 
                 strNotSure = ""
                 if currSPLocusTag in dictLocusTagNotSure2ICEIMEInternalId:
                     currSetInternalId = dictLocusTagNotSure2ICEIMEInternalId[currSPLocusTag]
                     strNotSure = " ".join(str(i) for i in sorted(currSetInternalId))
+                for IMEICEIDIT, humanReadableIMEICEIIdentifierIT in dictIMEICEID2humanReadableIMEICEIIdentifier.items():
+                    strNotSure = strNotSure.replace(IMEICEIDIT, humanReadableIMEICEIIdentifierIT)
 
                 strLocusTag2CommentIT = ""
                 if currSPLocusTag in locusTagMerge2Comment:
@@ -208,6 +283,8 @@ def printAllICEsIMEsStructureToInputFile(
                 if currSPLocusTag in locusTagFinalize2Comment:
                     if locusTagFinalize2Comment[currSPLocusTag] not in strLocusTag2CommentIT:
                         strLocusTag2CommentIT += locusTagFinalize2Comment[currSPLocusTag]
+                for IMEICEIDIT, humanReadableIMEICEIIdentifierIT in dictIMEICEID2humanReadableIMEICEIIdentifier.items():
+                    strLocusTag2CommentIT = strLocusTag2CommentIT.replace(IMEICEIDIT, humanReadableIMEICEIIdentifierIT)
 
                 if printSegmentNumber:
                     strSegmentNumber = ""
@@ -217,23 +294,60 @@ def printAllICEsIMEsStructureToInputFile(
                 else:
                     print(strSure + "\t" + strNotSure + "\t" + strLocusTag2CommentIT + "\t" + "\t".join(str(i) for i in row), file=modifiedInputFile)
 
-                totalNumberSP += 1
+
+                #totalNumberSP += 1
+                if currSPGenomeAccession in dictGenomeAccnum2totalNumberSP:
+                    dictGenomeAccnum2totalNumberSP[currSPGenomeAccession] += 1
+                else :
+                    dictGenomeAccnum2totalNumberSP[currSPGenomeAccession] = 1
                 if currSPType == "Coupling protein":
-                    totalNumberCoupling += 1
+                    #totalNumberCoupling += 1
+                    if currSPGenomeAccession in dictGenomeAccnum2totalNumberCoupling:
+                        dictGenomeAccnum2totalNumberCoupling[currSPGenomeAccession] += 1
+                    else :
+                        dictGenomeAccnum2totalNumberCoupling[currSPGenomeAccession] = 1
                     if not strSure:
-                        totalNumberUnaffectedCoupling += 1
+                        #totalNumberUnaffectedCoupling += 1
+                        if currSPGenomeAccession in dictGenomeAccnum2totalNumberUnaffectedCoupling:
+                            dictGenomeAccnum2totalNumberUnaffectedCoupling[currSPGenomeAccession] += 1
+                        else :
+                            dictGenomeAccnum2totalNumberUnaffectedCoupling[currSPGenomeAccession] = 1
                 elif currSPType == "Relaxase":
-                    totalNumberRelaxase += 1
+                    #totalNumberRelaxase += 1
+                    if currSPGenomeAccession in dictGenomeAccnum2totalNumberRelaxase:
+                        dictGenomeAccnum2totalNumberRelaxase[currSPGenomeAccession] += 1
+                    else:
+                        dictGenomeAccnum2totalNumberRelaxase[currSPGenomeAccession] = 1
                     if not strSure:
-                        totalNumberUnaffectedRelaxase += 1
+                        #totalNumberUnaffectedRelaxase += 1
+                        if currSPGenomeAccession in dictGenomeAccnum2totalNumberUnaffectedRelaxase:
+                            dictGenomeAccnum2totalNumberUnaffectedRelaxase[currSPGenomeAccession] += 1
+                        else:
+                            dictGenomeAccnum2totalNumberUnaffectedRelaxase[currSPGenomeAccession] = 1
                 elif currSPType == "VirB4":
-                    totalNumberVirb4 += 1
+                    #totalNumberVirb4 += 1
+                    if currSPGenomeAccession in dictGenomeAccnum2totalNumberVirb4:
+                        dictGenomeAccnum2totalNumberVirb4[currSPGenomeAccession] += 1
+                    else:
+                        dictGenomeAccnum2totalNumberVirb4[currSPGenomeAccession] = 1
                     if not strSure:
-                        totalNumberUnaffectedVirb4 += 1
+                        #totalNumberUnaffectedVirb4 += 1
+                        if currSPGenomeAccession in dictGenomeAccnum2totalNumberUnaffectedVirb4:
+                            dictGenomeAccnum2totalNumberUnaffectedVirb4[currSPGenomeAccession] += 1
+                        else:
+                            dictGenomeAccnum2totalNumberUnaffectedVirb4[currSPGenomeAccession] = 1
                 elif currSPType in setIntegraseNames:
-                    totalNumberIntegrase += 1
+                    #totalNumberIntegrase += 1
+                    if currSPGenomeAccession in dictGenomeAccnum2totalNumberIntegrase:
+                        dictGenomeAccnum2totalNumberIntegrase[currSPGenomeAccession] += 1
+                    else:
+                        dictGenomeAccnum2totalNumberIntegrase[currSPGenomeAccession] = 1
                     if not strSure:
-                        totalNumberUnaffectedIntegrase += 1
+                        #totalNumberUnaffectedIntegrase += 1
+                        if currSPGenomeAccession in dictGenomeAccnum2totalNumberUnaffectedIntegrase:
+                            dictGenomeAccnum2totalNumberUnaffectedIntegrase[currSPGenomeAccession] += 1
+                        else:
+                            dictGenomeAccnum2totalNumberUnaffectedIntegrase[currSPGenomeAccession] = 1
                 else:
                     raise RuntimeError(
                             'printAllICEsIMEsStructureToInputFile error: unrecognized SPType {} for LocusTag {}'.format(
@@ -243,46 +357,88 @@ def printAllICEsIMEsStructureToInputFile(
 
     csvfile.close()
 
-    return (totalNumberSP,
-            totalNumberIntegrase,
-            totalNumberUnaffectedIntegrase,
-            totalNumberRelaxase,
-            totalNumberUnaffectedRelaxase,
-            totalNumberCoupling,
-            totalNumberUnaffectedCoupling,
-            totalNumberVirb4,
-            totalNumberUnaffectedVirb4)
+    # return (totalNumberSP,
+    #         totalNumberIntegrase,
+    #         totalNumberUnaffectedIntegrase,
+    #         totalNumberRelaxase,
+    #         totalNumberUnaffectedRelaxase,
+    #         totalNumberCoupling,
+    #         totalNumberUnaffectedCoupling,
+    #         totalNumberVirb4,
+    #         totalNumberUnaffectedVirb4)
+    return (dictGenomeAccnum2totalNumberSP,
+        dictGenomeAccnum2totalNumberIntegrase,
+        dictGenomeAccnum2totalNumberUnaffectedIntegrase,
+        dictGenomeAccnum2totalNumberRelaxase,
+        dictGenomeAccnum2totalNumberUnaffectedRelaxase,
+        dictGenomeAccnum2totalNumberCoupling,
+        dictGenomeAccnum2totalNumberUnaffectedCoupling,
+        dictGenomeAccnum2totalNumberVirb4,
+        dictGenomeAccnum2totalNumberUnaffectedVirb4)
+
+
 
 
 # This method parse the input file into objects used internally in the program.
-def parse_csv(outputPrintCDSNumberInsteadOfProteinIdAndStart, pathInputFile):
+#def parse_csv(outputPrintCDSNumberInsteadOfProteinIdAndStart, pathInputFile):
+def parse_csv(pathInputFile, hasMultipleGenomeAccesion):
     listSPsParsed = hit.ListSPs()
     with open(pathInputFile, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter="\t")
         countIterRow = 0
-        idxColCDS = -1
+        #idxColCDS = -1
+        idxColCDS_locus_tag = -1
+        idxColCDS_protein_id = -1
+        idxColGenome_accession = -1
+        idxColGenome_accession_rank = -1
         idxColCDS_start = -1
         idxColCDS_end = -1
         idxColCDS_strand = -1
         idxColCDS_num = -1
         idxColCDS_Protein_Type = -1
-        idxColhit_blast = -1
-        idxColhit_HMM = -1
-        # idxColhit_HMM_CC = -1
+        idxColIs_hit_blast = -1
+        idxColIs_hit_HMM = -1
+        idxColIs_pseudo = -1
+        idxColLength_of_blast_most_similar_ref_SP = -1
+        idxColBlast_ali_length = -1
+        idxColBlast_ali_start_CDS = -1
+        idxColBlast_ali_end_CDS = -1
+        idxColBlast_ali_start_Query_blast = -1
+        idxColBlast_ali_end_Query_blast = -1
+        idxColBlast_ali_identity_perc = -1
+        idxColE_value_blast = -1
+        idxColBlast_ali_bitscore = -1
+        idxColCDS_coverage_blast = -1
+        idxColBlast_ali_coverage_most_similar_ref_SP = -1
+        # idxColIs_hit_HMM_CC = -1
         # idxColElement_family = -1
-        idxColICE_superfamily = -1
-        idxColICE_family = -1
-        idxColIME_family = -1
-
+        idxColICE_superfamily_of_most_similar_ref_SP = -1
+        idxColICE_family_of_most_similar_ref_SP = -1
+        idxColIME_superfamily_of_most_similar_ref_SP = -1
+        idxColRelaxase_family_domain_of_most_similar_ref_SP = -1
+        idxColRelaxase_family_MOB_of_most_similar_ref_SP = -1
+        idxColCoupling_type_of_most_similar_ref_SP = -1
+        idxColFalse_positives = -1
+        idxColSP_blast_validation = -1
+        idxColUse_annotation = -1
         idxColBest_hmmprofile = -1
         # idxColBest_hmmprofile_CC = -1
+        dictCheckUniquLocusTag = {}
         for row in reader:
             if countIterRow == 0:
                 # check header
                 countIterCol = 0
                 for column in row:
-                    if column == "CDS":
-                        idxColCDS = countIterCol
+                    # if column == "CDS":
+                    #     idxColCDS = countIterCol
+                    if column == "CDS_locus_tag":
+                        idxColCDS_locus_tag = countIterCol
+                    elif column == "CDS_protein_id":
+                        idxColCDS_protein_id = countIterCol
+                    elif column == "Genome_accession":
+                        idxColGenome_accession = countIterCol
+                    elif column == "Genome_accession_rank":
+                        idxColGenome_accession_rank = countIterCol
                     elif column == "CDS_start":
                         idxColCDS_start = countIterCol
                     elif column == "CDS_end":
@@ -293,63 +449,144 @@ def parse_csv(outputPrintCDSNumberInsteadOfProteinIdAndStart, pathInputFile):
                         idxColCDS_num = countIterCol
                     elif column == "CDS_Protein_type":
                         idxColCDS_Protein_Type = countIterCol
-                    elif column == "hit_blast":
-                        idxColhit_blast = countIterCol
-                    elif column == "hit_HMM":
-                        idxColhit_HMM = countIterCol
-                    # elif column=="hit_HMM_CC":
-                    #    idxColhit_HMM_CC = countIterCol
+                    elif column == "Is_hit_blast":
+                        idxColIs_hit_blast = countIterCol
+                    elif column == "Is_hit_HMM":
+                        idxColIs_hit_HMM = countIterCol
+                    elif column == "Is_pseudo":
+                        idxColIs_pseudo = countIterCol
+                    elif column == "Length_of_blast_most_similar_ref_SP":
+                        idxColLength_of_blast_most_similar_ref_SP = countIterCol
+                    elif column == "Blast_ali_length":
+                        idxColBlast_ali_length = countIterCol
+                    elif column == "Blast_ali_start_CDS":
+                        idxColBlast_ali_start_CDS = countIterCol
+                    elif column == "Blast_ali_end_CDS":
+                        idxColBlast_ali_end_CDS = countIterCol
+                    elif column == "Blast_ali_start_Query_blast":
+                        idxColBlast_ali_start_Query_blast = countIterCol
+                    elif column == "Blast_ali_end_Query_blast":
+                        idxColBlast_ali_end_Query_blast = countIterCol
+                    elif column == "Blast_ali_identity_perc":
+                        idxColBlast_ali_identity_perc = countIterCol
+                    elif column == "Blast_ali_E-value":
+                        idxColE_value_blast = countIterCol
+                    elif column == "Blast_ali_bitscore":
+                        idxColBlast_ali_bitscore = countIterCol
+                    elif column == "CDS_coverage_blast":
+                        idxColCDS_coverage_blast = countIterCol
+                    elif column == "Blast_ali_coverage_most_similar_ref_SP":
+                        idxColBlast_ali_coverage_most_similar_ref_SP = countIterCol
+                    # elif column=="Is_hit_HMM_CC":
+                    #    idxColIs_hit_HMM_CC = countIterCol
                     # elif column=="Element_family":
                     #    idxColElement_family = countIterCol
-                    elif column == "ICE_superfamily":
-                        idxColICE_superfamily = countIterCol
-                    elif column == "ICE_family":
-                        idxColICE_family = countIterCol
-                    elif column == "IME_family":
-                        idxColIME_family = countIterCol
-                    elif column == "Profile_description":
+                    elif column == "ICE_superfamily_of_most_similar_ref_SP":
+                        idxColICE_superfamily_of_most_similar_ref_SP = countIterCol
+                    elif column == "ICE_family_of_most_similar_ref_SP":
+                        idxColICE_family_of_most_similar_ref_SP = countIterCol
+                    elif column == "IME_superfamily_of_most_similar_ref_SP":
+                        idxColIME_superfamily_of_most_similar_ref_SP = countIterCol
+                    elif column == "Relaxase_family_domain_of_most_similar_ref_SP":
+                        idxColRelaxase_family_domain_of_most_similar_ref_SP = countIterCol
+                    elif column == "Relaxase_family_MOB_of_most_similar_ref_SP":
+                        idxColRelaxase_family_MOB_of_most_similar_ref_SP = countIterCol
+                    elif column == "Coupling_type_of_most_similar_ref_SP":
+                        idxColCoupling_type_of_most_similar_ref_SP = countIterCol
+                    elif column == "False_positives":
+                        idxColFalse_positives = countIterCol
+                    elif column == "SP_blast_validation":
+                        idxColSP_blast_validation = countIterCol
+                    elif column == "Use_annotation":
+                        idxColUse_annotation = countIterCol
+                    elif column == "Description_of_matching_HMM_profile":
                         # was elif column=="Best_hmmprofile":
                         idxColBest_hmmprofile = countIterCol
                     # elif column=="Best_hmmprofile_CC":
                     #    idxColBest_hmmprofile_CC = countIterCol
                     countIterCol += 1
-                if ((idxColhit_blast + idxColhit_HMM) == -2):  # + idxColhit_HMM_CC
-                    raise RuntimeError('Input file error: absence of at least one of the mandatory columns \"hit_blast\" or \"hit_HMM\"')
+                if ((idxColIs_hit_blast + idxColIs_hit_HMM) == -2):  # + idxColIs_hit_HMM_CC
+                    raise RuntimeError('Input file error: absence of at least one of the mandatory columns \"Is_hit_blast\" or \"Is_hit_HMM\"')
             else:
                 currSP = hit.SP()
-                if idxColCDS >= 0:
-                    parsedCell = row[idxColCDS]
-                    currSP.proteinId = parsedCell
-                    if outputPrintCDSNumberInsteadOfProteinIdAndStart == "NO":
-                        currSP.locusTag = currSP.proteinId + "-" + str(currSP.start)
-                    elif outputPrintCDSNumberInsteadOfProteinIdAndStart == "YES":
-                        pass
-                    else:
-                        raise RuntimeError(
-                                "Error in parse_csv: unrecognized outputPrintCDSNumberInsteadOfProteinIdAndStart = {}".format(
-                                        outputPrintCDSNumberInsteadOfProteinIdAndStart))
+                #geneHasRealLocusTag = False
+                # if idxColCDS >= 0:
+                #     parsedCell = row[idxColCDS]
+                #     currSP.proteinId = parsedCell
+                #     if outputPrintCDSNumberInsteadOfProteinIdAndStart == "NO":
+                #         currSP.locusTag = currSP.proteinId + "-" + str(currSP.start)
+                #     elif outputPrintCDSNumberInsteadOfProteinIdAndStart == "YES":
+                #         pass
+                #     else:
+                #         raise RuntimeError(
+                #                 "Error in parse_csv: unrecognized outputPrintCDSNumberInsteadOfProteinIdAndStart = {}".format(
+                #                         outputPrintCDSNumberInsteadOfProteinIdAndStart))
+                # else:
+                #     raise RuntimeError('Input file error: missing mandatory column \"CDS\"')
+                locusTagParsed = ""
+                if idxColCDS_locus_tag >= 0:
+                    parsedCell = row[idxColCDS_locus_tag]
+                    if len(parsedCell) > 0:
+                        locusTagParsed = parsedCell
+                        #geneHasRealLocusTag = True
                 else:
-                    raise RuntimeError('Input file error: missing mandatory column \"CDS\"')
+                    raise RuntimeError('Input file error: missing mandatory column \"CDS_locus_tag\" in file {}'.format(str(pathInputFile)))
+                if idxColCDS_protein_id >= 0:
+                    parsedCell = row[idxColCDS_protein_id]
+                    if len(parsedCell) > 0:
+                        currSP.proteinId = parsedCell
+                else:
+                    raise RuntimeError('Input file error: missing mandatory column \"CDS_protein_id\" in file {}'.format(str(pathInputFile)))
+                if idxColGenome_accession >= 0:
+                    parsedCell = row[idxColGenome_accession]
+                    if len(parsedCell) > 0:
+                        currSP.genomeAccession = parsedCell
+                    else:
+                        raise RuntimeError('Input file error: missing mandatory information on Genome_accession for row {} in file {}'.format(str(row), str(pathInputFile)))
+                else:
+                    raise RuntimeError('Input file error: missing mandatory column \"Genome_accession\" in file {}'.format(str(pathInputFile)))
+
+                if idxColGenome_accession_rank >= 0:
+                    parsedCell = row[idxColGenome_accession_rank]
+                    if len(parsedCell) > 0:
+                        parsedCell = int(parsedCell)
+                        currSP.genomeAccessionRank = parsedCell
+                    else:
+                        raise RuntimeError('Input file error: missing mandatory information on Genome_accession_rank for row {} in file {}'.format(str(row), str(pathInputFile)))
+                else:
+                    raise RuntimeError('Input file error: missing mandatory column \"Genome_accession_rank\" in file {}'.format(str(pathInputFile)))
+
                 if idxColCDS_start >= 0:
                     parsedCell = row[idxColCDS_start]
-                    parsedCell = int(parsedCell)
-                    currSP.start = parsedCell
-                    if outputPrintCDSNumberInsteadOfProteinIdAndStart == "NO":
-                        currSP.locusTag = currSP.proteinId + "-" + str(currSP.start)
-                    elif outputPrintCDSNumberInsteadOfProteinIdAndStart == "YES":
-                        pass
-                    else:
-                        raise RuntimeError(
-                                "Error in parse_csv: unrecognized outputPrintCDSNumberInsteadOfProteinIdAndStart = {}".format(
-                                        outputPrintCDSNumberInsteadOfProteinIdAndStart))
+                    if len(parsedCell) > 0:
+                        parsedCell = int(parsedCell)
+                        currSP.start = parsedCell
+                    # if outputPrintCDSNumberInsteadOfProteinIdAndStart == "NO":
+                    #     currSP.locusTag = currSP.proteinId + "-" + str(currSP.start)
+                    # elif outputPrintCDSNumberInsteadOfProteinIdAndStart == "YES":
+                    #     pass
+                    # else:
+                    #     raise RuntimeError(
+                    #             "Error in parse_csv: unrecognized outputPrintCDSNumberInsteadOfProteinIdAndStart = {}".format(
+                    #                     outputPrintCDSNumberInsteadOfProteinIdAndStart))
                 else:
-                    raise RuntimeError('Input file error: missing mandatory column \"CDS_start\"')
+                    raise RuntimeError('Input file error: missing mandatory column \"CDS_start\" in file {}'.format(str(pathInputFile)))
+                
+                #if not geneHasRealLocusTag:
+                currSP.locusTag = commonMethods.makeCompositeUniqLocusTag(hasMultipleGenomeAccesion, locusTagParsed, currSP.proteinId, currSP.genomeAccession, currSP.start)
+                if len(currSP.locusTag) == 0:
+                    raise RuntimeError('Input file error: could not determine locusTag for row\n{}\n in file {}'.format(str(row), str(pathInputFile)))
+                if currSP.locusTag in dictCheckUniquLocusTag:
+                    raise RuntimeError('Input file error: duplicate locusTag {}'.format(currSP.locusTag))
+                else:
+                    dictCheckUniquLocusTag[currSP.locusTag] = 1
+
                 if idxColCDS_end >= 0:
                     parsedCell = row[idxColCDS_end]
                     parsedCell = int(parsedCell)
                     currSP.stop = parsedCell
                 else:
-                    raise RuntimeError('Input file error: missing mandatory column \"CDS_end\"')
+                    raise RuntimeError('Input file error: missing mandatory column \"CDS_end\" in file {}'.format(str(pathInputFile)))
                 if idxColCDS_strand >= 0:
                     parsedCell = row[idxColCDS_strand]
                     if (parsedCell == "+" or parsedCell == "-"):
@@ -359,21 +596,21 @@ def parse_csv(outputPrintCDSNumberInsteadOfProteinIdAndStart, pathInputFile):
                                 'Input file error: could not parse value \"{}\" of column \"CDS_strand\" in row number {}'.format(
                                         parsedCell, countIterRow + 1))
                 else:
-                    raise RuntimeError('Input file error: missing mandatory column \"CDS_strand\"')
+                    raise RuntimeError('Input file error: missing mandatory column \"CDS_strand\" in file {}'.format(str(pathInputFile)))
                 if idxColCDS_num >= 0:
                     parsedCell = row[idxColCDS_num]
                     parsedCell = int(parsedCell)
                     currSP.CDSPositionInGenome = parsedCell
-                    if outputPrintCDSNumberInsteadOfProteinIdAndStart == "NO":
-                        pass
-                    elif outputPrintCDSNumberInsteadOfProteinIdAndStart == "YES":
-                        currSP.locusTag = str(currSP.CDSPositionInGenome)
-                    else:
-                        raise RuntimeError(
-                                "Error in parse_csv: unrecognized outputPrintCDSNumberInsteadOfProteinIdAndStart = {}".format(
-                                        outputPrintCDSNumberInsteadOfProteinIdAndStart))
+                    # if outputPrintCDSNumberInsteadOfProteinIdAndStart == "NO":
+                    #     pass
+                    # elif outputPrintCDSNumberInsteadOfProteinIdAndStart == "YES":
+                    #     currSP.locusTag = str(currSP.CDSPositionInGenome)
+                    # else:
+                    #     raise RuntimeError(
+                    #             "Error in parse_csv: unrecognized outputPrintCDSNumberInsteadOfProteinIdAndStart = {}".format(
+                    #                     outputPrintCDSNumberInsteadOfProteinIdAndStart))
                 else:
-                    raise RuntimeError('Input file error: missing mandatory column \"CDS_num\"')
+                    raise RuntimeError('Input file error: missing mandatory column \"CDS_num\" in file {}'.format(str(pathInputFile)))
                 if idxColCDS_Protein_Type >= 0:
                     parsedCell = row[idxColCDS_Protein_Type]
                     if (parsedCell == "Coupling protein" or parsedCell == "Relaxase" or parsedCell == "VirB4" or parsedCell in setIntegraseNames):  # parsedCell == "IntTyr" or parsedCell == "IntSer" or parsedCell == "DDE"
@@ -383,9 +620,9 @@ def parse_csv(outputPrintCDSNumberInsteadOfProteinIdAndStart, pathInputFile):
                                 'Input file error: could not parse value \"{}\" of column \"CDS_Protein_type\" in row number {}'.format(
                                         parsedCell, countIterRow + 1))
                 else:
-                    raise RuntimeError('Input file error: missing mandatory column \"CDS_Protein_type\"')
-                if idxColhit_blast >= 0:
-                    parsedCell = row[idxColhit_blast]
+                    raise RuntimeError('Input file error: missing mandatory column \"CDS_Protein_type\" in file {}'.format(str(pathInputFile)))
+                if idxColIs_hit_blast >= 0:
+                    parsedCell = row[idxColIs_hit_blast]
                     parsedCell = int(parsedCell[0])  # [0] to get only the first character and avoid issues with number formatting according to different locale
                     if (parsedCell == 0 or parsedCell == 1):
                         currSP.SPDetectedByBlast = parsedCell
@@ -396,24 +633,58 @@ def parse_csv(outputPrintCDSNumberInsteadOfProteinIdAndStart, pathInputFile):
                         #        if currFamilyToken:# add only if not empty or null
                         #            currSP.setSPFamilyFromBlast.add(currFamilyToken)
                         if parsedCell == 1:
-                            if idxColICE_superfamily >= 0:
-                                parsedCell = row[idxColICE_superfamily]
+                            if idxColICE_superfamily_of_most_similar_ref_SP >= 0:
+                                parsedCell = row[idxColICE_superfamily_of_most_similar_ref_SP]
                                 if parsedCell and parsedCell != "-":  # add only if not empty or null
                                     currSP.setSPICESuperFamilyFromBlast.add(parsedCell)
-                            if idxColICE_family >= 0:
-                                parsedCell = row[idxColICE_family]
+                            if idxColICE_family_of_most_similar_ref_SP >= 0:
+                                parsedCell = row[idxColICE_family_of_most_similar_ref_SP]
                                 if parsedCell and parsedCell != "-":  # add only if not empty or null
                                     currSP.setSPICEFamilyFromBlast.add(parsedCell)
-                            if idxColIME_family >= 0:
-                                parsedCell = row[idxColIME_family]
+                            if idxColIME_superfamily_of_most_similar_ref_SP >= 0:
+                                parsedCell = row[idxColIME_superfamily_of_most_similar_ref_SP]
                                 if parsedCell and parsedCell != "-":  # add only if not empty or null
-                                    currSP.setSPIMEFamilyFromBlast.add(parsedCell)
+                                    currSP.setSPIMESuperFamilyFromBlast.add(parsedCell)
+                            if idxColRelaxase_family_domain_of_most_similar_ref_SP >= 0:
+                                parsedCell = row[idxColRelaxase_family_domain_of_most_similar_ref_SP]
+                                if parsedCell and parsedCell != "-":  # add only if not empty or null
+                                    if currSP.SPType == "Relaxase":  # col CDS_Protein_Type ; Values: Coupling, Relaxase, Virb4
+                                        currSP.Relaxase_family_domain_of_most_similar_ref_SPFromBlast = parsedCell
+                                        #print("{} have Relaxase_family_domain_of_most_similar_ref_SPFromBlast \"{}\"".format(currSP.locusTag, currSP.Relaxase_family_domain_of_most_similar_ref_SPFromBlast))
+                                    else:
+                                        raise RuntimeError('Input file error: adding Relaxase_family_domain_of_most_similar_ref_SP to SP {} ({}-{}) of Type {}'.format(currSP.locusTag, currSP.start, currSP.stop, currSP.SPType))
+                            if idxColRelaxase_family_MOB_of_most_similar_ref_SP >= 0:
+                                parsedCell = row[idxColRelaxase_family_MOB_of_most_similar_ref_SP]
+                                if parsedCell and parsedCell != "-":  # add only if not empty or null
+                                    if currSP.SPType == "Relaxase":  # col CDS_Protein_Type ; Values: Coupling, Relaxase, Virb4
+                                        currSP.Relaxase_family_MOB_of_most_similar_ref_SPFromBlast = parsedCell
+                                    else:
+                                        raise RuntimeError('Input file error: adding Relaxase_family_MOB_of_most_similar_ref_SP to SP {} ({}-{}) of Type {}'.format(currSP.locusTag, currSP.start, currSP.stop, currSP.SPType))
+                            if idxColCoupling_type_of_most_similar_ref_SP >= 0:
+                                parsedCell = row[idxColCoupling_type_of_most_similar_ref_SP]
+                                if parsedCell and parsedCell != "-":  # add only if not empty or null
+                                    if currSP.SPType == "Coupling protein":  # col CDS_Protein_Type ; Values: Coupling, Relaxase, Virb4
+                                        currSP.Coupling_type_of_most_similar_ref_SPFromBlast = parsedCell
+                                    else:
+                                        raise RuntimeError('Input file error: adding Coupling_type_of_most_similar_ref_SP to SP {} ({}-{}) of Type {}'.format(currSP.locusTag, currSP.start, currSP.stop, currSP.SPType))
+                            if idxColFalse_positives >= 0:
+                                parsedCell = row[idxColFalse_positives]
+                                if parsedCell and parsedCell != "-":  # add only if not empty or null
+                                    currSP.False_positivesFromBlast = parsedCell
+                            if idxColSP_blast_validation >= 0:
+                                parsedCell = row[idxColSP_blast_validation]
+                                if parsedCell and parsedCell != "-":  # add only if not empty or null
+                                    currSP.blast_validation = parsedCell
+                            if idxColUse_annotation >= 0:
+                                parsedCell = row[idxColUse_annotation]
+                                if parsedCell and parsedCell != "-":  # add only if not empty or null
+                                    currSP.Use_annotationFromBlast = parsedCell
                     else:
                         raise RuntimeError(
-                                'Input file error: could not parse value \"{}\" of column \"hit_blast\" in row number {}'.format(
+                                'Input file error: could not parse value \"{}\" of column \"Is_hit_blast\" in row number {}'.format(
                                         parsedCell, countIterRow + 1))
-                if idxColhit_HMM >= 0:
-                    parsedCell = row[idxColhit_HMM]
+                if idxColIs_hit_HMM >= 0:
+                    parsedCell = row[idxColIs_hit_HMM]
                     parsedCell = int(parsedCell[0])  # [0] to get only the first character and avoid issues with number formatting according to different locale
                     if (parsedCell == 0 or parsedCell == 1):
                         currSP.SPDetectedByHMM = parsedCell
@@ -427,13 +698,98 @@ def parse_csv(outputPrintCDSNumberInsteadOfProteinIdAndStart, pathInputFile):
                                 currSP.setSPFamilyFromHMM.add(parsedCell)
                     else:
                         raise RuntimeError(
-                                'Input file error: could not parse value \"{}\" of column \"hit_HMM\" in row number {}'.format(
+                                'Input file error: could not parse value \"{}\" of column \"Is_hit_HMM\" in row number {}'.format(
                                         parsedCell, countIterRow + 1))
-#                if idxColhit_HMM_CC >= 0:
+                if idxColIs_pseudo >= 0:
+                    parsedCell = row[idxColIs_pseudo]
+                    if parsedCell == "Pseudo" or parsedCell == "pseudo" or parsedCell == "True" or parsedCell == "true" :
+                        currSP.pseudo = True
+                if idxColLength_of_blast_most_similar_ref_SP >= 0:
+                    parsedCell = row[idxColLength_of_blast_most_similar_ref_SP]
+                    try:
+                        currSP.Length_of_blast_most_similar_ref_SP = int(float(parsedCell)) # 796
+                    except:
+                        pass
+                else:
+                    raise RuntimeError('Input file error: missing mandatory column \"Length_of_blast_most_similar_ref_SP\" in file {}'.format(str(pathInputFile)))
+                if idxColBlast_ali_length >= 0:
+                    parsedCell = row[idxColBlast_ali_length]
+                    try:
+                        currSP.Blast_ali_length = int(float(parsedCell)) # 786
+                    except:
+                        pass
+                else:
+                    raise RuntimeError('Input file error: missing mandatory column \"Blast_ali_length\" in file {}'.format(str(pathInputFile)))
+                if idxColBlast_ali_start_CDS >= 0:
+                    parsedCell = row[idxColBlast_ali_start_CDS]
+                    try:
+                        currSP.Blast_ali_start_CDS = int(float(parsedCell))
+                    except:
+                        pass
+                if idxColBlast_ali_end_CDS >= 0:
+                    parsedCell = row[idxColBlast_ali_end_CDS]
+                    try:
+                        currSP.Blast_ali_end_CDS = int(float(parsedCell))
+                    except:
+                        pass
+                if idxColBlast_ali_start_Query_blast >= 0:
+                    parsedCell = row[idxColBlast_ali_start_Query_blast]
+                    try:
+                        currSP.Blast_ali_start_Query_blast = int(float(parsedCell))
+                    except:
+                        pass
+                if idxColBlast_ali_end_Query_blast >= 0:
+                    parsedCell = row[idxColBlast_ali_end_Query_blast]
+                    try:
+                        currSP.Blast_ali_end_Query_blast = int(float(parsedCell))
+                    except:
+                        pass
+                if idxColBlast_ali_identity_perc >= 0:
+                    parsedCell = row[idxColBlast_ali_identity_perc]
+                    try:
+                        currSP.Blast_ali_identity_perc = float(parsedCell) # 100.0
+                    except:
+                        pass
+                else:
+                    raise RuntimeError('Input file error: missing mandatory column \"Blast_ali_identity_perc\" in file {}'.format(str(pathInputFile)))
+                if idxColE_value_blast >= 0:
+                    parsedCell = row[idxColE_value_blast]
+                    try:
+                        currSP.E_value_blast = float(parsedCell)
+                    except:
+                        pass
+                else:
+                    raise RuntimeError('Input file error: missing mandatory column \"Blast_ali_E-value\" in file {}'.format(str(pathInputFile)))
+                if idxColBlast_ali_bitscore >= 0:
+                    parsedCell = row[idxColBlast_ali_bitscore]
+                    try:
+                        currSP.Blast_ali_bitscore = float(parsedCell)
+                    except:
+                        pass
+                else:
+                    raise RuntimeError('Input file error: missing mandatory column \"Blast_ali_bitscore\" in file {}'.format(str(pathInputFile)))
+                if idxColCDS_coverage_blast >= 0:
+                    parsedCell = row[idxColCDS_coverage_blast]
+                    try:
+                        currSP.CDS_coverage_blast = float(parsedCell)
+                    except:
+                        pass
+                else:
+                    raise RuntimeError('Input file error: missing mandatory column \"CDS_coverage_blast\" in file {}'.format(str(pathInputFile)))
+                if idxColBlast_ali_coverage_most_similar_ref_SP >= 0:
+                    parsedCell = row[idxColBlast_ali_coverage_most_similar_ref_SP]
+                    try:
+                        currSP.Blast_ali_coverage_most_similar_ref_SP = float(parsedCell)
+                    except:
+                        pass
+                else:
+                    raise RuntimeError('Input file error: missing mandatory column \"Blast_ali_coverage_most_similar_ref_SP\" in file {}'.format(str(pathInputFile)))
+
+#                if idxColIs_hit_HMM_CC >= 0:
 #                    if (currSP.SPDetectedByHMM == 1):
-#                        pass # already detected by hit_HMM_JL
+#                        pass # already detected by Is_hit_HMM_JL
 #                    else:
-#                        parsedCell = row[idxColhit_HMM_CC]
+#                        parsedCell = row[idxColIs_hit_HMM_CC]
 #                        parsedCell = int(parsedCell[0]) # [0] to get only the first character and avoid issues with number formatting according to different locale
 #                        if (parsedCell == 0 or parsedCell == 1):
 #                            currSP.SPDetectedByHMM = parsedCell
@@ -444,18 +800,47 @@ def parse_csv(outputPrintCDSNumberInsteadOfProteinIdAndStart, pathInputFile):
 #                                    if currFamilyToken:# add only if not empty or null
 #                                        currSP.setSPFamilyFromHMM.add(currFamilyToken)
 #                        else:
-#                            raise RuntimeError('Input file error: could not parse value \"{}\" of column \"hit_HMM_CC\" in row number {}'.format(parsedCell, countIterRow+1))
+#                            raise RuntimeError('Input file error: could not parse value \"{}\" of column \"Is_hit_HMM_CC\" in row number {}'.format(parsedCell, countIterRow+1))
                 listSPsParsed.list.append(currSP)
             countIterRow += 1
     csvfile.close()
     return listSPsParsed
 
 
+
+def createDictIMEICEID2humanReadableIMEICEIIdentifier(listOfListAllICEsIMEsStructure):
+
+    dictIMEICEID2humanReadableIMEICEIIdentifier = {}
+    idxCountIdStructure = 1
+    for currListAllICEsIMEsStructure in listOfListAllICEsIMEsStructure:
+        for currICEIMEStructure in currListAllICEsIMEsStructure:
+            #print ("internalIdentifier = {}".format(currICEIMEStructure.internalIdentifier))
+            if currICEIMEStructure.internalIdentifier in dictIMEICEID2humanReadableIMEICEIIdentifier:
+                raise RuntimeError('Error createDictIMEICEID2humanReadableIMEICEIIdentifier: currICEIMEStructure.internalIdentifier {} already in dictIMEICEID2humanReadableIMEICEIIdentifier'.format(currICEIMEStructure.internalIdentifier))
+            if currICEIMEStructure.catStructConjModule == "unsure" and currICEIMEStructure.categoryRegardingIntegrase == "no integrase assigned":
+                pass
+            else :
+                dictIMEICEID2humanReadableIMEICEIIdentifier[currICEIMEStructure.internalIdentifier] = "ID_"+str(idxCountIdStructure)
+                idxCountIdStructure += 1
+    return dictIMEICEID2humanReadableIMEICEIIdentifier
+
+    #carefull, changed internalIdentifier to a non digit, can cause the following problems:
+    # - src/EMStructure.py : problems maybe ??
+        # DONE !!! if self.internalIdentifier >= otherICEsIMEsStructureToMerge.internalIdentifier:
+        # DONE !!! if self.internalIdentifier == lowerBoundMergedInternalIdentifierIT and otherICEsIMEsStructureToMerge.internalIdentifier == higherBoundMergedInternalIdentifierIT:
+        # DONE !!! and rest of the method
+        # DONE !!! ICEsIMEsStructure.listLowerBoundHigherBoundStructureMergedInternalIdentifier.append(
+        # DONE !!! if self.internalIdentifier < currICEIMEInConflict.internalIdentifier:
+
+
+
 # This method prints the output file (tsv file) that details the list of ICEs and IMEs including their signature proteins.
 def printAllICEsIMEsStructureToOutputFile(
         listOfListAllICEsIMEsStructure,
-        outputPrintCDSNumberInsteadOfProteinIdAndStart,
-        outputFile):
+        # outputPrintCDSNumberInsteadOfProteinIdAndStart,
+        outputFile,
+        dictIMEICEID2humanReadableIMEICEIIdentifier):
+
 
     # print("\n** Detailed ICE / IME structures:", file=outputFile)
     listStHeaderToPrint = EMStructure.ICEsIMEsStructure.GetSummaryObjectHeaderAsTsv()
@@ -465,13 +850,17 @@ def printAllICEsIMEsStructureToOutputFile(
     for idx, currListAllICEsIMEsStructure in enumerate(listOfListAllICEsIMEsStructure):
         # print("--------------------- Genomic region {}: {} - {} -------------------".format(idx+1, segmentIdx2startGenomicRegion[idx], segmentIdx2stopGenomicRegion[idx]), file=outputFile)
         for currICEIMEStructure in currListAllICEsIMEsStructure:
-            listStToPrint = currICEIMEStructure.GetSummaryObjectAsTsv(
-                    outputPrintCDSNumberInsteadOfProteinIdAndStart,
-                    idx + 1)
-            stToPrintPrefix = listStToPrint[0]
-            stToPrintPostfix = listStToPrint[1]
-            print(stToPrintPrefix + stToPrintPostfix, file=outputFile)
-            # print("{}".format(currICEIMEStructure.GetObjectAsJson(True, "")))
+            if currICEIMEStructure.catStructConjModule == "unsure" and currICEIMEStructure.categoryRegardingIntegrase == "no integrase assigned":
+                pass
+            else :
+                listStToPrint = currICEIMEStructure.GetSummaryObjectAsTsv(
+                        # outputPrintCDSNumberInsteadOfProteinIdAndStart,
+                        idx + 1,
+                        dictIMEICEID2humanReadableIMEICEIIdentifier)
+                stToPrintPrefix = listStToPrint[0]
+                stToPrintPostfix = listStToPrint[1]
+                print(stToPrintPrefix + stToPrintPostfix, file=outputFile)
+                # print("{}".format(currICEIMEStructure.GetObjectAsJson(True, "")))
 
 ########
 # MAIN #
@@ -508,7 +897,7 @@ def main():
     required.add_argument(
             '-m',
             '--modified_input',
-            help="path to output file (tsv file) that is the input file with columns added that reflect the output file (i.e. \"ICE IME Number\" and \"ICE IME Number (To review)\")",
+            help="path to output csv file: input cvs file + information on the ICE or IME structure",
             required=True)
     required.add_argument(
             '-l',
@@ -541,12 +930,13 @@ def main():
     useFamilyInfoToTryToResolveSPModuleConjConflict = config["PARAMS"]["useFamilyInfoToTryToResolveSPModuleConjConflict"]
     useDistanceCDSInfoToTryToResolveSPModuleConjConflict = config["PARAMS"]["useDistanceCDSInfoToTryToResolveSPModuleConjConflict"]
     moveSingleSPToCheck = config["PARAMS"]["moveSingleSPToCheck"]
-    outputPrintCDSNumberInsteadOfProteinIdAndStart = config["PARAMS"]["outputPrintCDSNumberInsteadOfProteinIdAndStart"]
+    # outputPrintCDSNumberInsteadOfProteinIdAndStart = config["PARAMS"]["outputPrintCDSNumberInsteadOfProteinIdAndStart"]
     allowAdjacentIntegraseOnlyForSer = config["PARAMS"]["allowAdjacentIntegraseOnlyForSer"]
-    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance = int(
-            config["PARAMS"]["useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance"])
-    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance = int(
-            config["PARAMS"]["useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance"])
+    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance = int(config["PARAMS"]["useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance"])
+    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance = int(config["PARAMS"]["useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance"])
+    maxOverlappingAliLenghtFragmentedSPs = int(config["PARAMS"]["maxOverlappingAliLenghtFragmentedSPs"])
+    maxCDSDistanceToMergeFragmentedSPs = int(config["PARAMS"]["maxCDSDistanceToMergeFragmentedSPs"])
+    EMStructure.BasicEMStructure.threshold_blast_ali_identity_perc_transfert_ICEFamily_to_structure_module_conj = int(config["PARAMS"]["threshold_blast_ali_identity_perc_transfert_ICEFamily_to_structure_module_conj"])
 
     # open and truncate outputFile and logFile
     outputFile = open(pathOutputFile, "w")
@@ -582,8 +972,8 @@ def main():
             useDistanceCDSInfoToTryToResolveSPModuleConjConflict), file=logFile)
     print("moveSingleSPToCheck: \"{}\"".format(
             moveSingleSPToCheck), file=logFile)
-    print("outputPrintCDSNumberInsteadOfProteinIdAndStart: \"{}\"".format(
-            outputPrintCDSNumberInsteadOfProteinIdAndStart), file=logFile)
+    # print("outputPrintCDSNumberInsteadOfProteinIdAndStart: \"{}\"".format(
+    #         outputPrintCDSNumberInsteadOfProteinIdAndStart), file=logFile)
     print("allowAdjacentIntegraseOnlyForSer: \"{}\"".format(
             allowAdjacentIntegraseOnlyForSer), file=logFile)
     print("useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance: \"{}\"".format(
@@ -591,9 +981,16 @@ def main():
     print("useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance: \"{}\"".format(
             useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance), file=logFile)
 
+    
+    hasMultipleGenomeAccesion = commonMethods.determineIfResultSPFileHasMultipleGenomeAccesion(pathInputFile)
+
+
     SPsWholeGenome = parse_csv(
-            outputPrintCDSNumberInsteadOfProteinIdAndStart,
-            pathInputFile)
+            # outputPrintCDSNumberInsteadOfProteinIdAndStart,
+            pathInputFile,
+            hasMultipleGenomeAccesion
+            )
+    
     SPsWholeGenome.sortListSPsByStart()
 
     # for testing
@@ -636,6 +1033,37 @@ def main():
                 useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
                 useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance)
 
+        # checkForObviousIntegraseUpstreamAndDownstreamToAdd
+        rulesAddIntegrases.addObviousIntegraseUpstreamAndDownstream_priorMerging(
+            listICEsIMEsStructures,
+            currListSPs.list,
+            locusTagIntegrase2Comment,
+            useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
+            useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
+            allowAdjacentIntegraseOnlyForSer
+        )
+
+        rulesMergeICEIMEStructures.tryMergeFragmentedSPs(
+                listICEsIMEsStructures,
+                locusTagMerge2Comment,
+                locusTagIntegrase2Comment,
+                groupListSPintoICEsIMEsUsingFamilyInfo,
+                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
+                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
+                maxOverlappingAliLenghtFragmentedSPs,
+                maxCDSDistanceToMergeFragmentedSPs
+                )
+# - improvment to do : deteccte SP fragmentées. Test 1 segment 16 : WP_158396091.1 should be merged with WP_158396083.1
+# Blast_ali_start_Query_blast	Blast_ali_end_Query_blast
+# WP_158396083.1 : 1.0	279.0
+# WP_158396091.1 : 251.0	432.0
+# maxOverlappingAliLenghtFragmentedSPs = 40
+# same protein type
+# maxCDSDistanceToMergeFragmentedSPs = 150
+# compatible IME_superfamily_of_most_similar_ref_SP and ICE_superfamily_of_most_similar_ref_SP
+# if relaxase : same Relaxase_family_domain_of_most_similar_ref_SP
+
+
         # tryMergeSameFamilyStructures merge distant anchors of SPs of the conjugation module that are of the same family
         rulesMergeICEIMEStructures.tryMergeSameFamilyStructures(
                 listICEsIMEsStructures,
@@ -660,8 +1088,7 @@ def main():
             # tryResolveSPsInConflictAfterMergeEvents solves SPs that were attributed to multiple anchors initially and whose at least 1 anchor was involved in a merge with another anchor.
             currICEsIMEsStructure.tryResolveSPsInConflictAfterMergeEvents()
 
-        # addSPIntegraseUpstreamAndDownstream add integrase to anchor to create ICE and IME structures
-        rulesAddIntegrases.addSPIntegraseUpstreamAndDownstream(
+        rulesAddIntegrases.addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure(
                 currListSPs.list,
                 listICEsIMEsStructures,
                 maxNumberCDSForFilterIMESize,
@@ -709,49 +1136,82 @@ def main():
                         listIntegraseNotFoundInStructureSegment.append(currSP)
                         # dictIntegraseNotFoundInStructure[currSP] = 1
             listOfListSPsLonelyIntegrases.append(listIntegraseNotFoundInStructureSegment)
-
         else:
             listOfListAllICEsIMEsStructure.append(listICEsIMEsStructures)
             listOfListSPsLonelyIntegrases.append(currListSPs.list)
 
+
+    dictIMEICEID2humanReadableIMEICEIIdentifier = createDictIMEICEID2humanReadableIMEICEIIdentifier(listOfListAllICEsIMEsStructure)
+
     # print in output files
     printAllICEsIMEsStructureToOutputFile(
             listOfListAllICEsIMEsStructure,
-            outputPrintCDSNumberInsteadOfProteinIdAndStart,
-            outputFile)
-    (totalNumberSP,
-     totalNumberIntegrase,
-     totalNumberUnaffectedIntegrase,
-     totalNumberRelaxase,
-     totalNumberUnaffectedRelaxase,
-     totalNumberCoupling,
-     totalNumberUnaffectedCoupling,
-     totalNumberVirb4,
-     totalNumberUnaffectedVirb4) = printAllICEsIMEsStructureToInputFile(
-             listOfListAllICEsIMEsStructure,
-             listOfListSPsLonelyIntegrases,
-             pathInputFile,
-             modifiedInputFile,
-             locusTagIntegrase2Comment,
-             locusTagFinalize2Comment,
-             locusTagMerge2Comment)
+            # outputPrintCDSNumberInsteadOfProteinIdAndStart,
+            outputFile,
+            dictIMEICEID2humanReadableIMEICEIIdentifier)
+    
+    
+    # (totalNumberSP,
+    #  totalNumberIntegrase,
+    #  totalNumberUnaffectedIntegrase,
+    #  totalNumberRelaxase,
+    #  totalNumberUnaffectedRelaxase,
+    #  totalNumberCoupling,
+    #  totalNumberUnaffectedCoupling,
+    #  totalNumberVirb4,
+    #  totalNumberUnaffectedVirb4) = printAllICEsIMEsStructureToInputFile(
+    (dictGenomeAccnum2totalNumberSP,
+    dictGenomeAccnum2totalNumberIntegrase,
+    dictGenomeAccnum2totalNumberUnaffectedIntegrase,
+    dictGenomeAccnum2totalNumberRelaxase,
+    dictGenomeAccnum2totalNumberUnaffectedRelaxase,
+    dictGenomeAccnum2totalNumberCoupling,
+    dictGenomeAccnum2totalNumberUnaffectedCoupling,
+    dictGenomeAccnum2totalNumberVirb4,
+    dictGenomeAccnum2totalNumberUnaffectedVirb4) = printAllICEsIMEsStructureToInputFile(
+        listOfListAllICEsIMEsStructure,
+        listOfListSPsLonelyIntegrases,
+        pathInputFile,
+        modifiedInputFile,
+        locusTagIntegrase2Comment,
+        locusTagFinalize2Comment,
+        locusTagMerge2Comment,
+        dictIMEICEID2humanReadableIMEICEIIdentifier,
+        hasMultipleGenomeAccesion
+        )
     pathSummaryFile = os.path.splitext(pathOutputFile)[0] + '.summary'
     summaryFile = open(pathSummaryFile, "w")
     # print summary file
+    # printOverallStatsToSummaryFile(
+    #         totalNumberSP,
+    #         totalNumberIntegrase,
+    #         totalNumberUnaffectedIntegrase,
+    #         totalNumberRelaxase,
+    #         totalNumberUnaffectedRelaxase,
+    #         totalNumberCoupling,
+    #         totalNumberUnaffectedCoupling,
+    #         totalNumberVirb4,
+    #         totalNumberUnaffectedVirb4,
+    #         listOfListAllICEsIMEsStructure,
+    #         maxNumberCDSForSplitSPsByColocalizion,
+    #         maxNumberCDSForFilterIMESize,
+    #         summaryFile)
     printOverallStatsToSummaryFile(
-            totalNumberSP,
-            totalNumberIntegrase,
-            totalNumberUnaffectedIntegrase,
-            totalNumberRelaxase,
-            totalNumberUnaffectedRelaxase,
-            totalNumberCoupling,
-            totalNumberUnaffectedCoupling,
-            totalNumberVirb4,
-            totalNumberUnaffectedVirb4,
-            listOfListAllICEsIMEsStructure,
-            maxNumberCDSForSplitSPsByColocalizion,
-            maxNumberCDSForFilterIMESize,
-            summaryFile)
+        dictGenomeAccnum2totalNumberSP,
+        dictGenomeAccnum2totalNumberIntegrase,
+        dictGenomeAccnum2totalNumberUnaffectedIntegrase,
+        dictGenomeAccnum2totalNumberRelaxase,
+        dictGenomeAccnum2totalNumberUnaffectedRelaxase,
+        dictGenomeAccnum2totalNumberCoupling,
+        dictGenomeAccnum2totalNumberUnaffectedCoupling,
+        dictGenomeAccnum2totalNumberVirb4,
+        dictGenomeAccnum2totalNumberUnaffectedVirb4,
+        listOfListAllICEsIMEsStructure,
+        maxNumberCDSForSplitSPsByColocalizion,
+        maxNumberCDSForFilterIMESize,
+        summaryFile)
+
+
     summaryFile.close()
 
     outputFile.close()

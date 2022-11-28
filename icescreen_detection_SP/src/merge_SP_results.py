@@ -67,20 +67,22 @@ def merge_results(blpath, hmmpath):
     blast_df = pd.read_csv(blpath, sep="\t")
     hmm_df = pd.read_csv(hmmpath, sep="\t")
 
-    # Add 'hit_blast' and 'hit_hmm' columns
-    blast_df["hit_blast"] = 1
-    hmm_df["hit_HMM"] = 1
+    # Add 'Is_hit_blast' and 'Is_hit_HMM' columns
+    blast_df["Is_hit_blast"] = 1
+    hmm_df["Is_hit_HMM"] = 1
 
     merged_df = pd.merge(left=blast_df, right=hmm_df, how='outer',
-                         on=["#ICEscreen_ID", "CDS_num", "CDS", "CDS_strand",
-                             "CDS_start", "CDS_end", "CDS_length"],
+                         on=["#ICEscreen_ID", "CDS_num",
+                         #"CDS",
+                         "Genome_accession", "Genome_accession_rank", "CDS_locus_tag", "CDS_protein_id",
+                         "CDS_strand", "CDS_start", "CDS_end", "CDS_length"],
                          suffixes=('_blast', '_hmm'))
 
-    # Fill out 'hit_blast' and 'hit_hmm' columns
-    merged_df["hit_blast"] = merged_df["hit_blast"].replace({None: 0})
-    merged_df["hit_HMM"] = merged_df["hit_HMM"].replace({None: 0})
-    merged_df["hit_blast"] = merged_df["hit_blast"].fillna(0)
-    merged_df["hit_HMM"] = merged_df["hit_HMM"].fillna(0)
+    # Fill out 'Is_hit_blast' and 'Is_hit_HMM' columns
+    merged_df["Is_hit_blast"] = merged_df["Is_hit_blast"].replace({None: 0})
+    merged_df["Is_hit_HMM"] = merged_df["Is_hit_HMM"].replace({None: 0})
+    merged_df["Is_hit_blast"] = merged_df["Is_hit_blast"].fillna(0)
+    merged_df["Is_hit_HMM"] = merged_df["Is_hit_HMM"].fillna(0)
 
     # Add 'Is_pseudo' column
     is_pseudo = merged_df["#ICEscreen_ID"].str.endswith("Pseudo")\
@@ -95,14 +97,15 @@ def merge_results(blpath, hmmpath):
     merged_df["CDS_Protein_type"] = cds_protein_type
 
     # Rename some columns to more specific name
-    merged_df.rename(columns={"CDS_Protein_type_hmm": "Profile_Protein_type"},
+    merged_df.rename(columns={"CDS_Protein_type_hmm": "Protein_type_of_matching_HMM_profile"},
                      inplace=True)
 
     # Drop unnecessary columns
     # Drop raw results of BlastP alignments
-    cols_to_rm = ["Mismatch", "Gapopen", "Ali_start_CDS", "Ali_end_CDS",
-                  'Ali_start_Query_blast', 'Ali_end_Query_blast',
-                  'CDS_length/Query_blast_length']
+    # cols_to_rm = ["Mismatch", "Gapopen", "Blast_ali_start_CDS", "Blast_ali_end_CDS",
+    #               'Blast_ali_start_Query_blast', 'Blast_ali_end_Query_blast',
+    #               'CDS_length/Length_of_blast_most_similar_ref_SP']
+    cols_to_rm = ["Mismatch", "Gapopen", 'CDS_length/Length_of_blast_most_similar_ref_SP']
     # Drop raw results of hmmscan alignments and Profile ID
     cols_to_rm = cols_to_rm + ["Profile_ID", "Ali_len_HMM",
                                "Ali_len_CDS", "hmm_coord_from", "hmm_coord_to",
@@ -120,21 +123,23 @@ def merge_results(blpath, hmmpath):
 
     # Reorder columns: First "core" common columns then other columns
     # Common columns between blastP results and hmmscan results
-    common_cols = ["hit_blast", "hit_HMM", "CDS_num", "CDS",
-                   "CDS_strand", "CDS_start", "CDS_end", "CDS_length",
-                   "Is_pseudo", "CDS_Protein_type"]
+    common_cols = ["Is_hit_blast", "Is_hit_HMM", "CDS_num",
+                    #"CDS",
+                    "Genome_accession", "Genome_accession_rank", "CDS_locus_tag", "CDS_protein_id",
+                    "CDS_strand", "CDS_start", "CDS_end", "CDS_length",
+                    "Is_pseudo", "CDS_Protein_type"]
     # Other columns
     other_cols = [x for x in merged_df.columns if x not in common_cols]
 
     merged_df = merged_df[common_cols + other_cols]
 
-    merged_df = merged_df.astype({'hit_blast': np.uint32,
-                                  'hit_HMM': np.uint32})
+    merged_df = merged_df.astype({'Is_hit_blast': np.uint32,
+                                    'Is_hit_HMM': np.uint32})
 
     # Format numeric columns
-    merged_df['E-value_hmm'] = merged_df['E-value_hmm'].map(
+    merged_df['HMM_ali_E-value'] = merged_df['HMM_ali_E-value'].map(
             lambda x: '{0:.3g}'.format(x))
-    merged_df['i-Evalue_hmm'] = merged_df['i-Evalue_hmm'].map(
+    merged_df['HMM_ali_i-Evalue'] = merged_df['HMM_ali_i-Evalue'].map(
             lambda x: '{0:.3g}'.format(x))
 
     return(merged_df)

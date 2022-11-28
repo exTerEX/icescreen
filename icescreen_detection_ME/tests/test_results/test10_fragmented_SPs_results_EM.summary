@@ -4,41 +4,41 @@ Maximum distance in CDS between consecutive SPs within a segments:	100
 Maximum distance in CDS between consecutive SPs within an IME element:	14
 
 
-##################### ICEscreen statistics for genome accession NZ_TEST7 #####################
+##################### ICEscreen statistics for genome accession NZ_TEST10 #####################
 
 ##### Mobile elements #####
 ## Number of complete elements
-Complete ICE (4 types of SP):	4
-Complete IME (R+I, R+C+I with distance between consecutive SPs <= 14 CDSs):	13
+Complete ICE (4 types of SP):	0
+Complete IME (R+I, R+C+I with distance between consecutive SPs <= 14 CDSs):	10
 ## Number of complete modules
-Conjugation module (R+C+V):	1
+Conjugation module (R+C+V):	0
 Mobilizable element (R+C with distance between consecutive SPs <= 14 CDS):	0
 ## Number of partial elements
-Partial ICE (at least V):	0
-Other partial element (R+C, R+V, V+C with distance between consecutive SPs > 14 CDS):	6
+Partial ICE (at least V):	3
+Other partial element (R+C, R+V, V+C with distance between consecutive SPs > 14 CDS):	2
 ## Composite elements
-Total nested elements (partial or complete):	8
+Total nested elements (partial or complete):	6
 Host element:	3
-Guest element:	5
+Guest element:	3
 Element that are both host and guest:	0
 
 ##### Signature proteins #####
 ## Total SPs detected
-Total SPs:	66
-Total Integrase:	31
-Total Relaxase:	24
-Total Coupling protein:	6
-Total VirB4:	5
+Total SPs:	35
+Total Integrase:	15
+Total Relaxase:	12
+Total Coupling protein:	4
+Total VirB4:	4
 ## Unassigned SPs
-Unassigned SPs:	9
-Unassigned Integrase:	9
+Unassigned SPs:	2
+Unassigned Integrase:	2
 Unassigned Relaxase:	0
 Unassigned Coupling protein:	0
 Unassigned VirB4:	0
 
 ##### Segments #####
-Number of segments with one element:	2
-Number of segments with several elements:	4
+Number of segments with one element:	0
+Number of segments with several elements:	5
 Number of segments with nested elements:	3
 Number of segments with exclusively isolated SPs to manually verify:	0
 

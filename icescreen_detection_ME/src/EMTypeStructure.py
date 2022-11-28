@@ -18,7 +18,8 @@
 """
 # import specific class OO for this script
 import EMStructure
-
+import hit
+#import datetime
 
 # Once an ICE or IME structure have been established, assign its type
 def assignPutativeTypeStructure(ICEsIMEsStructureSent, maxNumberCDSForFilterIMESize):
@@ -29,7 +30,7 @@ def assignPutativeTypeStructure(ICEsIMEsStructureSent, maxNumberCDSForFilterIMES
     else:
 
         greenLightDistanceIME = ICEsIMEsStructureSent.isFilterIMESizeOk(maxNumberCDSForFilterIMESize)
-        # totalNumberSPSureAndNotSure = len(ICEsIMEsStructureSent.listOrderedSPs) + len(ICEsIMEsStructureSent.setIntegraseLocusTagsToManuallyCheck) + len(ICEsIMEsStructureSent.setSPConjModuleLocusTagsToManuallyCheck)
+        # totalNumberSPSureAndNotSure = len(ICEsIMEsStructureSent.listOrderedSPs) + len(ICEsIMEsStructureSent.setIntegraseToManuallyCheck) + len(ICEsIMEsStructureSent.setSPConjModuleToManuallyCheck)
 
         putativePartialICEVirB4 = False
         if len(ICEsIMEsStructureSent.setSPInConflict) >= 1:
@@ -45,7 +46,7 @@ def assignPutativeTypeStructure(ICEsIMEsStructureSent, maxNumberCDSForFilterIMES
         if len(ICEsIMEsStructureSent.listRelaxase) == 1 and len(ICEsIMEsStructureSent.listCouplingProtein) == 1 and len(ICEsIMEsStructureSent.listVirB4) == 1:
             strTypeToSet = "ICE"  # canonical conjugaison module
         elif len(ICEsIMEsStructureSent.listRelaxase) >= 1 and len(ICEsIMEsStructureSent.listCouplingProtein) >= 1 and len(ICEsIMEsStructureSent.listVirB4) >= 1:
-            strTypeToSet = "ICE"  # mulitple adjacent SPs conjugaison module
+            strTypeToSet = "ICE"  # multiple adjacent SPs conjugaison module
         elif len(ICEsIMEsStructureSent.listVirB4) >= 1 or putativePartialICEVirB4:
             strTypeToSet = "partial ICE VirB4"
         elif len(ICEsIMEsStructureSent.listVirB4) == 0 and len(ICEsIMEsStructureSent.listOrderedSPs) >= 2 and greenLightDistanceIME:
@@ -65,22 +66,22 @@ def assignPutativeTypeStructure(ICEsIMEsStructureSent, maxNumberCDSForFilterIMES
         strTypeToSet = ""
         if len(ICEsIMEsStructureSent.listIntegraseUpstream) == 1 and len(ICEsIMEsStructureSent.listIntegraseDownstream) == 0:
             if ICEsIMEsStructureSent.listIntegraseUpstream[0].SPType == "Tyrosine integrase":
-                strTypeToSet = "one integrase - Tyr"
+                strTypeToSet = "one integrase Tyr"+hit.ListSPs.stringListSPHasPseudo(ICEsIMEsStructureSent.listIntegraseUpstream)
             elif ICEsIMEsStructureSent.listIntegraseUpstream[0].SPType == "Serine integrase":
-                strTypeToSet = "one integrase - Ser"
+                strTypeToSet = "one integrase Ser"+hit.ListSPs.stringListSPHasPseudo(ICEsIMEsStructureSent.listIntegraseUpstream)
             elif ICEsIMEsStructureSent.listIntegraseUpstream[0].SPType == "DDE transposase":
-                strTypeToSet = "one integrase - DDE"
+                strTypeToSet = "one integrase DDE"+hit.ListSPs.stringListSPHasPseudo(ICEsIMEsStructureSent.listIntegraseUpstream)
             else:
                 raise RuntimeError("Error in assignPutativeTypeStructure: unrecognized listIntegraseUpstream[0].SPType {} for locus tag = {}".format(
                         ICEsIMEsStructureSent.listIntegraseUpstream[0].SPType,
                         ICEsIMEsStructureSent.listIntegraseUpstream[0].locusTag))
         elif len(ICEsIMEsStructureSent.listIntegraseUpstream) == 0 and len(ICEsIMEsStructureSent.listIntegraseDownstream) == 1:
             if ICEsIMEsStructureSent.listIntegraseDownstream[0].SPType == "Tyrosine integrase":
-                strTypeToSet = "one integrase - Tyr"
+                strTypeToSet = "one integrase Tyr"+hit.ListSPs.stringListSPHasPseudo(ICEsIMEsStructureSent.listIntegraseDownstream)
             elif ICEsIMEsStructureSent.listIntegraseDownstream[0].SPType == "Serine integrase":
-                strTypeToSet = "one integrase - Ser"
+                strTypeToSet = "one integrase Ser"+hit.ListSPs.stringListSPHasPseudo(ICEsIMEsStructureSent.listIntegraseDownstream)
             elif ICEsIMEsStructureSent.listIntegraseDownstream[0].SPType == "DDE transposase":
-                strTypeToSet = "one integrase - DDE"
+                strTypeToSet = "one integrase DDE"+hit.ListSPs.stringListSPHasPseudo(ICEsIMEsStructureSent.listIntegraseDownstream)
             else:
                 raise RuntimeError("Error in assignPutativeTypeStructure: unrecognized listIntegraseDownstream[0].SPType {} for locus tag = {}".format(
                         ICEsIMEsStructureSent.listIntegraseDownstream[0].SPType,
@@ -98,12 +99,12 @@ def assignPutativeTypeStructure(ICEsIMEsStructureSent, maxNumberCDSForFilterIMES
                     raise RuntimeError("Error in assignPutativeTypeStructure: unrecognized currIntegrase.SPType {} for locus tag = {}".format(
                             currIntegrase.SPType, currIntegrase.locusTag))
             if len(setIntegraseType) == 1:
-                strTypeToSet = "mulitple adjacent integrases - " + setIntegraseType.pop()
+                strTypeToSet = "multiple adjacent integrases " + setIntegraseType.pop()+hit.ListSPs.stringListSPHasPseudo(ICEsIMEsStructureSent.listIntegraseUpstream)
             elif len(setIntegraseType) == 0:
                 raise RuntimeError("Error in assignPutativeTypeStructure len(ICEsIMEsStructureSent.listIntegraseUpstream) > 1 and len(ICEsIMEsStructureSent.listIntegraseDownstream) == 0: len (setIntegraseType) == 0 for EM structure = {}".format(
                         str(ICEsIMEsStructureSent.internalIdentifier)))
             else:
-                strTypeToSet = "mulitple adjacent integrases - Mixed"
+                strTypeToSet = "multiple adjacent integrases various types"+hit.ListSPs.stringListSPHasPseudo(ICEsIMEsStructureSent.listIntegraseUpstream)
         elif len(ICEsIMEsStructureSent.listIntegraseUpstream) == 0 and len(ICEsIMEsStructureSent.listIntegraseDownstream) > 1:
             setIntegraseType = set()
             for currIntegrase in ICEsIMEsStructureSent.listIntegraseDownstream:
@@ -117,12 +118,12 @@ def assignPutativeTypeStructure(ICEsIMEsStructureSent, maxNumberCDSForFilterIMES
                     raise RuntimeError("Error in assignPutativeTypeStructure: unrecognized currIntegrase.SPType {} for locus tag = {}".format(
                             currIntegrase.SPType, currIntegrase.locusTag))
             if len(setIntegraseType) == 1:
-                strTypeToSet = "mulitple adjacent integrases - " + setIntegraseType.pop()
+                strTypeToSet = "multiple adjacent integrases " + setIntegraseType.pop()+hit.ListSPs.stringListSPHasPseudo(ICEsIMEsStructureSent.listIntegraseDownstream)
             elif len(setIntegraseType) == 0:
                 raise RuntimeError("Error in assignPutativeTypeStructure len(ICEsIMEsStructureSent.listIntegraseDownstream) > 1 and len(ICEsIMEsStructureSent.listIntegraseDownstream) == 0: len (setIntegraseType) == 0 for EM structure = {}".format(
                         str(ICEsIMEsStructureSent.internalIdentifier)))
             else:
-                strTypeToSet = "mulitple adjacent integrases - Mixed"
+                strTypeToSet = "multiple adjacent integrases various types"+hit.ListSPs.stringListSPHasPseudo(ICEsIMEsStructureSent.listIntegraseDownstream)
         elif len(ICEsIMEsStructureSent.listIntegraseUpstream) >= 1 and len(ICEsIMEsStructureSent.listIntegraseDownstream) >= 1:
             setIntegraseType = set()
             for currIntegrase in ICEsIMEsStructureSent.listIntegraseUpstream:
@@ -145,16 +146,22 @@ def assignPutativeTypeStructure(ICEsIMEsStructureSent, maxNumberCDSForFilterIMES
                 else:
                     raise RuntimeError("Error in assignPutativeTypeStructure: unrecognized currIntegrase.SPType {} for locus tag = {}".format(
                             currIntegrase.SPType, currIntegrase.locusTag))
+            
+            listAllUpAndDownIntegrasesToSend = []
+            listAllUpAndDownIntegrasesToSend.extend(ICEsIMEsStructureSent.listIntegraseUpstream)
+            listAllUpAndDownIntegrasesToSend.extend(ICEsIMEsStructureSent.listIntegraseDownstream)
             if len(setIntegraseType) == 1:
-                strTypeToSet = "both upstream or downstream integrases - " + setIntegraseType.pop()
+                strTypeToSet = "both upstream or downstream integrases " + setIntegraseType.pop()+hit.ListSPs.stringListSPHasPseudo(listAllUpAndDownIntegrasesToSend)
             elif len(setIntegraseType) == 0:
                 raise RuntimeError(
                         "Error in assignPutativeTypeStructure len(ICEsIMEsStructureSent.listIntegraseUpstream) >= 1 and len(ICEsIMEsStructureSent.listIntegraseDownstream) >= 1: len (setIntegraseType) == 0 for EM structure = {}".format(
                                 str(ICEsIMEsStructureSent.internalIdentifier)))
             else:
-                strTypeToSet = "both upstream or downstream integrases - Mixed"
+                strTypeToSet = "both upstream or downstream integrases various types"+hit.ListSPs.stringListSPHasPseudo(listAllUpAndDownIntegrasesToSend)
         elif len(ICEsIMEsStructureSent.listIntegraseUpstream) == 0 and len(ICEsIMEsStructureSent.listIntegraseDownstream) == 0:
-            strTypeToSet = "no integrase"
+            strTypeToSet = "no integrase assigned"
+            if len(ICEsIMEsStructureSent.setIntegraseToManuallyCheck) > 0:
+                strTypeToSet += " for sure, "+str(len(ICEsIMEsStructureSent.setIntegraseToManuallyCheck))+" to check manually"
         else:
             raise RuntimeError("Error in assignPutativeTypeStructure: unrecognized category for integrase for EM structure = {}".format(
                     str(ICEsIMEsStructureSent.internalIdentifier)))
@@ -204,153 +211,171 @@ def getcatStructWholeElem(ICEIMEStructureSent, maxNumberCDSForFilterIMESize):
     is01_Unsure = 0
 
     if ICEIMEStructureSent.catStructConjModule == "ICE":
-        if ICEIMEStructureSent.categoryRegardingIntegrase == "one integrase - Tyr":
+        if ICEIMEStructureSent.categoryRegardingIntegrase.startswith("one integrase Tyr"):
             is01_ICETyr = 1
-            strTypeToSet = "Complete ICE (4 types of SP)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "one integrase - Ser":
+            strTypeToSet = "Complete ICE"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, "")+")" #"Complete ICE (4 types of SP)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("one integrase Ser"):
             is01_ICESer = 1
-            strTypeToSet = "Complete ICE (4 types of SP)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "one integrase - DDE":
+            strTypeToSet = "Complete ICE"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, "")+")" #"Complete ICE (4 types of SP)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("one integrase DDE"):
             is01_ICEDDE = 1
-            strTypeToSet = "Complete ICE (4 types of SP)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "mulitple adjacent integrases - Tyr":
+            strTypeToSet = "Complete ICE"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, "")+")" #"Complete ICE (4 types of SP)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("multiple adjacent integrases Tyr"):
             is01_ICETyr = 1
-            strTypeToSet = "Complete ICE (4 types of SP)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "mulitple adjacent integrases - Ser":
+            strTypeToSet = "Complete ICE"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, "")+")" #"Complete ICE (4 types of SP)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("multiple adjacent integrases Ser"):
             is01_ICESer = 1
-            strTypeToSet = "Complete ICE (4 types of SP)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "mulitple adjacent integrases - DDE":
+            strTypeToSet = "Complete ICE"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, "")+")" #"Complete ICE (4 types of SP)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("multiple adjacent integrases DDE"):
             is01_ICEDDE = 1
-            strTypeToSet = "Complete ICE (4 types of SP)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "both upstream or downstream integrases - Tyr":
-            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile ICE: both upstream or downstream integrases - Tyr found for ICE IME {}".format(
+            strTypeToSet = "Complete ICE"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, "")+")" #"Complete ICE (4 types of SP)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("both upstream or downstream integrases Tyr"):
+            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile ICE: both upstream or downstream integrases Tyr found for ICE IME {}".format(
                     ICEIMEStructureSent.internalIdentifier))
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "both upstream or downstream integrases - Ser":
-            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile ICE: both upstream or downstream integrases - Ser found for ICE IME {}".format(
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("both upstream or downstream integrases Ser"):
+            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile ICE: both upstream or downstream integrases Ser found for ICE IME {}".format(
                     ICEIMEStructureSent.internalIdentifier))
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "both upstream or downstream integrases - DDE":
-            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile ICE: both upstream or downstream integrases - DDE found for ICE IME {}".format(
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("both upstream or downstream integrases DDE"):
+            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile ICE: both upstream or downstream integrases DDE found for ICE IME {}".format(
                     ICEIMEStructureSent.internalIdentifier))
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "both upstream or downstream integrases - Mixed":
-            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile ICE: both upstream or downstream integrases - Mixed found for ICE IME {}".format(
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("both upstream or downstream integrases various types"):
+            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile ICE: both upstream or downstream integrases various types found for ICE IME {}".format(
                     ICEIMEStructureSent.internalIdentifier))
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "no integrase":
+
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("no integrase assigned"):
             is01_ConjugationModulesNoIntegrase = 1
-            strTypeToSet = "Conjugation module (R+C+V)"
+            strTypeToSet = "Conjugation module"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, "")+")" #R+C+V)"
         else:
             raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile: unrecognized ICEIMEStructureSent.categoryRegardingIntegrase = {} for ICE IME {}".format(
                     ICEIMEStructureSent.categoryRegardingIntegrase,
                     ICEIMEStructureSent.internalIdentifier))
     elif ICEIMEStructureSent.catStructConjModule == "partial ICE VirB4":
-        if ICEIMEStructureSent.categoryRegardingIntegrase == "one integrase - Tyr":
+        if ICEIMEStructureSent.categoryRegardingIntegrase.startswith("one integrase Tyr"):
             is01_PartialICETyr = 1
-            strTypeToSet = "Partial ICE (at least V)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "one integrase - Ser":
+            strTypeToSet = "Partial ICE"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, "")+")" #at least V)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("one integrase Ser"):
             is01_PartialICESer = 1
-            strTypeToSet = "Partial ICE (at least V)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "one integrase - DDE":
+            strTypeToSet = "Partial ICE"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, "")+")" #at least V)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("one integrase DDE"):
             is01_PartialICEDDE = 1
-            strTypeToSet = "Partial ICE (at least V)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "mulitple adjacent integrases - Tyr":
+            strTypeToSet = "Partial ICE"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, "")+")" #at least V)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("multiple adjacent integrases Tyr"):
             is01_PartialICETyr = 1
-            strTypeToSet = "Partial ICE (at least V)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "mulitple adjacent integrases - Ser":
+            strTypeToSet = "Partial ICE"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, "")+")" #at least V)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("multiple adjacent integrases Ser"):
             is01_PartialICESer = 1
-            strTypeToSet = "Partial ICE (at least V)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "mulitple adjacent integrases - DDE":
+            strTypeToSet = "Partial ICE"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, "")+")" #at least V)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("multiple adjacent integrases DDE"):
             is01_PartialICEDDE = 1
-            strTypeToSet = "Partial ICE (at least V)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "both upstream or downstream integrases - Tyr":
-            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile partial ICE VirB4: both upstream or downstream integrases - Tyr found for ICE IME {}".format(
+            strTypeToSet = "Partial ICE"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, "")+")" #at least V)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("both upstream or downstream integrases Tyr"):
+            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile partial ICE VirB4: both upstream or downstream integrases Tyr found for ICE IME {}".format(
                     ICEIMEStructureSent.internalIdentifier))
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "both upstream or downstream integrases - Ser":
-            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile partial ICE VirB4: both upstream or downstream integrases - Ser found for ICE IME {}".format(
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("both upstream or downstream integrases Ser"):
+            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile partial ICE VirB4: both upstream or downstream integrases Ser found for ICE IME {}".format(
                     ICEIMEStructureSent.internalIdentifier))
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "both upstream or downstream integrases - DDE":
-            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile partial ICE VirB4: both upstream or downstream integrases - DDE found for ICE IME {}".format(
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("both upstream or downstream integrases DDE"):
+            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile partial ICE VirB4: both upstream or downstream integrases DDE found for ICE IME {}".format(
                     ICEIMEStructureSent.internalIdentifier))
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "both upstream or downstream integrases - Mixed":
-            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile partial ICE VirB4: both upstream or downstream integrases - Mixed found for ICE IME {}".format(
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("both upstream or downstream integrases various types"):
+            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile partial ICE VirB4: both upstream or downstream integrases various types found for ICE IME {}".format(
                     ICEIMEStructureSent.internalIdentifier))
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "no integrase":
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("no integrase assigned"):
             is01_PartialICENoIntegrase = 1
-            strTypeToSet = "Partial ICE (at least V)"
+            strTypeToSet = "Partial ICE"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, "")+")" #at least V)"
         else:
             raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile: unrecognized ICEIMEStructureSent.categoryRegardingIntegrase = {} for ICE IME {}".format(
                     ICEIMEStructureSent.categoryRegardingIntegrase,
                     ICEIMEStructureSent.internalIdentifier))
+
     elif ICEIMEStructureSent.catStructConjModule == "IME":
-        if ICEIMEStructureSent.categoryRegardingIntegrase == "one integrase - Tyr":
+        if ICEIMEStructureSent.categoryRegardingIntegrase.startswith("one integrase Tyr"):
             is01_IMETyr = 1
-            strTypeToSet = "Complete IME (R+I, R+C+I)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "one integrase - Ser":
+            strToAppendIfMoreThanOneSP = " with # CDS between SP <= "+str(maxNumberCDSForFilterIMESize)
+            strTypeToSet = "Complete IME"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #R+I, R+C+I)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("one integrase Ser"):
             is01_IMESer = 1
-            strTypeToSet = "Complete IME (R+I, R+C+I)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "one integrase - DDE":
+            strToAppendIfMoreThanOneSP = " with # CDS between SP <= "+str(maxNumberCDSForFilterIMESize)
+            strTypeToSet = "Complete IME"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #R+I, R+C+I)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("one integrase DDE"):
             is01_IMEDDE = 1
-            strTypeToSet = "Complete IME (R+I, R+C+I)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "mulitple adjacent integrases - Tyr":
+            strToAppendIfMoreThanOneSP = " with # CDS between SP <= "+str(maxNumberCDSForFilterIMESize)
+            strTypeToSet = "Complete IME"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #R+I, R+C+I)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("multiple adjacent integrases Tyr"):
             is01_IMETyr = 1
-            strTypeToSet = "Complete IME (R+I, R+C+I)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "mulitple adjacent integrases - Ser":
+            strToAppendIfMoreThanOneSP = " with # CDS between SP <= "+str(maxNumberCDSForFilterIMESize)
+            strTypeToSet = "Complete IME"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #R+I, R+C+I)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("multiple adjacent integrases Ser"):
             is01_IMESer = 1
-            strTypeToSet = "Complete IME (R+I, R+C+I)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "mulitple adjacent integrases - DDE":
+            strToAppendIfMoreThanOneSP = " with # CDS between SP <= "+str(maxNumberCDSForFilterIMESize)
+            strTypeToSet = "Complete IME"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #R+I, R+C+I)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("multiple adjacent integrases DDE"):
             is01_IMEDDE = 1
-            strTypeToSet = "Complete IME (R+I, R+C+I)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "both upstream or downstream integrases - Tyr":
-            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile IME: both upstream or downstream integrases - Tyr found for ICE IME {}".format(
+            strToAppendIfMoreThanOneSP = " with # CDS between SP <= "+str(maxNumberCDSForFilterIMESize)
+            strTypeToSet = "Complete IME"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #R+I, R+C+I)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("both upstream or downstream integrases Tyr"):
+            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile IME: both upstream or downstream integrases Tyr found for ICE IME {}".format(
                     ICEIMEStructureSent.internalIdentifier))
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "both upstream or downstream integrases - Ser":
-            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile IME: both upstream or downstream integrases - Ser found for ICE IME {}".format(
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("both upstream or downstream integrases Ser"):
+            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile IME: both upstream or downstream integrases Ser found for ICE IME {}".format(
                     ICEIMEStructureSent.internalIdentifier))
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "both upstream or downstream integrases - DDE":
-            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile IME: both upstream or downstream integrases - DDE found for ICE IME {}".format(
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("both upstream or downstream integrases DDE"):
+            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile IME: both upstream or downstream integrases DDE found for ICE IME {}".format(
                     ICEIMEStructureSent.internalIdentifier))
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "both upstream or downstream integrases - Mixed":
-            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile IME: both upstream or downstream integrases - Mixed found for ICE IME {}".format(
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("both upstream or downstream integrases various types"):
+            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile IME: both upstream or downstream integrases various types found for ICE IME {}".format(
                     ICEIMEStructureSent.internalIdentifier))
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "no integrase":
+
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("no integrase assigned"):
             is01_MobilizableElementsNoIntegrase = 1
-            strTypeToSet = "Mobilizable element (R+C with size <= " + str(maxNumberCDSForFilterIMESize) + " CDS)"
+            strToAppendIfMoreThanOneSP = " with # CDS between SP <= "+str(maxNumberCDSForFilterIMESize)
+            strTypeToSet = "Mobilizable element"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #R+I, R+C+I)"(maxNumberCDSForFilterIMESize) + " CDS)"
         else:
             raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile: unrecognized ICEIMEStructureSent.categoryRegardingIntegrase = {} for ICE IME {}".format(
                     ICEIMEStructureSent.categoryRegardingIntegrase,
                     ICEIMEStructureSent.internalIdentifier))
+
     elif ICEIMEStructureSent.catStructConjModule == "partial conj module":
-        if ICEIMEStructureSent.categoryRegardingIntegrase == "one integrase - Tyr":
+        if ICEIMEStructureSent.categoryRegardingIntegrase.startswith("one integrase Tyr"):
             is01_PartialConjModuleTyr = 1
-            strTypeToSet = "Other partial element (R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "one integrase - Ser":
+            strToAppendIfMoreThanOneSP = " with # CDS between SP > "+str(maxNumberCDSForFilterIMESize)
+            strTypeToSet = "Other partial element"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #(R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("one integrase Ser"):
             is01_PartialConjModuleSer = 1
-            strTypeToSet = "Other partial element (R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "one integrase - DDE":
+            strToAppendIfMoreThanOneSP = " with # CDS between SP > "+str(maxNumberCDSForFilterIMESize)
+            strTypeToSet = "Other partial element"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #(R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("one integrase DDE"):
             is01_PartialConjModuleDDE = 1
-            strTypeToSet = "Other partial element (R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "mulitple adjacent integrases - Tyr":
+            strToAppendIfMoreThanOneSP = " with # CDS between SP > "+str(maxNumberCDSForFilterIMESize)
+            strTypeToSet = "Other partial element"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #(R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("multiple adjacent integrases Tyr"):
             is01_PartialConjModuleTyr = 1
-            strTypeToSet = "Other partial element (R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "mulitple adjacent integrases - Ser":
+            strToAppendIfMoreThanOneSP = " with # CDS between SP > "+str(maxNumberCDSForFilterIMESize)
+            strTypeToSet = "Other partial element"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #(R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("multiple adjacent integrases Ser"):
             is01_PartialConjModuleSer = 1
-            strTypeToSet = "Other partial element (R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "mulitple adjacent integrases - DDE":
+            strToAppendIfMoreThanOneSP = " with # CDS between SP > "+str(maxNumberCDSForFilterIMESize)
+            strTypeToSet = "Other partial element"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #(R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("multiple adjacent integrases DDE"):
             is01_PartialConjModuleDDE = 1
-            strTypeToSet = "Other partial element (R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS)"
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "both upstream or downstream integrases - Tyr":
-            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile partial conj module: both upstream or downstream integrases - Tyr found for ICE IME {}".format(
+            strToAppendIfMoreThanOneSP = " with # CDS between SP > "+str(maxNumberCDSForFilterIMESize)
+            strTypeToSet = "Other partial element"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #(R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS)"
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("both upstream or downstream integrases Tyr"):
+            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile partial conj module: both upstream or downstream integrases Tyr found for ICE IME {}".format(
                     ICEIMEStructureSent.internalIdentifier))
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "both upstream or downstream integrases - Ser":
-            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile partial conj module: both upstream or downstream integrases - Ser found for ICE IME {}".format(
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("both upstream or downstream integrases Ser"):
+            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile partial conj module: both upstream or downstream integrases Ser found for ICE IME {}".format(
                     ICEIMEStructureSent.internalIdentifier))
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "both upstream or downstream integrases - DDE":
-            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile partial conj module: both upstream or downstream integrases - DDE found for ICE IME {}".format(
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("both upstream or downstream integrases DDE"):
+            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile partial conj module: both upstream or downstream integrases DDE found for ICE IME {}".format(
                     ICEIMEStructureSent.internalIdentifier))
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "both upstream or downstream integrases - Mixed":
-            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile partial conj module: both upstream or downstream integrases - Mixed found for ICE IME {}".format(
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("both upstream or downstream integrases various types"):
+            raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile partial conj module: both upstream or downstream integrases various types found for ICE IME {}".format(
                     ICEIMEStructureSent.internalIdentifier))
-        elif ICEIMEStructureSent.categoryRegardingIntegrase == "no integrase":
+        elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("no integrase assigned"):
             is01_PartialConjModuleNoIntegrase = 1
-            strTypeToSet = "Other partial element (R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS)"
+            strToAppendIfMoreThanOneSP = " with # CDS between SP > "+str(maxNumberCDSForFilterIMESize)
+            strTypeToSet = "Other partial element"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #(R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS)"
         else:
             raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile: unrecognized ICEIMEStructureSent.categoryRegardingIntegrase = {} for ICE IME {}".format(
                     ICEIMEStructureSent.categoryRegardingIntegrase,
@@ -383,56 +408,57 @@ def getcatStructWholeElem(ICEIMEStructureSent, maxNumberCDSForFilterIMESize):
             is01_Unsure)
 
 
+
 def printOverallStatsToSummaryFile(
-        totalNumberSP,
-        totalNumberIntegrase,
-        totalNumberUnassignedIntegrase,
-        totalNumberRelaxase,
-        totalNumberUnassignedRelaxase,
-        totalNumberCoupling,
-        totalNumberUnassignedCoupling,
-        totalNumberVirb4,
-        totalNumberUnassignedVirb4,
+        dictGenomeAccnum2totalNumberSP,
+        dictGenomeAccnum2totalNumberIntegrase,
+        dictGenomeAccnum2totalNumberUnassignedIntegrase,
+        dictGenomeAccnum2totalNumberRelaxase,
+        dictGenomeAccnum2totalNumberUnassignedRelaxase,
+        dictGenomeAccnum2totalNumberCoupling,
+        dictGenomeAccnum2totalNumberUnassignedCoupling,
+        dictGenomeAccnum2totalNumberVirb4,
+        dictGenomeAccnum2totalNumberUnassignedVirb4,
         listOfListAllICEsIMEsStructure,
         maxNumberCDSForSplitSPsByColocalizion,
         maxNumberCDSForFilterIMESize,
         summaryFile):
 
-    # print("\n** Script version: \"{}\"".format(scriptVersion), file=summaryFile)
-    # print("\n** Parameters:", file=summaryFile)
-    # print("Maximum CDS numbers in initial segments (maxNumberCDSForSplitSPsByColocalizion): \"{}\"".format(maxNumberCDSForSplitSPsByColocalizion), file=summaryFile)
-    # print("Maximum CDS numbers in an IME element (maxNumberCDSForFilterIMESize): \"{}\"".format(maxNumberCDSForFilterIMESize), file=summaryFile)
+    #dictGenomeAccnum2totalNumberOfSegments = {}
+    dictGenomeAccnum2totalNumberOfSegmentsWithOneElement = {}
+    dictGenomeAccnum2totalNumberOfSegmentsWithSeveralElements = {}
+    dictGenomeAccnum2totalNumberOfSegmentsWithNestedElements = {}
+    dictGenomeAccnum2totalNumberOfSegmentsWithNoElement = {}
+    dictGenomeAccnum2countICETyrTotal = {}
+    dictGenomeAccnum2countICESerTotal = {}
+    dictGenomeAccnum2countICEDDETotal = {}
+    dictGenomeAccnum2countConjugationModulesNoIntegraseTotal = {}
+    dictGenomeAccnum2countPartialICETyrTotal = {}
+    dictGenomeAccnum2countPartialICESerTotal = {}
+    dictGenomeAccnum2countPartialICEDDETotal = {}
+    dictGenomeAccnum2countPartialICENoIntegraseTotal = {}
+    dictGenomeAccnum2countIMETyrTotal = {}
+    dictGenomeAccnum2countIMESerTotal = {}
+    dictGenomeAccnum2countIMEDDETotal = {}
+    dictGenomeAccnum2countMobilizableElementsNoIntegraseTotal = {}
+    dictGenomeAccnum2countPartialConjModuleTyrTotal = {}
+    dictGenomeAccnum2countPartialConjModuleSerTotal = {}
+    dictGenomeAccnum2countPartialConjModuleDDETotal = {}
+    dictGenomeAccnum2countPartialConjModuleNoIntegraseTotal = {}
+    dictGenomeAccnum2countUnsureTotal = {}
+    dictGenomeAccnum2countIntegrasesNotAttributedTyrTotal = {}
+    dictGenomeAccnum2countIntegrasesNotAttributedSerTotal = {}
+    dictGenomeAccnum2countIntegrasesNotAttributedDDETotal = {}
+    dictGenomeAccnum2countEMHostOnlyTotal = {}
+    dictGenomeAccnum2countEMGuestOnlyTotal = {}
+    dictGenomeAccnum2countEMHostAndGuestTotal = {}
 
-    totalNumberOfSegments = 0
-    totalNumberOfSegmentsWithOneElement = 0
-    totalNumberOfSegmentsWithSeveralElements = 0
-    totalNumberOfSegmentsWithNestedElements = 0
-    totalNumberOfSegmentsWithNoElement = 0
-    countICETyrTotal = 0
-    countICESerTotal = 0
-    countICEDDETotal = 0
-    countConjugationModulesNoIntegraseTotal = 0
-    countPartialICETyrTotal = 0
-    countPartialICESerTotal = 0
-    countPartialICEDDETotal = 0
-    countPartialICENoIntegraseTotal = 0
-    countIMETyrTotal = 0
-    countIMESerTotal = 0
-    countIMEDDETotal = 0
-    countMobilizableElementsNoIntegraseTotal = 0
-    countPartialConjModuleTyrTotal = 0
-    countPartialConjModuleSerTotal = 0
-    countPartialConjModuleDDETotal = 0
-    countPartialConjModuleNoIntegraseTotal = 0
-    countUnsureTotal = 0
-    countIntegrasesNotAttributedTyrTotal = 0
-    countIntegrasesNotAttributedSerTotal = 0
-    countIntegrasesNotAttributedDDETotal = 0
-    countEMHostOnlyTotal = 0
-    countEMGuestOnlyTotal = 0
-    countEMHostAndGuestTotal = 0
+    dictGenomeAccnum2HasStatToPrint = {}
 
     for idx, currListAllICEsIMEsStructure in enumerate(listOfListAllICEsIMEsStructure):
+
+        if len(currListAllICEsIMEsStructure) == 0 :
+            continue
 
         countICETyrSegment = 0
         countICESerSegment = 0
@@ -458,8 +484,31 @@ def printOverallStatsToSummaryFile(
         countEMGuestOnlySegment = 0
         countEMHostAndGuestSegment = 0
 
+        #Remark: listOrderedSPs can be empty : The SP TEST1_RS03125 seems to be an isolated relaxase and is therefore not reported as an ICE / IME structure by ICEscreen. Please manually check if it is a false positive or for the potential presence of other undetected SP in its genomic neighborhood.
+        genomeAccnumOfCurrListAllICEsIMEsStructureIT = ""
+        if len(currListAllICEsIMEsStructure[0].listOrderedSPs) > 0:
+            genomeAccnumOfCurrListAllICEsIMEsStructureIT = currListAllICEsIMEsStructure[0].listOrderedSPs[0].genomeAccession
+        else:
+            if len(currListAllICEsIMEsStructure[0].setSPConjModuleToManuallyCheck) > 0:
+                genomeAccnumOfCurrListAllICEsIMEsStructureIT = next(iter(currListAllICEsIMEsStructure[0].setSPConjModuleToManuallyCheck)).genomeAccession
+        if len(genomeAccnumOfCurrListAllICEsIMEsStructureIT) == 0:
+            raise RuntimeError('Error printOverallStatsToSummaryFile: len(genomeAccnumOfCurrListAllICEsIMEsStructureIT) == 0 ; currListAllICEsIMEsStructure = {} ; len = {} ; elet 0 = {} ; listOrderedSPs = {} of len = {} ; comment = {}'.format(str(currListAllICEsIMEsStructure), str(len(currListAllICEsIMEsStructure)), currListAllICEsIMEsStructure[0].internalIdentifier, str(currListAllICEsIMEsStructure[0].listOrderedSPs), str(len(currListAllICEsIMEsStructure[0].listOrderedSPs)), currListAllICEsIMEsStructure[0].comment))
+
+
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT not in dictGenomeAccnum2HasStatToPrint:
+            dictGenomeAccnum2HasStatToPrint[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = 1
+
         for currICEIMEStructure in currListAllICEsIMEsStructure:
             # print stat for each genomic segment and total
+
+            # check that all ICEsIMEsStructure in currListAllICEsIMEsStructure have the same .listOrderedSPs .genomeAccession
+            for SPsInlistOrderedSPsIT in currICEIMEStructure.listOrderedSPs:
+                if SPsInlistOrderedSPsIT.genomeAccession != genomeAccnumOfCurrListAllICEsIMEsStructureIT:
+                    raise RuntimeError('printOverallStatsToSummaryFile error: SPsInlistOrderedSPsIT.genomeAccession {} != genomeAccnumOfCurrListAllICEsIMEsStructureIT {}'.format(str(SPsInlistOrderedSPsIT.genomeAccession), str(genomeAccnumOfCurrListAllICEsIMEsStructureIT)))
+            # check for SP in setSPConjModuleToManuallyCheck
+            for SPsInsetSPConjModuleToManuallyCheck in currICEIMEStructure.setSPConjModuleToManuallyCheck:
+                if SPsInsetSPConjModuleToManuallyCheck.genomeAccession != genomeAccnumOfCurrListAllICEsIMEsStructureIT:
+                    raise RuntimeError('printOverallStatsToSummaryFile error: SPsInsetSPConjModuleToManuallyCheck.genomeAccession {} != genomeAccnumOfCurrListAllICEsIMEsStructureIT {}'.format(str(SPsInsetSPConjModuleToManuallyCheck.genomeAccession), str(genomeAccnumOfCurrListAllICEsIMEsStructureIT)))
 
             if len(currICEIMEStructure.setHostNestedICEsIMEsStructure) >= 1 and len(currICEIMEStructure.setGuestsNestedICEsIMEsStructure) >= 1:
                 countEMHostAndGuestSegment += 1
@@ -467,6 +516,7 @@ def printOverallStatsToSummaryFile(
                 countEMGuestOnlySegment += 1
             elif len(currICEIMEStructure.setGuestsNestedICEsIMEsStructure) >= 1:
                 countEMHostOnlySegment += 1
+
 
             (strTypeToSet,
              is01_ICETyr,
@@ -504,7 +554,13 @@ def printOverallStatsToSummaryFile(
             countPartialConjModuleNoIntegraseSegment += is01_PartialConjModuleNoIntegrase
             countUnsureSegment += is01_Unsure
 
-        totalNumberOfSegments += 1
+        #totalNumberOfSegments is incorrect number now as it is missing segment with empty currListAllICEsIMEsStructure
+        #totalNumberOfSegments += 1
+        # if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2totalNumberOfSegments :
+        #     dictGenomeAccnum2totalNumberOfSegments[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += 1
+        # else :
+        #     dictGenomeAccnum2totalNumberOfSegments[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = 1
+
         totalElementStructsInSegment = countICETyrSegment + countICESerSegment\
             + countICEDDESegment + countConjugationModulesNoIntegraseSegment\
             + countPartialICETyrSegment + countPartialICESerSegment\
@@ -514,90 +570,267 @@ def printOverallStatsToSummaryFile(
             + countPartialConjModuleTyrSegment + countPartialConjModuleSerSegment\
             + countPartialConjModuleDDESegment\
             + countPartialConjModuleNoIntegraseSegment
+
+
         if (totalElementStructsInSegment) == 0:
-            totalNumberOfSegmentsWithNoElement += 1
+            #totalNumberOfSegmentsWithNoElement += 1
+            if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2totalNumberOfSegmentsWithNoElement:
+                dictGenomeAccnum2totalNumberOfSegmentsWithNoElement[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += 1
+            else:
+                dictGenomeAccnum2totalNumberOfSegmentsWithNoElement[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = 1
         elif (totalElementStructsInSegment) == 1:
-            totalNumberOfSegmentsWithOneElement += 1
+            # totalNumberOfSegmentsWithOneElement += 1
+            if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2totalNumberOfSegmentsWithOneElement:
+                dictGenomeAccnum2totalNumberOfSegmentsWithOneElement[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += 1
+            else:
+                dictGenomeAccnum2totalNumberOfSegmentsWithOneElement[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = 1
         else:
-            totalNumberOfSegmentsWithSeveralElements += 1
+            #totalNumberOfSegmentsWithSeveralElements += 1
+            if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2totalNumberOfSegmentsWithSeveralElements:
+                dictGenomeAccnum2totalNumberOfSegmentsWithSeveralElements[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += 1
+            else:
+                dictGenomeAccnum2totalNumberOfSegmentsWithSeveralElements[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = 1
+
         if countEMHostOnlySegment > 0:
-            totalNumberOfSegmentsWithNestedElements += 1
+            #totalNumberOfSegmentsWithNestedElements += 1
+            if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2totalNumberOfSegmentsWithNestedElements:
+                dictGenomeAccnum2totalNumberOfSegmentsWithNestedElements[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += 1
+            else:
+                dictGenomeAccnum2totalNumberOfSegmentsWithNestedElements[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = 1
 
-        countICETyrTotal += countICETyrSegment
-        countICESerTotal += countICESerSegment
-        countICEDDETotal += countICEDDESegment
-        countConjugationModulesNoIntegraseTotal += countConjugationModulesNoIntegraseSegment
-        countPartialICETyrTotal += countPartialICETyrSegment
-        countPartialICESerTotal += countPartialICESerSegment
-        countPartialICEDDETotal += countPartialICEDDESegment
-        countPartialICENoIntegraseTotal += countPartialICENoIntegraseSegment
-        countIMETyrTotal += countIMETyrSegment
-        countIMESerTotal += countIMESerSegment
-        countIMEDDETotal += countIMEDDESegment
-        countMobilizableElementsNoIntegraseTotal += countMobilizableElementsNoIntegraseSegment
-        countPartialConjModuleTyrTotal += countPartialConjModuleTyrSegment
-        countPartialConjModuleSerTotal += countPartialConjModuleSerSegment
-        countPartialConjModuleDDETotal += countPartialConjModuleDDESegment
-        countPartialConjModuleNoIntegraseTotal += countPartialConjModuleNoIntegraseSegment
-        countUnsureTotal += countUnsureSegment
-        countIntegrasesNotAttributedTyrTotal += countIntegrasesNotAttributedTyrSegment
-        countIntegrasesNotAttributedSerTotal += countIntegrasesNotAttributedSerSegment
-        countIntegrasesNotAttributedDDETotal += countIntegrasesNotAttributedDDESegment
-        countEMHostOnlyTotal += countEMHostOnlySegment
-        countEMGuestOnlyTotal += countEMGuestOnlySegment
-        countEMHostAndGuestTotal += countEMHostAndGuestSegment
-
-    # Elements
-    totalNumberOfCompleteICE = countICETyrTotal + countICESerTotal + countICEDDETotal
-    totalNumberOfConjugationModules = countConjugationModulesNoIntegraseTotal
-    totalNumberOfPartialICE = countPartialICETyrTotal + countPartialICESerTotal + countPartialICEDDETotal + countPartialICENoIntegraseTotal
-    totalNumberOfCompleteIME = countIMETyrTotal + countIMESerTotal + countIMEDDETotal
-    totalNumberOfMobilizableElements = countMobilizableElementsNoIntegraseTotal
-    totalNumberOfOtherPartialElements = countPartialConjModuleTyrTotal + countPartialConjModuleSerTotal + countPartialConjModuleDDETotal + countPartialConjModuleNoIntegraseTotal
-    totalNumberOfNestedElementsInSegments = countEMHostOnlyTotal + countEMGuestOnlyTotal + countEMHostAndGuestTotal
-    totalNumberOfHostElements = countEMHostOnlyTotal
-    totalNumberOfGuestElements = countEMGuestOnlyTotal
-    totalNumberOfHostAndGuestElements = countEMHostAndGuestTotal
-
+        # countICETyrTotal += countICETyrSegment
+        # countICESerTotal += countICESerSegment
+        # countICEDDETotal += countICEDDESegment
+        # countConjugationModulesNoIntegraseTotal += countConjugationModulesNoIntegraseSegment
+        # countPartialICETyrTotal += countPartialICETyrSegment
+        # countPartialICESerTotal += countPartialICESerSegment
+        # countPartialICEDDETotal += countPartialICEDDESegment
+        # countPartialICENoIntegraseTotal += countPartialICENoIntegraseSegment
+        # countIMETyrTotal += countIMETyrSegment
+        # countIMESerTotal += countIMESerSegment
+        # countIMEDDETotal += countIMEDDESegment
+        # countMobilizableElementsNoIntegraseTotal += countMobilizableElementsNoIntegraseSegment
+        # countPartialConjModuleTyrTotal += countPartialConjModuleTyrSegment
+        # countPartialConjModuleSerTotal += countPartialConjModuleSerSegment
+        # countPartialConjModuleDDETotal += countPartialConjModuleDDESegment
+        # countPartialConjModuleNoIntegraseTotal += countPartialConjModuleNoIntegraseSegment
+        # countUnsureTotal += countUnsureSegment
+        # countIntegrasesNotAttributedTyrTotal += countIntegrasesNotAttributedTyrSegment
+        # countIntegrasesNotAttributedSerTotal += countIntegrasesNotAttributedSerSegment
+        # countIntegrasesNotAttributedDDETotal += countIntegrasesNotAttributedDDESegment
+        # countEMHostOnlyTotal += countEMHostOnlySegment
+        # countEMGuestOnlyTotal += countEMGuestOnlySegment
+        # countEMHostAndGuestTotal += countEMHostAndGuestSegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countICETyrTotal:
+            dictGenomeAccnum2countICETyrTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countICETyrSegment
+        else:
+            dictGenomeAccnum2countICETyrTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countICETyrSegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countICESerTotal:
+            dictGenomeAccnum2countICESerTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countICESerSegment
+        else:
+            dictGenomeAccnum2countICESerTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countICESerSegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countICEDDETotal:
+            dictGenomeAccnum2countICEDDETotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countICEDDESegment
+        else:
+            dictGenomeAccnum2countICEDDETotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countICEDDESegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countConjugationModulesNoIntegraseTotal:
+            dictGenomeAccnum2countConjugationModulesNoIntegraseTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countConjugationModulesNoIntegraseSegment
+        else:
+            dictGenomeAccnum2countConjugationModulesNoIntegraseTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countConjugationModulesNoIntegraseSegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countPartialICETyrTotal:
+            dictGenomeAccnum2countPartialICETyrTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countPartialICETyrSegment
+        else:
+            dictGenomeAccnum2countPartialICETyrTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countPartialICETyrSegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countPartialICESerTotal:
+            dictGenomeAccnum2countPartialICESerTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countPartialICESerSegment
+        else:
+            dictGenomeAccnum2countPartialICESerTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countPartialICESerSegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countPartialICEDDETotal:
+            dictGenomeAccnum2countPartialICEDDETotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countPartialICEDDESegment
+        else:
+            dictGenomeAccnum2countPartialICEDDETotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countPartialICEDDESegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countPartialICENoIntegraseTotal:
+            dictGenomeAccnum2countPartialICENoIntegraseTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countPartialICENoIntegraseSegment
+        else:
+            dictGenomeAccnum2countPartialICENoIntegraseTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countPartialICENoIntegraseSegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countIMETyrTotal:
+            dictGenomeAccnum2countIMETyrTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countIMETyrSegment
+        else:
+            dictGenomeAccnum2countIMETyrTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countIMETyrSegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countIMESerTotal:
+            dictGenomeAccnum2countIMESerTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countIMESerSegment
+        else:
+            dictGenomeAccnum2countIMESerTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countIMESerSegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countIMEDDETotal:
+            dictGenomeAccnum2countIMEDDETotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countIMEDDESegment
+        else:
+            dictGenomeAccnum2countIMEDDETotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countIMEDDESegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countMobilizableElementsNoIntegraseTotal:
+            dictGenomeAccnum2countMobilizableElementsNoIntegraseTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countMobilizableElementsNoIntegraseSegment
+        else:
+            dictGenomeAccnum2countMobilizableElementsNoIntegraseTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countMobilizableElementsNoIntegraseSegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countPartialConjModuleTyrTotal:
+            dictGenomeAccnum2countPartialConjModuleTyrTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countPartialConjModuleTyrSegment
+        else:
+            dictGenomeAccnum2countPartialConjModuleTyrTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countPartialConjModuleTyrSegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countPartialConjModuleSerTotal:
+            dictGenomeAccnum2countPartialConjModuleSerTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countPartialConjModuleSerSegment
+        else:
+            dictGenomeAccnum2countPartialConjModuleSerTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countPartialConjModuleSerSegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countPartialConjModuleDDETotal:
+            dictGenomeAccnum2countPartialConjModuleDDETotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countPartialConjModuleDDESegment
+        else:
+            dictGenomeAccnum2countPartialConjModuleDDETotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countPartialConjModuleDDESegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countPartialConjModuleNoIntegraseTotal:
+            dictGenomeAccnum2countPartialConjModuleNoIntegraseTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countPartialConjModuleNoIntegraseSegment
+        else:
+            dictGenomeAccnum2countPartialConjModuleNoIntegraseTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countPartialConjModuleNoIntegraseSegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countUnsureTotal:
+            dictGenomeAccnum2countUnsureTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countUnsureSegment
+        else:
+            dictGenomeAccnum2countUnsureTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countUnsureSegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countIntegrasesNotAttributedTyrTotal:
+            dictGenomeAccnum2countIntegrasesNotAttributedTyrTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countIntegrasesNotAttributedTyrSegment
+        else:
+            dictGenomeAccnum2countIntegrasesNotAttributedTyrTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countIntegrasesNotAttributedTyrSegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countIntegrasesNotAttributedSerTotal:
+            dictGenomeAccnum2countIntegrasesNotAttributedSerTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countIntegrasesNotAttributedSerSegment
+        else:
+            dictGenomeAccnum2countIntegrasesNotAttributedSerTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countIntegrasesNotAttributedSerSegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countIntegrasesNotAttributedDDETotal:
+            dictGenomeAccnum2countIntegrasesNotAttributedDDETotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countIntegrasesNotAttributedDDESegment
+        else:
+            dictGenomeAccnum2countIntegrasesNotAttributedDDETotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countIntegrasesNotAttributedDDESegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countEMHostOnlyTotal:
+            dictGenomeAccnum2countEMHostOnlyTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countEMHostOnlySegment
+        else:
+            dictGenomeAccnum2countEMHostOnlyTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countEMHostOnlySegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countEMGuestOnlyTotal:
+            dictGenomeAccnum2countEMGuestOnlyTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countEMGuestOnlySegment
+        else:
+            dictGenomeAccnum2countEMGuestOnlyTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countEMGuestOnlySegment
+        if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countEMHostAndGuestTotal:
+            dictGenomeAccnum2countEMHostAndGuestTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countEMHostAndGuestSegment
+        else:
+            dictGenomeAccnum2countEMHostAndGuestTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countEMHostAndGuestSegment
+    
     # print("\n** Overall statistics:", file=summaryFile)
-    strTotalToPrint = (
-        "##################### Mobile elements detection statistics #####################" +
-        "\n# Number of complete elements" +
-        "\nComplete ICE (4 types of SP): " + str(totalNumberOfCompleteICE) +
-        "\nComplete IME (R+I, R+C+I): " + str(totalNumberOfCompleteIME) +
-        "\n\n# Number of complete modules" +
-        "\nConjugation module (R+C+V): " + str(totalNumberOfConjugationModules) +
-        "\nMobilizable element (R+C with size <= " + str(maxNumberCDSForFilterIMESize) + " CDS): " + str(totalNumberOfMobilizableElements) +
-        "\n\n# Number of partial elements" +
-        "\nPartial ICE (at least V): " + str(totalNumberOfPartialICE) +
-        "\nOther partial element (R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS): " + str(totalNumberOfOtherPartialElements) +
-        "\n\n# Composite elements" +
-        "\nTotal nested elements (partial or complete): " + str(totalNumberOfNestedElementsInSegments) +
-        "\nHost element: " + str(totalNumberOfHostElements) +
-        "\nGuest element: " + str(totalNumberOfGuestElements) +
-        "\nElement that are both host and guest: " + str(totalNumberOfHostAndGuestElements) +
-        "\n\n################### Signature proteins detection statistics ####################" +
-        "\n# Total SP detected" +
-        "\nTotal SP: " + str(totalNumberSP) +
-        "\nTotal Integrase: " + str(totalNumberIntegrase) +
-        "\nTotal Relaxase: " + str(totalNumberRelaxase) +
-        "\nTotal Coupling protein: " + str(totalNumberCoupling) +
-        "\nTotal VirB4: " + str(totalNumberVirb4) +
-        "\n\n# Unassigned SP" +
-        "\nUnassigned SP: " + str(totalNumberUnassignedIntegrase + totalNumberUnassignedRelaxase + totalNumberUnassignedCoupling + totalNumberUnassignedVirb4) +
-        "\nUnassigned Integrase: " + str(totalNumberUnassignedIntegrase) +
-        "\nUnassigned Relaxase: " + str(totalNumberUnassignedRelaxase) +
-        "\nUnassigned Coupling protein: " + str(totalNumberUnassignedCoupling) +
-        "\nUnassigned VirB4: " + str(totalNumberUnassignedVirb4) +
-        "\n\n############################# Segments statistics ##############################" +
-        "\nNumber of segments: " + str(totalNumberOfSegments) +
-        "\nSegment with one element: " + str(totalNumberOfSegmentsWithOneElement) +
-        "\nSegment with several elements: " + str(totalNumberOfSegmentsWithSeveralElements) +
-        "\nSegment with nested elements: " + str(totalNumberOfSegmentsWithNestedElements) +
-        "\nSegment with no element: " + str(totalNumberOfSegmentsWithNoElement) +
-        "\n\n############################### Parameters used ################################" +
-        "\nMaximum CDS numbers in initial segments: " + str(maxNumberCDSForSplitSPsByColocalizion) +
-        "\nMaximum CDS numbers in an IME element: " + str(maxNumberCDSForFilterIMESize)
-    )
 
-    print(strTotalToPrint, file=summaryFile)
+    #now = datetime.datetime.now()
+    strHeaderToPrint = (
+        "\n##################### Main parameters of the ICEscreen analysis #####################" +
+        #"\nDate and time of the analysis:\t" + now.strftime("%Y-%m-%d %H:%M:%S") +
+        "\nMaximum distance in CDS between consecutive SPs within a segments:\t" + str(maxNumberCDSForSplitSPsByColocalizion) +
+        "\nMaximum distance in CDS between consecutive SPs within an IME element:\t" + str(maxNumberCDSForFilterIMESize) +
+        "\n\n"
+        )
+    print(strHeaderToPrint, file=summaryFile)
+
+    for genomeAccnumIT in dictGenomeAccnum2HasStatToPrint:
+
+        # Elements
+        # totalNumberOfCompleteICE = countICETyrTotal + countICESerTotal + countICEDDETotal
+        # totalNumberOfConjugationModules = countConjugationModulesNoIntegraseTotal
+        # totalNumberOfPartialICE = countPartialICETyrTotal + countPartialICESerTotal + countPartialICEDDETotal + countPartialICENoIntegraseTotal
+        # totalNumberOfCompleteIME = countIMETyrTotal + countIMESerTotal + countIMEDDETotal
+        # totalNumberOfMobilizableElements = countMobilizableElementsNoIntegraseTotal
+        # totalNumberOfOtherPartialElements = countPartialConjModuleTyrTotal + countPartialConjModuleSerTotal + countPartialConjModuleDDETotal + countPartialConjModuleNoIntegraseTotal
+        # totalNumberOfNestedElementsInSegments = countEMHostOnlyTotal + countEMGuestOnlyTotal + countEMHostAndGuestTotal
+        # totalNumberOfHostElements = countEMHostOnlyTotal
+        # totalNumberOfGuestElements = countEMGuestOnlyTotal
+        # totalNumberOfHostAndGuestElements = countEMHostAndGuestTotal
+        totalNumberOfCompleteICE = dictGenomeAccnum2countICETyrTotal[genomeAccnumIT] + dictGenomeAccnum2countICESerTotal[genomeAccnumIT] + dictGenomeAccnum2countICEDDETotal[genomeAccnumIT]
+        totalNumberOfConjugationModules = dictGenomeAccnum2countConjugationModulesNoIntegraseTotal[genomeAccnumIT]
+        totalNumberOfPartialICE = dictGenomeAccnum2countPartialICETyrTotal[genomeAccnumIT] + dictGenomeAccnum2countPartialICESerTotal[genomeAccnumIT] + dictGenomeAccnum2countPartialICEDDETotal[genomeAccnumIT] + dictGenomeAccnum2countPartialICENoIntegraseTotal[genomeAccnumIT]
+        totalNumberOfCompleteIME = dictGenomeAccnum2countIMETyrTotal[genomeAccnumIT] + dictGenomeAccnum2countIMESerTotal[genomeAccnumIT] + dictGenomeAccnum2countIMEDDETotal[genomeAccnumIT]
+        totalNumberOfMobilizableElements = dictGenomeAccnum2countMobilizableElementsNoIntegraseTotal[genomeAccnumIT]
+        totalNumberOfOtherPartialElements = dictGenomeAccnum2countPartialConjModuleTyrTotal[genomeAccnumIT] + dictGenomeAccnum2countPartialConjModuleSerTotal[genomeAccnumIT] + dictGenomeAccnum2countPartialConjModuleDDETotal[genomeAccnumIT] + dictGenomeAccnum2countPartialConjModuleNoIntegraseTotal[genomeAccnumIT]
+        totalNumberOfNestedElementsInSegments = dictGenomeAccnum2countEMHostOnlyTotal[genomeAccnumIT] + dictGenomeAccnum2countEMGuestOnlyTotal[genomeAccnumIT] + dictGenomeAccnum2countEMHostAndGuestTotal[genomeAccnumIT]
+        totalNumberOfHostElements = dictGenomeAccnum2countEMHostOnlyTotal[genomeAccnumIT]
+        totalNumberOfGuestElements = dictGenomeAccnum2countEMGuestOnlyTotal[genomeAccnumIT]
+        totalNumberOfHostAndGuestElements = dictGenomeAccnum2countEMHostAndGuestTotal[genomeAccnumIT]
+
+        countFromdictGenomeAccnum2totalNumberSP = 0
+        if genomeAccnumIT in dictGenomeAccnum2totalNumberSP:
+            countFromdictGenomeAccnum2totalNumberSP = dictGenomeAccnum2totalNumberSP[genomeAccnumIT]
+        countFromdictGenomeAccnum2totalNumberIntegrase = 0
+        if genomeAccnumIT in dictGenomeAccnum2totalNumberIntegrase:
+            countFromdictGenomeAccnum2totalNumberIntegrase = dictGenomeAccnum2totalNumberIntegrase[genomeAccnumIT]
+        countFromdictGenomeAccnum2totalNumberUnassignedIntegrase = 0
+        if genomeAccnumIT in dictGenomeAccnum2totalNumberUnassignedIntegrase:
+            countFromdictGenomeAccnum2totalNumberUnassignedIntegrase = dictGenomeAccnum2totalNumberUnassignedIntegrase[genomeAccnumIT]
+        countFromdictGenomeAccnum2totalNumberRelaxase = 0
+        if genomeAccnumIT in dictGenomeAccnum2totalNumberRelaxase:
+            countFromdictGenomeAccnum2totalNumberRelaxase = dictGenomeAccnum2totalNumberRelaxase[genomeAccnumIT]
+        countFromdictGenomeAccnum2totalNumberUnassignedRelaxase = 0
+        if genomeAccnumIT in dictGenomeAccnum2totalNumberUnassignedRelaxase:
+            countFromdictGenomeAccnum2totalNumberUnassignedRelaxase = dictGenomeAccnum2totalNumberUnassignedRelaxase[genomeAccnumIT]
+        countFromdictGenomeAccnum2totalNumberCoupling = 0
+        if genomeAccnumIT in dictGenomeAccnum2totalNumberCoupling:
+            countFromdictGenomeAccnum2totalNumberCoupling = dictGenomeAccnum2totalNumberCoupling[genomeAccnumIT]
+        countFromdictGenomeAccnum2totalNumberUnassignedCoupling = 0
+        if genomeAccnumIT in dictGenomeAccnum2totalNumberUnassignedCoupling:
+            countFromdictGenomeAccnum2totalNumberUnassignedCoupling = dictGenomeAccnum2totalNumberUnassignedCoupling[genomeAccnumIT]
+        countFromdictGenomeAccnum2totalNumberVirb4 = 0
+        if genomeAccnumIT in dictGenomeAccnum2totalNumberVirb4:
+            countFromdictGenomeAccnum2totalNumberVirb4 = dictGenomeAccnum2totalNumberVirb4[genomeAccnumIT]
+        countFromdictGenomeAccnum2totalNumberUnassignedVirb4 = 0
+        if genomeAccnumIT in dictGenomeAccnum2totalNumberUnassignedVirb4:
+            countFromdictGenomeAccnum2totalNumberUnassignedVirb4 = dictGenomeAccnum2totalNumberUnassignedVirb4[genomeAccnumIT]
+        # countFromdictGenomeAccnum2totalNumberOfSegments = 0
+        # if genomeAccnumIT in dictGenomeAccnum2totalNumberOfSegments:
+        #     countFromdictGenomeAccnum2totalNumberOfSegments = dictGenomeAccnum2totalNumberOfSegments[genomeAccnumIT]
+        countFromdictGenomeAccnum2totalNumberOfSegmentsWithOneElement = 0
+        if genomeAccnumIT in dictGenomeAccnum2totalNumberOfSegmentsWithOneElement:
+            countFromdictGenomeAccnum2totalNumberOfSegmentsWithOneElement = dictGenomeAccnum2totalNumberOfSegmentsWithOneElement[genomeAccnumIT]
+        countFromdictGenomeAccnum2totalNumberOfSegmentsWithSeveralElements = 0
+        if genomeAccnumIT in dictGenomeAccnum2totalNumberOfSegmentsWithSeveralElements:
+            countFromdictGenomeAccnum2totalNumberOfSegmentsWithSeveralElements = dictGenomeAccnum2totalNumberOfSegmentsWithSeveralElements[genomeAccnumIT]
+        countFromdictGenomeAccnum2totalNumberOfSegmentsWithNestedElements = 0
+        if genomeAccnumIT in dictGenomeAccnum2totalNumberOfSegmentsWithNestedElements:
+            countFromdictGenomeAccnum2totalNumberOfSegmentsWithNestedElements = dictGenomeAccnum2totalNumberOfSegmentsWithNestedElements[genomeAccnumIT]
+        countFromdictGenomeAccnum2totalNumberOfSegmentsWithNoElement = 0
+        if genomeAccnumIT in dictGenomeAccnum2totalNumberOfSegmentsWithNoElement:
+            countFromdictGenomeAccnum2totalNumberOfSegmentsWithNoElement = dictGenomeAccnum2totalNumberOfSegmentsWithNoElement[genomeAccnumIT]
+
+
+
+        strTotalToPrint = (
+            "##################### ICEscreen statistics for genome accession "+genomeAccnumIT+" #####################" +
+            "\n\n##### Mobile elements #####" +
+            "\n## Number of complete elements" +
+            "\nComplete ICE (4 types of SP):\t" + str(totalNumberOfCompleteICE) +
+            "\nComplete IME (R+I, R+C+I with distance between consecutive SPs <= "+str(maxNumberCDSForFilterIMESize)+" CDSs):\t" + str(totalNumberOfCompleteIME) +
+            "\n## Number of complete modules" +
+            "\nConjugation module (R+C+V):\t" + str(totalNumberOfConjugationModules) +
+            "\nMobilizable element (R+C with distance between consecutive SPs <= " + str(maxNumberCDSForFilterIMESize) + " CDS):\t" + str(totalNumberOfMobilizableElements) +
+            "\n## Number of partial elements" +
+            "\nPartial ICE (at least V):\t" + str(totalNumberOfPartialICE) +
+            "\nOther partial element (R+C, R+V, V+C with distance between consecutive SPs > " + str(maxNumberCDSForFilterIMESize) + " CDS):\t" + str(totalNumberOfOtherPartialElements) +
+            "\n## Composite elements" +
+            "\nTotal nested elements (partial or complete):\t" + str(totalNumberOfNestedElementsInSegments) +
+            "\nHost element:\t" + str(totalNumberOfHostElements) +
+            "\nGuest element:\t" + str(totalNumberOfGuestElements) +
+            "\nElement that are both host and guest:\t" + str(totalNumberOfHostAndGuestElements) +
+            "\n\n##### Signature proteins #####" +
+            "\n## Total SPs detected" +
+            "\nTotal SPs:\t" + str(countFromdictGenomeAccnum2totalNumberSP) +
+            "\nTotal Integrase:\t" + str(countFromdictGenomeAccnum2totalNumberIntegrase) +
+            "\nTotal Relaxase:\t" + str(countFromdictGenomeAccnum2totalNumberRelaxase) +
+            "\nTotal Coupling protein:\t" + str(countFromdictGenomeAccnum2totalNumberCoupling) +
+            "\nTotal VirB4:\t" + str(countFromdictGenomeAccnum2totalNumberVirb4) +
+            "\n## Unassigned SPs" +
+            "\nUnassigned SPs:\t" + str(countFromdictGenomeAccnum2totalNumberUnassignedIntegrase + countFromdictGenomeAccnum2totalNumberUnassignedRelaxase + countFromdictGenomeAccnum2totalNumberUnassignedCoupling + countFromdictGenomeAccnum2totalNumberUnassignedVirb4) +
+            "\nUnassigned Integrase:\t" + str(countFromdictGenomeAccnum2totalNumberUnassignedIntegrase) +
+            "\nUnassigned Relaxase:\t" + str(countFromdictGenomeAccnum2totalNumberUnassignedRelaxase) +
+            "\nUnassigned Coupling protein:\t" + str(countFromdictGenomeAccnum2totalNumberUnassignedCoupling) +
+            "\nUnassigned VirB4:\t" + str(countFromdictGenomeAccnum2totalNumberUnassignedVirb4) +
+            "\n\n##### Segments #####" +
+            #"\nNumber of segments:\t" + str(countFromdictGenomeAccnum2totalNumberOfSegments) +
+            "\nNumber of segments with one element:\t" + str(countFromdictGenomeAccnum2totalNumberOfSegmentsWithOneElement) +
+            "\nNumber of segments with several elements:\t" + str(countFromdictGenomeAccnum2totalNumberOfSegmentsWithSeveralElements) +
+            "\nNumber of segments with nested elements:\t" + str(countFromdictGenomeAccnum2totalNumberOfSegmentsWithNestedElements) +
+            "\nNumber of segments with exclusively isolated SPs to manually verify:\t" + str(countFromdictGenomeAccnum2totalNumberOfSegmentsWithNoElement) +
+            "\n"
+        )
+        print(strTotalToPrint, file=summaryFile)

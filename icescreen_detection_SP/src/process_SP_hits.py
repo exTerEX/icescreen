@@ -24,7 +24,7 @@ def split_identifier(identifier):
 
     :param identifier: ICEscreen CDS identifier
     :type identifier:  :class:`str`
-    :return:           `cds_num`, `cds`, `cds_strand`, `cds_start` and
+    :return:           `cds_num`, `locus_tag`, `protein_id`, `genome_accession`, `cds_strand`, `cds_start` and
                        `cds_end`
     :rtype:            :class:`tuple`
 
@@ -32,9 +32,14 @@ def split_identifier(identifier):
     ---------------------
     cds_num
       Numbering of CDS
-    cds
-      An identifier of the CDS from genbank file.
-      It might be: `protein_id`, `locus_tag`, ...
+    locus_tag
+      An uniq identifier of the gene
+    protein_ID
+      An identifier of the protein.
+    genome_accession
+      An identifier of the genome record
+    genome_accession_rank
+      The rank of the genome record in the genbank file
     cds_strand
       Strand of gene coding for the CDS (+ or -)
     cds_start
@@ -44,12 +49,57 @@ def split_identifier(identifier):
     """
 
     # Compile regex to catch all information in ICEscreen CDS identifier
-    reg = re.compile(r"^([0-9]*)_(.*)\|(\+|-)\|([0-9]*)\.\.([0-9]*)")
+    #``[CDS_number]&locus_tag=[locus_tag]&protein_id=[protein_id]&genome_accession=[ACCESSION]&genome_accession_rank=[rank]|[Strand]|[Start]..[End]|[Pseudo]``
+    #reg = re.compile(r"^([0-9]*)_(.*)\|(\+|-)\|([0-9]*)\.\.([0-9]*)")
+    reg = re.compile(r"^([0-9]*)&locus_tag=(.*)&protein_id=(.*)&genome_accession=(.*)&genome_accession_rank=([0-9]+)\|(\+|-)\|([0-9]*)\.\.([0-9]*)")
+
+    CDS_numToReturn = ""
+    locus_tagToReturn = ""
+    protein_idToReturn = ""
+    genome_accessionToReturn = ""
+    genome_accession_rankToReturn = ""
+    CDS_strandToReturn = ""
+    CDS_startToReturn = ""
+    CDS_endToReturn = ""
+
 
     # Extract information
     reg_results = re.search(reg, identifier)
+    if reg_results is None :
+      raise RuntimeError("Error in split_identifier: identifier {} do not match the regex as expected".format(
+          str(identifier)))
+    else :
+      CDS_numToReturn = reg_results.group(1)
+      if len(CDS_numToReturn) == 0:
+        raise RuntimeError('split_identifier error: len(CDS_numToReturn) == 0 for identifier {}'.format(str(identifier)))
+      locus_tagToReturn = reg_results.group(2)
+      if len(locus_tagToReturn) == 0:
+        locus_tagToReturn = "-"
+      protein_idToReturn = reg_results.group(3)
+      if len(protein_idToReturn) == 0:
+        protein_idToReturn = "-"
+      genome_accessionToReturn = reg_results.group(4)
+      if len(genome_accessionToReturn) == 0:
+        raise RuntimeError('split_identifier error: len(genome_accessionToReturn) == 0 for identifier {}'.format(str(identifier)))
+      genome_accession_rankToReturn = reg_results.group(5)
+      if len(genome_accession_rankToReturn) == 0:
+        raise RuntimeError('split_identifier error: len(genome_accession_rankToReturn) == 0 for identifier {}'.format(str(identifier)))
+      CDS_strandToReturn = reg_results.group(6)
+      if len(CDS_strandToReturn) == 0:
+        raise RuntimeError('split_identifier error: len(CDS_strandToReturn) == 0 for identifier {}'.format(str(identifier)))
+      CDS_startToReturn = reg_results.group(7)
+      if len(CDS_startToReturn) == 0:
+        raise RuntimeError('split_identifier error: len(CDS_startToReturn) == 0 for identifier {}'.format(str(identifier)))
+      CDS_endToReturn = reg_results.group(8)
+      if len(CDS_endToReturn) == 0:
+        raise RuntimeError('split_identifier error: len(CDS_endToReturn) == 0 for identifier {}'.format(str(identifier)))
 
-    return(reg_results.groups(0))
+    #print ("reg_results.groups(0) = {}".format(str(reg_results.groups(0))))
+    #print ("locus_tagToReturn = {}".format(str(locus_tagToReturn)))
+    #print ("locus_tagToReturn = {}, protein_idToReturn = {}, genome_accessionToReturn = {}, genome_accession_rankToReturn = {}".format(str(locus_tagToReturn), str(protein_idToReturn), str(genome_accessionToReturn), str(genome_accession_rankToReturn)))
+
+    return (CDS_numToReturn, locus_tagToReturn, protein_idToReturn, genome_accessionToReturn, genome_accession_rankToReturn, CDS_strandToReturn, CDS_startToReturn, CDS_endToReturn)
+    #return(reg_results.groups(0))
 
 
 def breakdown_filtering_rule(rule, header_ref):

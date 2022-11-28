@@ -1,44 +1,44 @@
-##################### Mobile elements detection statistics #####################
-# Number of complete elements
-Complete ICE (4 types of SP): 4
-Complete IME (R+I, R+C+I): 10
 
-# Number of complete modules
-Conjugation module (R+C+V): 1
-Mobilizable element (R+C with size <= 10 CDS): 0
+##################### Main parameters of the ICEscreen analysis #####################
+Maximum distance in CDS between consecutive SPs within a segments:	100
+Maximum distance in CDS between consecutive SPs within an IME element:	14
 
-# Number of partial elements
-Partial ICE (at least V): 1
-Other partial element (R+C, R+V, V+C with size > 10 CDS): 2
 
-# Composite elements
-Total nested elements (partial or complete): 9
-Host element: 3
-Guest element: 6
-Element that are both host and guest: 0
+##################### ICEscreen statistics for genome accession NZ_TEST8 #####################
 
-################### Signature proteins detection statistics ####################
-# Total SP detected
-Total SP: 56
-Total Integrase: 25
-Total Relaxase: 17
-Total Coupling protein: 8
-Total VirB4: 6
+##### Mobile elements #####
+## Number of complete elements
+Complete ICE (4 types of SP):	4
+Complete IME (R+I, R+C+I with distance between consecutive SPs <= 14 CDSs):	10
+## Number of complete modules
+Conjugation module (R+C+V):	1
+Mobilizable element (R+C with distance between consecutive SPs <= 14 CDS):	0
+## Number of partial elements
+Partial ICE (at least V):	1
+Other partial element (R+C, R+V, V+C with distance between consecutive SPs > 14 CDS):	2
+## Composite elements
+Total nested elements (partial or complete):	9
+Host element:	3
+Guest element:	6
+Element that are both host and guest:	0
 
-# Unassigned SP
-Unassigned SP: 9
-Unassigned Integrase: 9
-Unassigned Relaxase: 0
-Unassigned Coupling protein: 0
-Unassigned VirB4: 0
+##### Signature proteins #####
+## Total SPs detected
+Total SPs:	56
+Total Integrase:	25
+Total Relaxase:	17
+Total Coupling protein:	8
+Total VirB4:	6
+## Unassigned SPs
+Unassigned SPs:	9
+Unassigned Integrase:	9
+Unassigned Relaxase:	0
+Unassigned Coupling protein:	0
+Unassigned VirB4:	0
 
-############################# Segments statistics ##############################
-Number of segments: 6
-Segment with one element: 0
-Segment with several elements: 5
-Segment with nested elements: 3
-Segment with no element: 1
+##### Segments #####
+Number of segments with one element:	0
+Number of segments with several elements:	5
+Number of segments with nested elements:	3
+Number of segments with exclusively isolated SPs to manually verify:	0
 
-############################### Parameters used ################################
-Maximum CDS numbers in initial segments: 100
-Maximum CDS numbers in an IME element: 10

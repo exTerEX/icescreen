@@ -142,7 +142,7 @@ def get_blastp_df(tsvpath):
                     "qend": np.uint32,
                     "sstart": np.uint32,
                     "send": np.uint32,
-                    "evalue": np.float32,
+                    "evalue": np.float64, # "evalue": np.float32,
                     "bitscore": np.float32,
                     "qlen": np.uint32,
                     "slen": np.uint32}
@@ -168,7 +168,8 @@ def get_blastp_df(tsvpath):
         return(data)
 
     # Split ICEscreen CDS identifier into multiple columns
-    columns = ["CDS_num", "CDS", "CDS_strand", "CDS_start", "CDS_end"]
+    #columns = ["CDS_num", "CDS", "CDS_strand", "CDS_start", "CDS_end"]
+    columns = ["CDS_num", "CDS_locus_tag", "CDS_protein_id", "Genome_accession", "Genome_accession_rank", "CDS_strand", "CDS_start", "CDS_end"]
     cds_identifiers = np.vectorize(split_identifier)(data["qseqid"])
     cds_identifiers = np.transpose(cds_identifiers)
     data[columns] = pd.DataFrame(cds_identifiers, columns=columns)
@@ -342,9 +343,9 @@ def get_annotation(dbpath, dbtable, data):
         # keys: Columns of ICEscreen annotation database table to be retrieved
         # values: Associated columns names in dataframe for retrieved info
         cols = {"Prot_ID": "sseqid",
-                "Prot_Type": "Query_blast_Protein_type",
+                "Prot_Type": "Protein_type_of_blast_most_similar_ref_SP",
                 "Associated_element_DynAMic_name": "Associated_element",
-                "Associated_element_type": "Associated_element_type",
+                "Associated_element_type": "Associated_element_type_of_blast_most_similar_ref_SP",
                 "Genome_ID": "Genome_Query",
                 "Associated_integrase": "Associated_integrase",
                 "integrase_position_vs_integration_site": "Int_position_vs"
@@ -352,12 +353,12 @@ def get_annotation(dbpath, dbtable, data):
                 "complement_vs_": "Int_strand_vs_insertion_gene_strand",
                 "Insertion_site": "Query_Insertion_site",
                 "Element_type_family": "Query_Element_type_family",
-                "ICE_superfamily": "ICE_superfamily",
-                "ICE_family": "ICE_family",
-                "IME_family": "IME_family",
-                "relaxase_family_domain": "Relaxase_family_domain",
-                "relaxase_family_MOB": "Relaxase_family_MOB",
-                "coupling_type": "Coupling_type",
+                "ICE_superfamily": "ICE_superfamily_of_most_similar_ref_SP",
+                "ICE_family": "ICE_family_of_most_similar_ref_SP",
+                "IME_superfamily": "IME_superfamily_of_most_similar_ref_SP",
+                "relaxase_family_domain": "Relaxase_family_domain_of_most_similar_ref_SP",
+                "relaxase_family_MOB": "Relaxase_family_MOB_of_most_similar_ref_SP",
+                "coupling_type": "Coupling_type_of_most_similar_ref_SP",
                 "False_positives": "False_positives"
                 }
 
@@ -366,14 +367,14 @@ def get_annotation(dbpath, dbtable, data):
         # keys: Columns of ICEscreen annotation database table to be retrieved
         # values: Associated columns names in dataframe for retrieved info
         cols = {"Prot_ID": "sseqid",
-                "Prot_Type": "Query_blast_Protein_type",
-                "Associated_element_type": "Associated_element_type",
-                "ICE_superfamily": "ICE_superfamily",
-                "ICE_family": "ICE_family",
-                "IME_family": "IME_family",
-                "relaxase_family_domain": "Relaxase_family_domain",
-                "relaxase_family_MOB": "Relaxase_family_MOB",
-                "coupling_type": "Coupling_type",
+                "Prot_Type": "Protein_type_of_blast_most_similar_ref_SP",
+                "Associated_element_type": "Associated_element_type_of_blast_most_similar_ref_SP",
+                "ICE_superfamily": "ICE_superfamily_of_most_similar_ref_SP",
+                "ICE_family": "ICE_family_of_most_similar_ref_SP",
+                "IME_superfamily": "IME_superfamily_of_most_similar_ref_SP",
+                "relaxase_family_domain": "Relaxase_family_domain_of_most_similar_ref_SP",
+                "relaxase_family_MOB": "Relaxase_family_MOB_of_most_similar_ref_SP",
+                "coupling_type": "Coupling_type_of_most_similar_ref_SP",
                 "False_positives": "False_positives"
                 }
 
@@ -554,7 +555,7 @@ def pretty_df(df):
 
     # Order SP by position on the genome and
     # sort each result from best to worst
-    df = df.groupby("CDS_num", as_index=False)\
+    df = df.groupby("CDS_num", as_index=False, group_keys=True)\
            .apply(lambda x: x.sort_values(["evalue", "bitscore", "qcovs",
                                            "scovs", "pident"],
                                           ascending=[True, False, False,
@@ -573,22 +574,22 @@ def pretty_df(df):
 
     # Rename columns
     cols = {"qseqid": "#ICEscreen_ID",                     # ICEscreen_ID
-            "sseqid": "Query_blast",                       # qblast
-            "pident": "Ali_Identity_perc",                 # ali_pident
-            "length": "Ali_length",                        # ali_len
+            "sseqid": "Id_of_blast_most_similar_ref_SP",                       # qblast
+            "pident": "Blast_ali_identity_perc",                 # ali_pident
+            "length": "Blast_ali_length",                        # ali_len
             "mismatch": "Mismatch",                        # mismatch
             "gapopen": "Gapopen",                          # gapopen
-            "qstart": "Ali_start_CDS",                     # ali_start_cds
-            "qend": "Ali_end_CDS",                         # ali_end_cds
-            "sstart": "Ali_start_Query_blast",             # ali_start_qblast
-            "send": "Ali_end_Query_blast",                 # ali_end_qblast
-            "evalue": "E-value_blast",                     # evalue_blast
-            "bitscore": "Bitscore_blast",                  # bitscore_blast
+            "qstart": "Blast_ali_start_CDS",                     # ali_start_cds
+            "qend": "Blast_ali_end_CDS",                         # ali_end_cds
+            "sstart": "Blast_ali_start_Query_blast",             # ali_start_qblast
+            "send": "Blast_ali_end_Query_blast",                 # ali_end_qblast
+            "evalue": "Blast_ali_E-value",                     # evalue_blast
+            "bitscore": "Blast_ali_bitscore",                  # bitscore_blast
             "qlen": "CDS_length",                          # cds_len
-            "slen": "Query_blast_length",                  # qblast_len
+            "slen": "Length_of_blast_most_similar_ref_SP",                  # qblast_len
             "qcovs": "CDS_coverage",                       # cds_cov
-            "scovs": "Query_blast_coverage",               # qblast_cov
-            "qlen/slen": "CDS_length/Query_blast_length"}  # cds_len/qblast_len
+            "scovs": "Blast_ali_coverage_most_similar_ref_SP",               # qblast_cov
+            "qlen/slen": "CDS_length/Length_of_blast_most_similar_ref_SP"}  # cds_len/qblast_len
 
     df = df.rename(columns=cols)
 
@@ -607,27 +608,29 @@ def reorder_columns(df, detailed):
     """
 
     # Reorder columns
-    cols_common = [["#ICEscreen_ID", "CDS_num", "CDS", "CDS_strand",
-                    "CDS_start", "CDS_end", "CDS_length", "CDS_Protein_type",
-                    "Blast_description",
-                    "Query_blast", "Query_blast_length", "Ali_length",
-                    "Mismatch", "Gapopen", "Ali_start_CDS", "Ali_end_CDS",
-                    "Ali_start_Query_blast", "Ali_end_Query_blast",
-                    "Ali_Identity_perc", "E-value_blast", "Bitscore_blast",
-                    "CDS_coverage", "Query_blast_coverage",
-                    "CDS_length/Query_blast_length",
-                    "Query_blast_Protein_type"],
-                   ["ICE_superfamily", "ICE_family", "IME_family",
-                    "Relaxase_family_domain", "Relaxase_family_MOB",
-                    "Coupling_type", "False_positives", "Possible_SP",
+    cols_common = [["#ICEscreen_ID", "CDS_num",
+                    #"CDS", # "CDS" has been changed to  "CDS_locus_tag", "CDS_protein_id", "Genome_accession", "Genome_accession_rank" -> change it everywhere
+                    "Genome_accession", "Genome_accession_rank", "CDS_locus_tag", "CDS_protein_id",
+                    "CDS_strand", "CDS_start", "CDS_end", "CDS_length", "CDS_Protein_type",
+                    "Description_of_blast_most_similar_ref_SP",
+                    "Id_of_blast_most_similar_ref_SP", "Length_of_blast_most_similar_ref_SP", "Blast_ali_length",
+                    "Mismatch", "Gapopen", "Blast_ali_start_CDS", "Blast_ali_end_CDS",
+                    "Blast_ali_start_Query_blast", "Blast_ali_end_Query_blast",
+                    "Blast_ali_identity_perc", "Blast_ali_E-value", "Blast_ali_bitscore",
+                    "CDS_coverage", "Blast_ali_coverage_most_similar_ref_SP",
+                    "CDS_length/Length_of_blast_most_similar_ref_SP",
+                    "Protein_type_of_blast_most_similar_ref_SP"],
+                   ["ICE_superfamily_of_most_similar_ref_SP", "ICE_family_of_most_similar_ref_SP", "IME_superfamily_of_most_similar_ref_SP",
+                    "Relaxase_family_domain_of_most_similar_ref_SP", "Relaxase_family_MOB_of_most_similar_ref_SP",
+                    "Coupling_type_of_most_similar_ref_SP", "False_positives", "Possible_SP",
                     "SP_blast_validation", "Use_annotation"]]
 
     # Not detailed results columns
-    cols_not_detailed = cols_common[0] + ["Associated_element_type"] +\
+    cols_not_detailed = cols_common[0] + ["Associated_element_type_of_blast_most_similar_ref_SP"] +\
         cols_common[1]
     # Detailed results columns
     cols_detailed = cols_common[0] + ["Associated_element",
-                                      "Associated_element_type",
+                                      "Associated_element_type_of_blast_most_similar_ref_SP",
                                       "Genome_Query",
                                       "Associated_integrase",
                                       "Int_position_vs_insertion_gene",
@@ -648,6 +651,35 @@ def reorder_columns(df, detailed):
             df = df[cols_detailed]
 
     return(df)
+
+def remove_family_info_if_perc_identity_less_40(df):
+    """Remove the family information for SP whose percentage identity is less than 40 percent.
+
+    :param df:       dataframe of BlastP hits that might be a signature protein
+    :return:         Nothing, modify in place
+    """
+    df['ICE_family_of_most_similar_ref_SP'] = np.where((df['pident'] < 40),
+                           "-",
+                           df['ICE_family_of_most_similar_ref_SP'])
+                           
+
+def remove_family_info_from_type_integrase(df):
+    """Hide the family information for SP of type integrase.
+
+    :param df:       dataframe of BlastP hits that might be a signature protein
+    :return:         Nothing, modify in place
+    """
+    df['ICE_superfamily_of_most_similar_ref_SP'] = np.where((df['Protein_type_of_blast_most_similar_ref_SP'] == 'Integrase'),
+                           "-",
+                           df['ICE_superfamily_of_most_similar_ref_SP'])
+
+    df['ICE_family_of_most_similar_ref_SP'] = np.where((df['Protein_type_of_blast_most_similar_ref_SP'] == 'Integrase'),
+                           "-",
+                           df['ICE_family_of_most_similar_ref_SP'])
+    df['IME_superfamily_of_most_similar_ref_SP'] = np.where((df['Protein_type_of_blast_most_similar_ref_SP'] == 'Integrase'),
+                           "-",
+                           df['IME_superfamily_of_most_similar_ref_SP'])
+
 
 
 def get_description(df, cds_type, col):
@@ -675,20 +707,20 @@ def get_description(df, cds_type, col):
     # If signature protein type is Coupling protein, the description is the
     # type of protein and superfamily/family of the protein
     if cds_type == "Coupling protein":
-        df[col] = np.where((df['False_positives'] == '-') & (df["Coupling_type"] != "-"),
-                           df[col] + " " + df["Coupling_type"],
+        df[col] = np.where((df['False_positives'] == '-') & (df["Coupling_type_of_most_similar_ref_SP"] != "-"),
+                           df[col] + " " + df["Coupling_type_of_most_similar_ref_SP"],
                            df[col])
     # If signature protein type is Relaxase, the description is the
     # type of protein and superfamily/family of the protein
     elif cds_type == "Relaxase":
-        df[col] = np.where((df['False_positives'] == '-') & (df["Relaxase_family_MOB"] != "-") & (df["Relaxase_family_domain"] != "-"),
-                           df[col] + " " + df["Relaxase_family_MOB"] + " (" + df["Relaxase_family_domain"] + ")",
+        df[col] = np.where((df['False_positives'] == '-') & (df["Relaxase_family_MOB_of_most_similar_ref_SP"] != "-") & (df["Relaxase_family_domain_of_most_similar_ref_SP"] != "-"),
+                           df[col] + " " + df["Relaxase_family_MOB_of_most_similar_ref_SP"] + " (" + df["Relaxase_family_domain_of_most_similar_ref_SP"] + ")",
                            df[col])
-        df[col] = np.where((df['False_positives'] == '-') & (df["Relaxase_family_MOB"] != "-") & (df["Relaxase_family_domain"] == "-"),
-                           df[col] + " " + df["Relaxase_family_MOB"],
+        df[col] = np.where((df['False_positives'] == '-') & (df["Relaxase_family_MOB_of_most_similar_ref_SP"] != "-") & (df["Relaxase_family_domain_of_most_similar_ref_SP"] == "-"),
+                           df[col] + " " + df["Relaxase_family_MOB_of_most_similar_ref_SP"],
                            df[col])
-        df[col] = np.where((df['False_positives'] == '-') & (df["Relaxase_family_MOB"] == "-") & (df["Relaxase_family_domain"] != "-"),
-                           df[col] + " " + df["Relaxase_family_domain"],
+        df[col] = np.where((df['False_positives'] == '-') & (df["Relaxase_family_MOB_of_most_similar_ref_SP"] == "-") & (df["Relaxase_family_domain_of_most_similar_ref_SP"] != "-"),
+                           df[col] + " " + df["Relaxase_family_domain_of_most_similar_ref_SP"],
                            df[col])
 
 
@@ -744,7 +776,7 @@ if __name__ == "__main__":
     data = get_annotation(annotdb, dbtable, data)
 
     # Add description of each result
-    get_description(data, prot_type, "Blast_description")
+    get_description(data, prot_type, "Description_of_blast_most_similar_ref_SP")
 
     # Add validation of SP:
     # If the gene coding for the signature protein is functional or not
@@ -757,6 +789,10 @@ if __name__ == "__main__":
     # Add validation of SP enriched annotation:
     # If % identity is too low, the enriched annotation should not be used
     get_annotation_validation(data, "Use_annotation")
+
+    # Do not take into account family for integrase
+    remove_family_info_from_type_integrase(data)
+    remove_family_info_if_perc_identity_less_40(data)
 
     # Save results
     data = pretty_df(data)

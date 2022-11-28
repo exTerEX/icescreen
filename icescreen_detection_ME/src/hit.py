@@ -26,13 +26,16 @@ import rulesAddIntegrases
 # The CDS object class mimics the attributes of the biological object CDS
 class CDS():
     def __init__(self):
-        self.locusTag = ""  # col CDS + CDS_start
+        self.locusTag = ""  # col "CDS_locus_tag" or if absent a combination of "Genome_accession"-"CDS_protein_id"-"CDS_start" ("Genome_accession" is mandatory only if multigenbank, otherwise ignored)
         self.proteinId = ""  # col CDS
+        self.genomeAccession = ""  # col "Genome_accession"
+        self.genomeAccessionRank = ""  # col "Genome_accession"
         self.start = ""  # col CDS_start
         self.stop = ""  # col CDS_end
         self.strand = ""  # col CDS_strand ; Values: +, -
         self.CDSPositionInGenome = ""  # col CDS_num
         self.idxInListSP = -1
+        self.pseudo = False
 
     def __hash__(self):
         return hash((self.locusTag))
@@ -51,21 +54,40 @@ class CDS():
             return NotImplemented
         return not(self == other)
 
+    
 
 # The SP object class extends CDS and add extra attributes to mimic the biological object signature protein
 class SP(CDS):
     def __init__(self):
         super(SP, self).__init__()
         self.SPType = ""  # col CDS_Protein_Type ; Values: Coupling, Relaxase, Virb4, icescreen_OO.setIntegrase ; modify in tryAddingSPToConjugaisonModuleEMStructure() if make changes
-        self.SPDetectedByBlast = ""  # col hit_blast ; Values: 1, 0
-        self.SPDetectedByHMM = ""  # col hit_HMM_JL or hit_HMM_CC depending ; Values: 1, 0
+        self.SPDetectedByBlast = ""  # col Is_hit_blast ; Values: 1, 0
+        self.SPDetectedByHMM = ""  # col Is_hit_HMM_JL or Is_hit_HMM_CC depending ; Values: 1, 0
         # self.SPFamilyFromBlast = ""
         # self.setSPFamilyFromBlast = set()
-        self.setSPICESuperFamilyFromBlast = set()  # col ICE_superfamily
-        self.setSPICEFamilyFromBlast = set()  # col ICE_family
-        self.setSPIMEFamilyFromBlast = set()  # col IME_family
+        self.setSPICESuperFamilyFromBlast = set()  # col ICE_superfamily_of_most_similar_ref_SP
+        self.setSPICEFamilyFromBlast = set()  # col ICE_family_of_most_similar_ref_SP
+        self.setSPIMESuperFamilyFromBlast = set()  # col IME_superfamily_of_most_similar_ref_SP
+        self.Relaxase_family_domain_of_most_similar_ref_SPFromBlast = ""
+        self.Relaxase_family_MOB_of_most_similar_ref_SPFromBlast = ""
+        self.Coupling_type_of_most_similar_ref_SPFromBlast = ""
+        self.False_positivesFromBlast = ""
+        self.blast_validation = ""
+        self.Use_annotationFromBlast = ""
         self.setSPFamilyFromHMM = set()  # col Best_hmmprofile_JL or Best_hmmprofile_CC depending
         self.setICEsIMEsStructureInConflict = set()  # list internalIdentifier, max 2 ICEsIMEsStructure In Conflict
+        self.Length_of_blast_most_similar_ref_SP = -1 # -1 if NA
+        self.Blast_ali_length = -1 # -1 if NA
+        self.Blast_ali_start_CDS = -1 # -1 if NA
+        self.Blast_ali_end_CDS = -1 # -1 if NA
+        self.Blast_ali_start_Query_blast = -1 # -1 if NA
+        self.Blast_ali_end_Query_blast = -1 # -1 if NA
+        self.Blast_ali_identity_perc = -1 # -1 if NA
+        self.E_value_blast = -1 # -1 if NA
+        self.Blast_ali_bitscore = -1 # -1 if NA
+        self.CDS_coverage_blast = -1 # -1 if NA
+        self.Blast_ali_coverage_most_similar_ref_SP = -1 # -1 if NA
+
 
     def __hash__(self):
         return super(SP, self).__hash__()
@@ -84,23 +106,44 @@ class SP(CDS):
         # True at the same time
         return super(SP, self).__ne__(other)
 
+
     def GetObjectAsJson(self):
         stToReturn = "{\n"
         stToReturn += "\t\"locusTag\": \"" + self.locusTag + "\"\n"
         stToReturn += "\t\"proteinId\": \"" + self.proteinId + "\"\n"
+        stToReturn += "\t\"genomeAccession\": \"" + self.genomeAccession + "\"\n"
+        stToReturn += "\t\"genomeAccessionRank\": \"" + self.genomeAccessionRank + "\"\n"
         stToReturn += "\t\"start\": \"" + str(self.start) + "\"\n"
         stToReturn += "\t\"stop\": \"" + str(self.stop) + "\"\n"
         stToReturn += "\t\"strand\": \"" + self.strand + "\"\n"
         stToReturn += "\t\"CDSPositionInGenome\": \"" + str(self.CDSPositionInGenome) + "\"\n"
+        stToReturn += "\t\"pseudo\": \"" + str(self.pseudo) + "\"\n"
         stToReturn += "\t\"SPType\": \"" + self.SPType + "\"\n"
         stToReturn += "\t\"SPDetectedByBlast\": \"" + str(self.SPDetectedByBlast) + "\"\n"
         stToReturn += "\t\"SPDetectedByHMM\": \"" + str(self.SPDetectedByHMM) + "\"\n"
         # stToReturn += "\t\"setSPFamilyFromBlast\": \"" + ", ".join(str(i) for i in sorted(self.setSPFamilyFromBlast)) + "\"\n"
         stToReturn += "\t\"setSPICESuperFamilyFromBlast\": \"" + ", ".join(str(i) for i in sorted(self.setSPICESuperFamilyFromBlast)) + "\"\n"
         stToReturn += "\t\"setSPICEFamilyFromBlast\": \"" + ", ".join(str(i) for i in sorted(self.setSPICEFamilyFromBlast)) + "\"\n"
-        stToReturn += "\t\"setSPIMEFamilyFromBlast\": \"" + ", ".join(str(i) for i in sorted(self.setSPIMEFamilyFromBlast)) + "\"\n"
+        stToReturn += "\t\"setSPIMESuperFamilyFromBlast\": \"" + ", ".join(str(i) for i in sorted(self.setSPIMESuperFamilyFromBlast)) + "\"\n"
+        stToReturn += "\t\"Relaxase_family_domain_of_most_similar_ref_SPFromBlast\": \"" + str(self.Relaxase_family_domain_of_most_similar_ref_SPFromBlast) + "\"\n"
+        stToReturn += "\t\"Relaxase_family_MOB_of_most_similar_ref_SPFromBlast\": \"" + str(self.Relaxase_family_MOB_of_most_similar_ref_SPFromBlast) + "\"\n"
+        stToReturn += "\t\"Coupling_type_of_most_similar_ref_SPFromBlast\": \"" + str(self.Coupling_type_of_most_similar_ref_SPFromBlast) + "\"\n"
+        stToReturn += "\t\"False_positivesFromBlast\": \"" + str(self.False_positivesFromBlast) + "\"\n"
+        stToReturn += "\t\"blast_validation\": \"" + str(self.blast_validation) + "\"\n"
+        stToReturn += "\t\"Use_annotationFromBlast\": \"" + str(self.Use_annotationFromBlast) + "\"\n"
         stToReturn += "\t\"setSPFamilyFromHMM\": \"" + ", ".join(str(i) for i in sorted(self.setSPFamilyFromHMM)) + "\"\n"
         stToReturn += "\t\"setICEsIMEsStructureInConflict\": \"" + EMStructure.BasicEMStructure.GetListInternIdFromSetEMStructure(self.setICEsIMEsStructureInConflict) + "\"\n"  # ", ".join(str(i) for i in sorted(self.setICEsIMEsStructureInConflict))
+        stToReturn += "\t\"Length_of_blast_most_similar_ref_SP\": \"" + str(self.Length_of_blast_most_similar_ref_SP) + "\"\n"
+        stToReturn += "\t\"Blast_ali_length\": \"" + str(self.Blast_ali_length) + "\"\n"
+        stToReturn += "\t\"Blast_ali_start_CDS\": \"" + str(self.Blast_ali_start_CDS) + "\"\n"
+        stToReturn += "\t\"Blast_ali_end_CDS\": \"" + str(self.Blast_ali_end_CDS) + "\"\n"
+        stToReturn += "\t\"Blast_ali_start_Query_blast\": \"" + str(self.Blast_ali_start_Query_blast) + "\"\n"
+        stToReturn += "\t\"Blast_ali_end_Query_blast\": \"" + str(self.Blast_ali_end_Query_blast) + "\"\n"
+        stToReturn += "\t\"Blast_ali_identity_perc\": \"" + str(self.Blast_ali_identity_perc) + "\"\n"
+        stToReturn += "\t\"E_value_blast\": \"" + str(self.E_value_blast) + "\"\n"
+        stToReturn += "\t\"Blast_ali_bitscore\": \"" + str(self.Blast_ali_bitscore) + "\"\n"
+        stToReturn += "\t\"CDS_coverage_blast\": \"" + str(self.CDS_coverage_blast) + "\"\n"
+        stToReturn += "\t\"Blast_ali_coverage_most_similar_ref_SP\": \"" + str(self.Blast_ali_coverage_most_similar_ref_SP) + "\"\n"
         stToReturn += "}\n"
         return stToReturn
 
@@ -119,7 +162,7 @@ class ListSPs():
             distanceCDSToMostDownstreamSpFromMEStructureSent = abs(MostDownstreamSpFromMEStructureSentThatIsNotAnIntegrase.CDSPositionInGenome - currSP.CDSPositionInGenome)
             distanceCDSToMEStructureIT = distanceCDSToMostUpstreamSpFromMEStructureSent + distanceCDSToMostDownstreamSpFromMEStructureSent
             listOfTuplesIT.append((distanceCDSToMEStructureIT, currSP))
-        # TODO not useful when distanceCDSToMEStructureIT is equal, like for test#4 CIRMBP-1274_01370 and CIRMBP-1274_01372 ; it would be better to sort by another criterion such as evalue of the alignment ? For now the second attribute sorted is the CDSPositionInGenome to account for consenstency, but this is not ideal
+        # not useful when distanceCDSToMEStructureIT is equal, like for test#4 CIRMBP-1274_01370 and CIRMBP-1274_01372 ; it would be better to sort by another criterion such as evalue of the alignment ? For now the second attribute sorted is the CDSPositionInGenome to account for consenstency, but this is not ideal
         listOfTuplesIT.sort(key=lambda a: (a[0], a[1].CDSPositionInGenome))
         newListSPsIT = []  # [SP]
         for currIndex, (distanceCDSToMEStructureIT, currSP) in enumerate(listOfTuplesIT, start=0):
@@ -127,8 +170,10 @@ class ListSPs():
         self.list = newListSPsIT
 
     def sortListSPsByStart(self):
-        self.list.sort(key=lambda x: x.start, reverse=False)
+        #self.list.sort(key=lambda x: x.start, reverse=False)
+        self.list.sort(key=lambda x: (x.genomeAccessionRank, x.start), reverse=False)
 
+    
     def splitListOrderedSPsByColocalizion(self, maxNumberCDSForSplitSPsByColocalizion):
         listOfListOfColocalizedSPsToReturn = []
         currListSPs = ListSPs()
@@ -136,18 +181,23 @@ class ListSPs():
             currListSPs.list.append(currSP)
             if (currIndex != (len(self.list) - 1)):  # if not last object in list
                 otherSP = self.list[currIndex + 1]
-                # distanceWithNextSp = currSP.GetDistanceCDSsToOtherSP(otherSP)
-                distanceWithNextSp = otherSP.CDSPositionInGenome - currSP.CDSPositionInGenome
-                if distanceWithNextSp <= 0:
-                    raise RuntimeError(
-                            "Error in splitListOrderedSPsByColocalizion: distanceWithNextSp <= 0: {} for SP {} and {}".format(
-                                    str(distanceWithNextSp),
-                                    currSP.locusTag,
-                                    otherSP.locusTag))
-                if (distanceWithNextSp > maxNumberCDSForSplitSPsByColocalizion):
+                if otherSP.genomeAccessionRank != currSP.genomeAccessionRank:
                     # start a new currListSPs
                     listOfListOfColocalizedSPsToReturn.append(currListSPs)
                     currListSPs = ListSPs()
+                else :
+                    # distanceWithNextSp = currSP.GetDistanceCDSsToOtherSP(otherSP)
+                    distanceWithNextSp = otherSP.CDSPositionInGenome - currSP.CDSPositionInGenome
+                    if distanceWithNextSp <= 0:
+                        raise RuntimeError(
+                                "Error in splitListOrderedSPsByColocalizion: distanceWithNextSp <= 0: {} for SP {} and {}".format(
+                                        str(distanceWithNextSp),
+                                        currSP.locusTag,
+                                        otherSP.locusTag))
+                    if (distanceWithNextSp > maxNumberCDSForSplitSPsByColocalizion):
+                        # start a new currListSPs
+                        listOfListOfColocalizedSPsToReturn.append(currListSPs)
+                        currListSPs = ListSPs()
             else:  # last object in list
                 listOfListOfColocalizedSPsToReturn.append(currListSPs)
         return listOfListOfColocalizedSPsToReturn
@@ -187,14 +237,7 @@ class ListSPs():
                         useDistanceCDSInfoToTryToResolveSPModuleConjConflict,
                         SPsInSameFamilyMergeStructures2SameFamilyMergeStructure,
                         listSameFamilyMergeStructures)
-                rulesAddIntegrases.checkForObviousIntegraseUpstreamAndDownstreamToAdd(
-                        currentICEsIMEsStructure,
-                        self.list,
-                        idxCurrentSP,
-                        allowAdjacentIntegraseOnlyForSer,
-                        locusTagIntegrase2Comment,
-                        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance)
+
                 listICEsIMEsStructures.append(currentICEsIMEsStructure)
                 # EMStructure.BasicEMStructure.countInternalIdentifier += 1
                 currentICEsIMEsStructure = EMStructure.ICEsIMEsStructure(True)
@@ -214,20 +257,26 @@ class ListSPs():
                 # print("\ncurrentSP: {}".format(currentSP.locusTag))
                 sameFamilyMergeStructureToCheck = SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[currentSP]
                 greenLightAddSPConjugaisonModule = currentICEsIMEsStructure.listSPsIsContainedWithinOtherStructure(
-                        currentSP,
-                        sameFamilyMergeStructureToCheck)
+                    currentSP,
+                    sameFamilyMergeStructureToCheck)
                 if greenLightAddSPConjugaisonModule:
-                    greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure
-                    (currentICEsIMEsStructure,
-                     currentSP,
-                     groupListSPintoICEsIMEsUsingFamilyInfo)
+                    greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
+                        currentICEsIMEsStructure,
+                        currentSP,
+                        groupListSPintoICEsIMEsUsingFamilyInfo,
+                        False,
+                        False,
+                        False)
                 transfertCommentFromSameFamilyMergeStructure = True
             else:
                 if sameFamilyMergeStructureToCheck is None:
                     greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
-                            currentICEsIMEsStructure,
-                            currentSP,
-                            groupListSPintoICEsIMEsUsingFamilyInfo)
+                        currentICEsIMEsStructure,
+                        currentSP,
+                        groupListSPintoICEsIMEsUsingFamilyInfo,
+                        False,
+                        False,
+                        False)
                 else:
                     # print("\ncurrentSP: {}".format(currentSP.locusTag))
                     greenLightAddSPConjugaisonModule = currentICEsIMEsStructure.listSPsIsContainedWithinOtherStructure(
@@ -235,9 +284,12 @@ class ListSPs():
                             sameFamilyMergeStructureToCheck)
                     if greenLightAddSPConjugaisonModule:
                         greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
-                                currentICEsIMEsStructure,
-                                currentSP,
-                                groupListSPintoICEsIMEsUsingFamilyInfo)
+                            currentICEsIMEsStructure,
+                            currentSP,
+                            groupListSPintoICEsIMEsUsingFamilyInfo,
+                            False,
+                            False,
+                            False)
 
             if greenLightAddSPConjugaisonModule:
                 currentICEsIMEsStructure.addSPToConjugaisonModule(currentSP)
@@ -256,9 +308,12 @@ class ListSPs():
                         useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance)
                 # try adding again with new EM struct
                 greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
-                        currentICEsIMEsStructure,
-                        currentSP,
-                        groupListSPintoICEsIMEsUsingFamilyInfo)
+                    currentICEsIMEsStructure,
+                    currentSP,
+                    groupListSPintoICEsIMEsUsingFamilyInfo,
+                    False,
+                    False,
+                    False)
                 if greenLightAddSPConjugaisonModule:
                     currentICEsIMEsStructure.addSPToConjugaisonModule(currentSP)
                     if currentSP in SPsInSameFamilyMergeStructures2SameFamilyMergeStructure:
@@ -282,7 +337,7 @@ class ListSPs():
     @staticmethod
     def GetIdxSPInList(SPToFind, listSPs):
         for idx, SPInList in enumerate(listSPs):
-            if SPToFind.locusTag == SPInList.locusTag:
+            if SPToFind == SPInList: # was if SPToFind.locusTag == SPInList.locusTag:
                 return idx
         return -1
 
@@ -295,6 +350,164 @@ class ListSPs():
             strToReturn += str(currentSP.CDSPositionInGenome)
         return strToReturn
 
+    # @staticmethod
+    def getListIntegraseGroupJustUpstreamOfThisSP(SPSent, listSPsSent, dictIntegraseAttributedByCheckForObviousIntegraseUpstreamAndDownstreamToAdd, setIntegraseTypeToCheck, downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented, locusTagIntegrase2Comment):
+        listUpstreamIntegraseToReturn = []
+        
+        if SPSent not in listSPsSent :
+            raise RuntimeError("Error in getListIntegraseGroupJustUpstreamOfThisSP: SPSent {} not in listSPsSent {}".format(SPSent.locusTag, ListSPs.GetListCDSNumberFromListSP(listSPsSent)))
+
+        idxSPsUpstreamToCheck = SPSent.idxInListSP - 1
+        if idxSPsUpstreamToCheck >= 0:
+            listSPsUpstream = listSPsSent[:(idxSPsUpstreamToCheck + 1)]
+            for currSp in reversed(listSPsUpstream):
+                if dictIntegraseAttributedByCheckForObviousIntegraseUpstreamAndDownstreamToAdd is not None :
+                    if currSp in dictIntegraseAttributedByCheckForObviousIntegraseUpstreamAndDownstreamToAdd:
+                        continue
+                        
+                # print("HERE up {}".format(currSp.locusTag))
+                if listUpstreamIntegraseToReturn:
+                    if (abs(listUpstreamIntegraseToReturn[-1].CDSPositionInGenome - currSp.CDSPositionInGenome) <= 2):  # Integrases are adjacent in genome or separated by a CDS
+                        if currSp.SPType in setIntegraseTypeToCheck:  # currSp.SPType == "IntTyr" or currSp.SPType == "IntSer" or currSp.SPType == "DDE"
+                            valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure = rulesAddIntegrases.isIntegraseCorrectlyOrientedForICEsIMEsStructure(currSp, downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented, True)
+                            if valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure == 0:
+                                #setIntegraseDiscarded.add(currSp.locusTag)
+                                strCommentIT = "Integrase {} can not be associated with the downstream structure {}, it needs to be on the - strand. ".format(currSp.locusTag, downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.internalIdentifier)
+                                if strCommentIT not in downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment:
+                                    downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment += strCommentIT
+                                icescreen_OO.addCommentToLocusTag2Comment(currSp.locusTag, strCommentIT, locusTagIntegrase2Comment)
+                                break
+                            elif type(valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure) is set and len(valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure) > 0:
+                                strCommentIT = "If {} is part of the structure {}, the upstream integrase {} would not be associated with this structure as it needs to be on the - strand. ".format(
+                                        ListSPs.GetListProtIdsFromSetSP(valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure), downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.internalIdentifier, currSp.locusTag)
+                                if strCommentIT not in downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment:
+                                    downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment += strCommentIT
+                                for conflictVirB4IT in valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure:
+                                    icescreen_OO.addCommentToLocusTag2Comment(conflictVirB4IT.locusTag, strCommentIT, locusTagIntegrase2Comment)
+
+                            if currSp.SPType == listUpstreamIntegraseToReturn[-1].SPType and currSp.strand == listUpstreamIntegraseToReturn[-1].strand:
+
+                                listUpstreamIntegraseToReturn.append(currSp)
+
+                                continue
+                            else:
+                                #setIntegraseDiscarded.add(currSp.locusTag)
+                                strCommentIT = "The upstream integrases {} and {} are adjacent but not of the same type or strand, {} is not considered as part of a tandem.".format(listUpstreamIntegraseToReturn[-1].locusTag, currSp.locusTag, currSp.locusTag)
+                                if strCommentIT not in downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment:
+                                    downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment += strCommentIT
+                                icescreen_OO.addCommentToLocusTag2Comment(currSp.locusTag, strCommentIT, locusTagIntegrase2Comment)
+                                break
+                        else:
+                            break
+                    else:  # SP are not adjacent in genome
+                        break
+                else:  # listUpstreamIntegraseToReturn is empty
+                    if (currSp.SPType in icescreen_OO.setIntegraseNames):  # currSp.SPType == "IntTyr" or currSp.SPType == "IntSer" or currSp.SPType == "DDE"
+                        valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure = rulesAddIntegrases.isIntegraseCorrectlyOrientedForICEsIMEsStructure(currSp, downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented, True)
+                        if valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure == 0:
+                            #setIntegraseDiscarded.add(currSp.locusTag)
+                            strCommentIT = "Integrase {} can not be associated with the downstream structure {}, it needs to be on the - strand. ".format(currSp.locusTag, downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.internalIdentifier)
+                            if strCommentIT not in downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment:
+                                downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment += strCommentIT
+                            icescreen_OO.addCommentToLocusTag2Comment(currSp.locusTag, strCommentIT, locusTagIntegrase2Comment)
+                            break
+                        elif type(valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure) is set and len(valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure) > 0:
+                            strCommentIT = "If {} is part of the structure {}, the upstream integrase {} would not be associated with this structure as it needs to be on the - strand. ".format(
+                                    ListSPs.GetListProtIdsFromSetSP(valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure), downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.internalIdentifier, currSp.locusTag)
+                            if strCommentIT not in downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment:
+                                downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment += strCommentIT
+                            for conflictVirB4IT in valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure:
+                                icescreen_OO.addCommentToLocusTag2Comment(conflictVirB4IT.locusTag, strCommentIT, locusTagIntegrase2Comment)
+
+                        listUpstreamIntegraseToReturn.append(currSp)
+                        continue
+                    else:
+                        break
+
+        return listUpstreamIntegraseToReturn
+
+
+    @staticmethod
+    def getListIntegraseGroupJustDownstreamOfThisSP(SPSent, listSPsSent, dictIntegraseAttributedByCheckForObviousIntegraseUpstreamAndDownstreamToAdd, setIntegraseTypeToCheck, upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented, locusTagIntegrase2Comment):
+        listDownstreamIntegraseToReturn = []
+
+        if SPSent not in listSPsSent :
+            raise RuntimeError("Error in getListIntegraseGroupJustDownstreamOfThisSP: SPSent {} not in listSPsSent {}".format(SPSent.locusTag, ListSPs.GetListCDSNumberFromListSP(listSPsSent)))
+
+        idxSPsDownstreamToCheck = SPSent.idxInListSP + 1
+        if idxSPsDownstreamToCheck < len(listSPsSent):
+            listSPsDownstream = listSPsSent[idxSPsDownstreamToCheck:]
+            for currSp in listSPsDownstream:
+                if dictIntegraseAttributedByCheckForObviousIntegraseUpstreamAndDownstreamToAdd is not None :
+                    if currSp in dictIntegraseAttributedByCheckForObviousIntegraseUpstreamAndDownstreamToAdd:
+                        continue
+
+                #  print("HERE down {}".format(currSp.locusTag))
+                if listDownstreamIntegraseToReturn:  # listIntegraseDownstream is not empty
+                    if (abs(listDownstreamIntegraseToReturn[-1].CDSPositionInGenome - currSp.CDSPositionInGenome) <= 2):  # Integrases are adjacent in genome or separated by a CDS
+                        if currSp.SPType in setIntegraseTypeToCheck:  # currSp.SPType == "IntTyr" or currSp.SPType == "IntSer" or currSp.SPType == "DDE"
+                            if upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented is not None :
+                                valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure = rulesAddIntegrases.isIntegraseCorrectlyOrientedForICEsIMEsStructure(currSp, upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented, False)
+                                if valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure == 0:
+                                    #setIntegraseDiscarded.add(currSp.locusTag)
+                                    strCommentIT = "Integrase {} can not be associated with the upstream structure {}, it needs to be on the + strand. ".format(currSp.locusTag, upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.internalIdentifier)
+                                    if strCommentIT not in upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment:
+                                        upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment += strCommentIT
+                                    icescreen_OO.addCommentToLocusTag2Comment(currSp.locusTag, strCommentIT, locusTagIntegrase2Comment)
+                                    break
+                                elif type(valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure) is set and len(valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure) > 0:
+                                    strCommentIT = "If {} is part of the structure {}, the downstream integrase {} would not be associated with this structure as it needs to be on the + strand. ".format(
+                                            ListSPs.GetListProtIdsFromSetSP(valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure), upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.internalIdentifier, currSp.locusTag)
+                                    if strCommentIT not in upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment:
+                                        upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment += strCommentIT
+                                    for conflictVirB4IT in valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure:
+                                        icescreen_OO.addCommentToLocusTag2Comment(conflictVirB4IT.locusTag, strCommentIT, locusTagIntegrase2Comment)
+
+                            if currSp.SPType == listDownstreamIntegraseToReturn[-1].SPType and currSp.strand == listDownstreamIntegraseToReturn[-1].strand:
+
+                                listDownstreamIntegraseToReturn.append(currSp)
+
+                                continue
+                            else:
+                                
+                                #setIntegraseDiscarded.add(currSp.locusTag)
+                                strCommentIT = "The downstream integrases {} and {} are adjacent but not of the same type or strand, {} is not considered as part of a tandem. ".format(listDownstreamIntegraseToReturn[-1].locusTag, currSp.locusTag, currSp.locusTag)
+                                if upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented is not None :
+                                    if strCommentIT not in upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment:
+                                        upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment += strCommentIT
+                                icescreen_OO.addCommentToLocusTag2Comment(currSp.locusTag, strCommentIT, locusTagIntegrase2Comment)
+                                break
+                        else:
+                            break
+                    else:  # SP are not adjacent in genome
+                        break
+                else:  # listDownstreamIntegraseToReturn is empty
+
+                    if (currSp.SPType in icescreen_OO.setIntegraseNames):  # currSp.SPType == "IntTyr" or currSp.SPType == "IntSer" or currSp.SPType == "DDE"
+                        if upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented is not None :
+                            valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure = rulesAddIntegrases.isIntegraseCorrectlyOrientedForICEsIMEsStructure(currSp, upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented, False)
+                            if valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure == 0:
+                                #setIntegraseDiscarded.add(currSp.locusTag)
+                                strCommentIT = "Integrase {} can not be associated with the upstream structure {}, it needs to be on the + strand. ".format(currSp.locusTag, upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.internalIdentifier)
+                                if strCommentIT not in upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment:
+                                    upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment += strCommentIT
+                                icescreen_OO.addCommentToLocusTag2Comment(currSp.locusTag, strCommentIT, locusTagIntegrase2Comment)
+                                break
+                            elif type(valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure) is set and len(valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure) > 0:
+                                strCommentIT = "If {} is part of the structure {}, the downstream integrase {} would not be associated with this structure as it needs to be on the + strand. ".format(
+                                        ListSPs.GetListProtIdsFromSetSP(valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure), upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.internalIdentifier, currSp.locusTag)
+                                if strCommentIT not in upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment:
+                                    upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment += strCommentIT
+                                for conflictVirB4IT in valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure:
+                                    icescreen_OO.addCommentToLocusTag2Comment(conflictVirB4IT.locusTag, strCommentIT, locusTagIntegrase2Comment)
+                        listDownstreamIntegraseToReturn.append(currSp)
+                        continue
+                    else:
+                        break
+
+        return listDownstreamIntegraseToReturn
+
+
     @staticmethod
     def GetListProtIdsFromSetSP(setSPs):
         strToReturn = ""
@@ -302,7 +515,10 @@ class ListSPs():
             if strToReturn:  # not tempty
                 strToReturn += ", "
             strToReturn += currentSP.locusTag
+            if currentSP.pseudo :
+                strToReturn += " [Pseudo]"
         return strToReturn
+
 
     @staticmethod
     def GetListProtIdsFromListSP(listSPs):
@@ -311,10 +527,27 @@ class ListSPs():
             if strToReturn:  # not tempty
                 strToReturn += ", "
             strToReturn += currentSP.locusTag
+            if currentSP.pseudo :
+                strToReturn += " [Pseudo]"
         return strToReturn
 
+
     @staticmethod
-    def PrintICElineFormat(listSPs):
+    def stringListSPHasPseudo(listSPs):
+        stringListSPHasPseudoToReturn = ""
+        for currIndex, currSP in enumerate(listSPs, start=0):
+            if currSP.pseudo:
+                if len(listSPs) > 1 :
+                    stringListSPHasPseudoToReturn = " with Pseudo"
+                else :
+                    stringListSPHasPseudoToReturn = " Pseudo"
+        return stringListSPHasPseudoToReturn
+
+
+
+
+    @staticmethod
+    def PrintICElineFormat(listSPs, onlyReturnListFirstLetterSPWithoutDistanceBetween, strToAppendIfMoreThanOneSP):
         # example ICElineFormat: C4.V5.C2.R7.V1:I1:R4.I1!i2!i7.R1:v6.c5!R2.I2!R2.I
         # SP type: R = Relaxase, C = Coupling Protein, V = VirB4, I = Integrase, D = DDE
         # SP strand: R = Relaxase on forward strand, r = relaxase on reverse strand
@@ -339,22 +572,32 @@ class ListSPs():
                 else:
                     raise RuntimeError("Error in PrintICElineFormat: unrecognized currSP.SPType = {}".format(currSP.SPType))
 
-                if currSP.strand == "+":
-                    strCurrSP = strCurrSP.upper()
-                else:
-                    strCurrSP = strCurrSP.lower()
-
-                strDistanceNumber = str(distance)[0]  # first char
-
+                strDistanceNumber = ""
                 strDistanceLegend = ""
-                if distance < 10:
-                    strDistanceLegend = "."
-                elif distance < 100:
-                    strDistanceLegend = ":"
-                else:
-                    strDistanceLegend = "!"
+                separatorBetweenSP = ""
+                if not onlyReturnListFirstLetterSPWithoutDistanceBetween :
 
-                strToReturn += strCurrSP + strDistanceNumber + strDistanceLegend
+                    if currSP.strand == "+":
+                        strCurrSP = strCurrSP.upper()
+                    else:
+                        strCurrSP = strCurrSP.lower()
+
+                    strDistanceNumber = str(distance)[0]  # first char
+
+                    if distance < 10:
+                        strDistanceLegend = "."
+                    elif distance < 100:
+                        strDistanceLegend = ":"
+                    else:
+                        strDistanceLegend = "!"
+                else :
+                    separatorBetweenSP = "+"
+
+                strPseudoOrNot = ""
+                if currSP.pseudo:
+                    strPseudoOrNot = "[Pseudo]"
+
+                strToReturn += strCurrSP + strPseudoOrNot + strDistanceNumber + strDistanceLegend + separatorBetweenSP
 
             else:  # if last object in list
                 if (currSP.SPType == "DDE transposase"):
@@ -369,10 +612,21 @@ class ListSPs():
                     strCurrSP = "V"
                 else:
                     raise RuntimeError("Error in PrintICElineFormat: unrecognized currSP.SPType = {}".format(currSP.SPType))
-                if currSP.strand == "+":
-                    strCurrSP = strCurrSP.upper()
-                else:
-                    strCurrSP = strCurrSP.lower()
 
-                strToReturn += strCurrSP
+                if not onlyReturnListFirstLetterSPWithoutDistanceBetween :
+                    if currSP.strand == "+":
+                        strCurrSP = strCurrSP.upper()
+                    else:
+                        strCurrSP = strCurrSP.lower()
+
+                strPseudoOrNot = ""
+                if currSP.pseudo:
+                    strPseudoOrNot = "[Pseudo]"
+
+                strToReturn += strCurrSP + strPseudoOrNot
+
+
+        if len(listSPs) > 1 :
+            strToReturn += strToAppendIfMoreThanOneSP
+
         return strToReturn

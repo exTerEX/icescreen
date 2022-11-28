@@ -24,18 +24,25 @@ import rulesSeedSPExtension
 import re
 import rulesAddIntegrases
 
+def returnDashIfEmptyStringOrNone(stringTocheck):
+    if len(stringTocheck) == 0 or stringTocheck is None :
+        return "-"
+    else :
+        return stringTocheck
 
 # BasicEMStructure contains attributes that are core to the ICE and
 # IME structures and other mobile genetic elements
 class BasicEMStructure():
     countInternalIdentifier = 1
+    threshold_blast_ali_identity_perc_transfert_ICEFamily_to_structure_module_conj = -1
 
     def __init__(self, doIncrementCountInternalIdentifier):
         if doIncrementCountInternalIdentifier is True:
             BasicEMStructure.countInternalIdentifier += 1
         # integer, for referencing the structures in the output files
         # and comments. The numbering is not contiguous.
-        self.internalIdentifier = BasicEMStructure.countInternalIdentifier
+        #self.internalIdentifier = BasicEMStructure.countInternalIdentifier
+        self.internalIdentifier = "__IMEICEID_BasicEMStructure__" + str(BasicEMStructure.countInternalIdentifier) + "__"
         # [SP] can be a list if multiple SP of the same type are adjacent
         # in genome
         self.listIntegraseUpstream = []
@@ -55,8 +62,14 @@ class BasicEMStructure():
         self.setICESuperFamilyFromBlastOfSPConjModule = set()
         # list only the different setSPICEFamilyFromBlast
         self.setICEFamilyFromBlastOfSPConjModule = set()
-        # list only the different setSPIMEFamilyFromBlast
-        self.setIMEFamilyFromBlastOfSPConjModule = set()
+        # list only the different setSPIMESuperFamilyFromBlast
+        self.setIMESuperFamilyFromBlastOfSPConjModule = set()
+        # list only the different Relaxase_family_domain_of_most_similar_ref_SPFromBlast
+        self.setRelaxase_family_domain_of_most_similar_ref_SPFromBlastOfSPConjModule = set()
+        # list only the different Relaxase_family_MOB_of_most_similar_ref_SPFromBlast
+        self.setRelaxase_family_MOB_of_most_similar_ref_SPFromBlastOfSPConjModule = set()
+        # list only the different Coupling_type_of_most_similar_ref_SPFromBlast
+        self.setCoupling_type_of_most_similar_ref_SPFromBlastOfSPConjModule = set()
         # list only the different familyFromHMM
         self.setFamilyFromHMMOfSPConjModule = set()
         # attrbute for ease of navigation in lists
@@ -66,8 +79,8 @@ class BasicEMStructure():
         self.setSPInConflict = set()
 
         # list all SPConjModuleLocusTagsToManuallyCheck
-        self.setSPConjModuleLocusTagsToManuallyCheck = set()
-        self.setIntegraseLocusTagsToManuallyCheck = set()
+        self.setSPConjModuleToManuallyCheck = set()
+        self.setIntegraseToManuallyCheck = set()
         # int ; index of the most upstream SP from the conjugation module
         # in the anchor
         self.idxUpstreamConjugationModuleSPInListSPs = -1
@@ -95,6 +108,17 @@ class BasicEMStructure():
         # Not strictly necessary, but to avoid having both x==y and x!=y
         # True at the same time
         return not(self == other)
+
+
+    def structureHasThoseIntegraseRegistred(self, listIntegraseToCheckForPresence):
+        foundInlistIntegraseUpstream = any(check in listIntegraseToCheckForPresence for check in self.listIntegraseUpstream)
+        foundInlistIntegraseDownstream = any(check in listIntegraseToCheckForPresence for check in self.listIntegraseDownstream)
+        if foundInlistIntegraseUpstream or foundInlistIntegraseDownstream :
+            return True
+        else:
+            return False
+
+
 
     # findMostUpstreamSpThatIsNotAnIntegrase
     def findMostUpstrSpNotIntegr(self):
@@ -133,21 +157,91 @@ class BasicEMStructure():
         self.refreshListIdxOrderedSPs()
 
     def addListIntegraseUpstream(self, listIntegraseUpstreamToAdd):
-        self.listIntegraseUpstream.extend(listIntegraseUpstreamToAdd)
-        self.listOrderedSPs.extend(listIntegraseUpstreamToAdd)
+        for integraseUpstreamToAddIT in listIntegraseUpstreamToAdd :
+            if integraseUpstreamToAddIT not in self.listIntegraseUpstream:
+                self.listIntegraseUpstream.append(integraseUpstreamToAddIT)
+            if integraseUpstreamToAddIT not in self.listOrderedSPs :
+                self.listOrderedSPs.append(integraseUpstreamToAddIT)
         self.refreshListIdxOrderedSPs()
 
     def addListIntegraseDownstream(self, listIntegraseDownstreamToAdd):
-        self.listIntegraseDownstream.extend(listIntegraseDownstreamToAdd)
-        self.listOrderedSPs.extend(listIntegraseDownstreamToAdd)
+        for integraseDownstreamToAddIT in listIntegraseDownstreamToAdd :
+            if integraseDownstreamToAddIT not in self.listIntegraseDownstream :
+                self.listIntegraseDownstream.append(integraseDownstreamToAddIT)
+            if integraseDownstreamToAddIT not in self.listOrderedSPs :
+                self.listOrderedSPs.append(integraseDownstreamToAddIT)
         self.refreshListIdxOrderedSPs()
+
+
+    def transferAllIntegrasesToManuallyCheck(self):
+        # for integraseIT in self.listIntegraseUpstream:
+        #     if integraseIT.locusTag not in self.setIntegraseToManuallyCheck :
+        #         self.setIntegraseToManuallyCheck.add(integraseIT.locusTag)
+        # for integraseIT in self.listIntegraseDownstream:
+        #     if integraseIT.locusTag not in self.setIntegraseToManuallyCheck :
+        #         self.setIntegraseToManuallyCheck.add(integraseIT.locusTag)
+        for integraseIT in self.listIntegraseUpstream:
+            if integraseIT not in self.setIntegraseToManuallyCheck :
+                self.setIntegraseToManuallyCheck.add(integraseIT)
+        for integraseIT in self.listIntegraseDownstream:
+            if integraseIT not in self.setIntegraseToManuallyCheck :
+                self.setIntegraseToManuallyCheck.add(integraseIT)
+        self.clearAllIntegraseUpstream()
+        self.clearAllIntegraseDownstream()
+
+
+    def inferICEFamilyFromBlastOfSPConjModule(self):
+        self.setICEFamilyFromBlastOfSPConjModule.clear()
+        ICEFamilyFromBlastOfSPConjModuleIT = ""
+        coherentSPToinferICEFamilyFromBlastOfSPConjModule = True
+        for currSP in self.listOrderedSPs:
+            #print("** inferICEFamilyFromBlastOfSPConjModule pour structure {} : CDS {}".format(self.internalIdentifier, currSP.locusTag))
+            if (currSP.SPType == "Relaxase" or currSP.SPType == "Coupling protein" or currSP.SPType == "VirB4"):
+                #print("YEP SPType")
+                if currSP.SPDetectedByBlast == 1:
+                    #print("YEP SPDetectedByBlast : currSP.Blast_ali_identity_perc = {}".format(str(currSP.Blast_ali_identity_perc)))
+                    # if len(currSP.setSPICEFamilyFromBlast) != 0:  # add only if not empty or null # OLD METHOD
+                    #     self.setICEFamilyFromBlastOfSPConjModule.update(currSP.setSPICEFamilyFromBlast)  # OLD METHOD
+
+                    # threshold_blast_ali_identity_perc_transfert_ICEFamily_to_structure_module_conj 60 as an argument rather than in hard coded
+                    # if currSP.Blast_ali_identity_perc >= 60: # original
+                    if currSP.Blast_ali_identity_perc >= BasicEMStructure.threshold_blast_ali_identity_perc_transfert_ICEFamily_to_structure_module_conj :
+                        if len(currSP.setSPICEFamilyFromBlast) != 0:  # add only if not empty or null
+                            #print("inferICEFamilyFromBlastOfSPConjModule pour structure {} : CDS {} with percent id {} has setSPICEFamilyFromBlast = {}".format(self.internalIdentifier, currSP.locusTag, currSP.Blast_ali_identity_perc, currSP.setSPICEFamilyFromBlast))
+
+                            if len(ICEFamilyFromBlastOfSPConjModuleIT) == 0 :
+                                if coherentSPToinferICEFamilyFromBlastOfSPConjModule is True :
+                                    if len(currSP.setSPICEFamilyFromBlast) == 1:
+                                        for currSPSPICEFamilyFromBlastIT in currSP.setSPICEFamilyFromBlast :
+                                            ICEFamilyFromBlastOfSPConjModuleIT = currSPSPICEFamilyFromBlastIT
+                                    else :
+                                        coherentSPToinferICEFamilyFromBlastOfSPConjModule = False   
+                            else :
+                                if coherentSPToinferICEFamilyFromBlastOfSPConjModule is False :
+                                    raise RuntimeError("Error in inferICEFamilyFromBlastOfSPConjModule: len(ICEFamilyFromBlastOfSPConjModuleIT) >= 0 {} and coherentSPToinferICEFamilyFromBlastOfSPConjModule is False".format(ICEFamilyFromBlastOfSPConjModuleIT))
+
+                                if len(currSP.setSPICEFamilyFromBlast) == 1 :
+                                    for currSPSPICEFamilyFromBlastIT in currSP.setSPICEFamilyFromBlast :
+                                        if currSPSPICEFamilyFromBlastIT == ICEFamilyFromBlastOfSPConjModuleIT :
+                                            pass
+                                        else :
+                                            ICEFamilyFromBlastOfSPConjModuleIT = ""
+                                            coherentSPToinferICEFamilyFromBlastOfSPConjModule = False
+                                else :
+                                    ICEFamilyFromBlastOfSPConjModuleIT = ""
+                                    coherentSPToinferICEFamilyFromBlastOfSPConjModule = False
+
+        if len(ICEFamilyFromBlastOfSPConjModuleIT) != 0:  # add only if not empty or null
+            self.setICEFamilyFromBlastOfSPConjModule.add(ICEFamilyFromBlastOfSPConjModuleIT)
+
+
 
     # update families in the anchor after modification of member SPs
     def resetSPFamiliesAfterDeletion(self):
         # self.setFamilyFromBlastOfSPConjModule.clear()
         self.setICESuperFamilyFromBlastOfSPConjModule.clear()
-        self.setICEFamilyFromBlastOfSPConjModule.clear()
-        self.setIMEFamilyFromBlastOfSPConjModule.clear()
+        #self.setICEFamilyFromBlastOfSPConjModule.clear()
+        self.setIMESuperFamilyFromBlastOfSPConjModule.clear()
         self.setFamilyFromHMMOfSPConjModule.clear()
 
         for currSP in self.listOrderedSPs:
@@ -158,11 +252,20 @@ class BasicEMStructure():
                     #        self.setFamilyFromBlastOfSPConjModule.add(currFamilyFromBlast)
                     if len(currSP.setSPICESuperFamilyFromBlast) != 0:  # add only if not empty or null
                         self.setICESuperFamilyFromBlastOfSPConjModule.update(currSP.setSPICESuperFamilyFromBlast)
-                    if len(currSP.setSPICEFamilyFromBlast) != 0:  # add only if not empty or null
-                        self.setICEFamilyFromBlastOfSPConjModule.update(currSP.setSPICEFamilyFromBlast)
-                    if len(currSP.setSPIMEFamilyFromBlast) != 0:  # add only if not empty or null
-                        self.setIMEFamilyFromBlastOfSPConjModule.update(currSP.setSPIMEFamilyFromBlast)
+                    #if len(currSP.setSPICEFamilyFromBlast) != 0:  # add only if not empty or null
+                    #    self.setICEFamilyFromBlastOfSPConjModule.update(currSP.setSPICEFamilyFromBlast) # see inferICEFamilyFromBlastOfSPConjModule
+                    if len(currSP.setSPIMESuperFamilyFromBlast) != 0:  # add only if not empty or null
+                        self.setIMESuperFamilyFromBlastOfSPConjModule.update(currSP.setSPIMESuperFamilyFromBlast)
 
+                    if len(currSP.Relaxase_family_domain_of_most_similar_ref_SPFromBlast) != 0:  # add only if not empty or null
+                        self.setRelaxase_family_domain_of_most_similar_ref_SPFromBlastOfSPConjModule.add(currSP.Relaxase_family_domain_of_most_similar_ref_SPFromBlast)
+
+                    if len(currSP.Relaxase_family_MOB_of_most_similar_ref_SPFromBlast) != 0:  # add only if not empty or null
+                        self.setRelaxase_family_MOB_of_most_similar_ref_SPFromBlastOfSPConjModule.add(currSP.Relaxase_family_MOB_of_most_similar_ref_SPFromBlast)
+
+                    if len(currSP.Coupling_type_of_most_similar_ref_SPFromBlast) != 0:  # add only if not empty or null
+                        self.setCoupling_type_of_most_similar_ref_SPFromBlastOfSPConjModule.add(currSP.Coupling_type_of_most_similar_ref_SPFromBlast)
+                        
                 # elif currSP.SPDetectedByHMM == 1:
                 if currSP.SPDetectedByHMM == 1:
 
@@ -172,7 +275,7 @@ class BasicEMStructure():
                             if currFamilyFromHMM:  # add only if not empty or null
                                 # self.setFamilyFromHMMOfSPConjModule.add(currFamilyFromHMM)
                                 if currSP.SPType == "Relaxase":
-                                    self.setFamilyFromHMMOfSPConjModule.add(f'R:{currFamilyFromHMM}')
+                                    self.setFamilyFromHMMOfSPConjModule.add(f'R:{currFamilyFromHMM}') #OLD
                                 if currSP.SPType == "Coupling protein":
                                     self.setFamilyFromHMMOfSPConjModule.add(f'C:{currFamilyFromHMM}')
                                 if currSP.SPType == "VirB4":
@@ -180,6 +283,8 @@ class BasicEMStructure():
 
                 if currSP.SPDetectedByBlast == 0 and currSP.SPDetectedByHMM == 0:
                     raise RuntimeError("Error in resetSPFamiliesAfterDeletion: currSP.SPDetectedByBlast and currSP.SPDetectedByHMM are both 0 for currSP.locusTag = {}".format(currSP.locusTag))
+
+        self.inferICEFamilyFromBlastOfSPConjModule()
 
     def addSPToConjugaisonModule(self, SPtoAdd):
         # update the fields:
@@ -191,13 +296,21 @@ class BasicEMStructure():
         # self.listOrderedSPs = [] #[SP]
 
         if (SPtoAdd.SPType == "Relaxase"):
-            self.listRelaxase.append(SPtoAdd)
+            if SPtoAdd not in self.listRelaxase :
+                self.listRelaxase.append(SPtoAdd)
         elif (SPtoAdd.SPType == "Coupling protein"):
-            self.listCouplingProtein.append(SPtoAdd)
+            if SPtoAdd not in self.listCouplingProtein :
+                self.listCouplingProtein.append(SPtoAdd)
         elif (SPtoAdd.SPType == "VirB4"):
-            self.listVirB4.append(SPtoAdd)
+            if SPtoAdd not in self.listVirB4 :
+                self.listVirB4.append(SPtoAdd)
         else:
             raise RuntimeError("Error in addSPToConjugaisonModule: unrecognized SPtoAdd.SPType = {} for SPtoAdd = {}".format(SPtoAdd.SPType, SPtoAdd.locusTag))
+
+        # print("adding {}".format(SPtoAdd.locusTag))
+        if SPtoAdd not in self.listOrderedSPs :
+            self.listOrderedSPs.append(SPtoAdd)
+        self.refreshListIdxOrderedSPs()
 
         if SPtoAdd.SPDetectedByBlast == 1:
             # if len(SPtoAdd.setSPFamilyFromBlast) != 0:# add only if not empty or null
@@ -206,10 +319,22 @@ class BasicEMStructure():
             #            self.setFamilyFromBlastOfSPConjModule.add(currFamilyFromBlast)
             if len(SPtoAdd.setSPICESuperFamilyFromBlast) != 0:  # add only if not empty or null
                 self.setICESuperFamilyFromBlastOfSPConjModule.update(SPtoAdd.setSPICESuperFamilyFromBlast)
-            if len(SPtoAdd.setSPICEFamilyFromBlast) != 0:  # add only if not empty or null
-                self.setICEFamilyFromBlastOfSPConjModule.update(SPtoAdd.setSPICEFamilyFromBlast)
-            if len(SPtoAdd.setSPIMEFamilyFromBlast) != 0:  # add only if not empty or null
-                self.setIMEFamilyFromBlastOfSPConjModule.update(SPtoAdd.setSPIMEFamilyFromBlast)
+            #if len(SPtoAdd.setSPICEFamilyFromBlast) != 0:  # add only if not empty or null
+            #    self.setICEFamilyFromBlastOfSPConjModule.update(SPtoAdd.setSPICEFamilyFromBlast) # see inferICEFamilyFromBlastOfSPConjModule
+            if len(SPtoAdd.setSPIMESuperFamilyFromBlast) != 0:  # add only if not empty or null
+                self.setIMESuperFamilyFromBlastOfSPConjModule.update(SPtoAdd.setSPIMESuperFamilyFromBlast)
+            #print("{} should add Relaxase_family_domain_of_most_similar_ref_SPFromBlast \"{}\"".format(SPtoAdd.locusTag, SPtoAdd.Relaxase_family_domain_of_most_similar_ref_SPFromBlast))
+            if len(SPtoAdd.Relaxase_family_domain_of_most_similar_ref_SPFromBlast) != 0:  # add only if not empty or null
+                #print("ADDED !!!")
+                self.setRelaxase_family_domain_of_most_similar_ref_SPFromBlastOfSPConjModule.add(SPtoAdd.Relaxase_family_domain_of_most_similar_ref_SPFromBlast)
+
+            if len(SPtoAdd.Relaxase_family_MOB_of_most_similar_ref_SPFromBlast) != 0:  # add only if not empty or null
+                self.setRelaxase_family_MOB_of_most_similar_ref_SPFromBlastOfSPConjModule.add(SPtoAdd.Relaxase_family_MOB_of_most_similar_ref_SPFromBlast)
+
+            if len(SPtoAdd.Coupling_type_of_most_similar_ref_SPFromBlast) != 0:  # add only if not empty or null
+                self.setCoupling_type_of_most_similar_ref_SPFromBlastOfSPConjModule.add(SPtoAdd.Coupling_type_of_most_similar_ref_SPFromBlast)
+
+        self.inferICEFamilyFromBlastOfSPConjModule()
 
         # elif SPtoAdd.SPDetectedByHMM == 1:
         if SPtoAdd.SPDetectedByHMM == 1:
@@ -227,15 +352,15 @@ class BasicEMStructure():
         if SPtoAdd.SPDetectedByBlast == 0 and SPtoAdd.SPDetectedByHMM == 0:
             raise RuntimeError("Error in addSPToConjugaisonModule: SPtoAdd.SPDetectedByBlast and SPtoAdd.SPDetectedByHMM are both 0 for SPtoAdd.locusTag = {}".format(SPtoAdd.locusTag))
 
-        # print("adding {}".format(SPtoAdd.locusTag))
-        self.listOrderedSPs.append(SPtoAdd)
-        self.refreshListIdxOrderedSPs()
 
     def refreshListIdxOrderedSPs(self):
         # update the fields:
         # self.idxUpstreamConjugationModuleSPInListSPs = "" # int
         # self.idxDownstreamConjugationModuleSPInListSPs = "" # int
-        self.listOrderedSPs.sort(key=lambda x: x.start, reverse=False)
+        #print ("refreshListIdxOrderedSPs {}".format(hit.ListSPs.GetListProtIdsFromListSP(self.listOrderedSPs)))
+        #self.listOrderedSPs.sort(key=lambda x: x.start, reverse=False)
+        self.listOrderedSPs.sort(key=lambda x: (x.genomeAccessionRank, x.start), reverse=False)
+        
 
         # for testing
         # strlistOrderedSPsLocusTag = ""
@@ -284,21 +409,27 @@ class BasicEMStructure():
                     sameFamilyMergeStructureToCheck = SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[currentSP]
                     greenLightAddSPConjugaisonModule = self.listSPsIsContainedWithinOtherStructure(currentSP, sameFamilyMergeStructureToCheck)
                     if greenLightAddSPConjugaisonModule:
-                        greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(self, currentSP, groupListSPintoICEsIMEsUsingFamilyInfo)
+                        greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(self, currentSP, groupListSPintoICEsIMEsUsingFamilyInfo, False, False, False)
                 # if self is in SameFamilyMergeStructures but not currentSP
                 elif len(self.listOrderedSPs) > 0 and self.listOrderedSPs[0] in SPsInSameFamilyMergeStructures2SameFamilyMergeStructure:
                     sameFamilyMergeStructureToCheck = SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[self.listOrderedSPs[0]]
                     greenLightAddSPConjugaisonModule = self.listSPsIsContainedWithinOtherStructure(currentSP, sameFamilyMergeStructureToCheck)
                     if greenLightAddSPConjugaisonModule:
                         greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
-                                self,
-                                currentSP,
-                                groupListSPintoICEsIMEsUsingFamilyInfo)
+                            self,
+                            currentSP,
+                            groupListSPintoICEsIMEsUsingFamilyInfo,
+                            False,
+                            False,
+                            False)
                 else:
                     greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
                             self,
                             currentSP,
-                            groupListSPintoICEsIMEsUsingFamilyInfo)
+                            groupListSPintoICEsIMEsUsingFamilyInfo,
+                            False,
+                            False,
+                            False)
                 if greenLightAddSPConjugaisonModule:
 
                     upstreamICEsIMEsStructure = listICEsIMEsStructures[-1]
@@ -432,7 +563,50 @@ class BasicEMStructure():
             # print("boolToReturn: {}".format(boolToReturn))
             return boolToReturn
 
-    # GetListInternalIdentifierFromSetEMStructure
+
+
+    @staticmethod
+    def buildFamily2SetICEsIMEsStructures(listICEsIMEsStructures):
+        family2SetICEsIMEsStructures = {}
+        for currICEsIMEsStructure in listICEsIMEsStructures:
+            for currFamilyFromBlast in currICEsIMEsStructure.setICEFamilyFromBlastOfSPConjModule:
+                if currFamilyFromBlast in family2SetICEsIMEsStructures:  # key already there
+                    currSetICEsIMEsStructures = family2SetICEsIMEsStructures[currFamilyFromBlast]
+                    currSetICEsIMEsStructures.add(currICEsIMEsStructure)
+                else:  # key not there
+                    currSetICEsIMEsStructures = set()
+                    currSetICEsIMEsStructures.add(currICEsIMEsStructure)
+                    family2SetICEsIMEsStructures[currFamilyFromBlast] = currSetICEsIMEsStructures
+            for currFamilyFromBlast in currICEsIMEsStructure.setIMESuperFamilyFromBlastOfSPConjModule:
+                if currFamilyFromBlast in family2SetICEsIMEsStructures:  # key already there
+                    currSetICEsIMEsStructures = family2SetICEsIMEsStructures[currFamilyFromBlast]
+                    currSetICEsIMEsStructures.add(currICEsIMEsStructure)
+                else:  # key not there
+                    currSetICEsIMEsStructures = set()
+                    currSetICEsIMEsStructures.add(currICEsIMEsStructure)
+                    family2SetICEsIMEsStructures[currFamilyFromBlast] = currSetICEsIMEsStructures
+
+        return family2SetICEsIMEsStructures
+
+
+    @staticmethod
+    def listStucturesHasAtLeastOneStructureWithoutRegistredIntergase(listEMStructures):
+        for EMStructureIT in listEMStructures :
+            if len(EMStructureIT.listIntegraseUpstream) == 0 and len(EMStructureIT.listIntegraseDownstream) == 0 :
+                return True
+        return False
+
+
+
+    @staticmethod
+    def GetListInternIdFromListEMStructure(listEMStructures):
+        strToReturn = ""
+        for currentICEsIMEsStructure in listEMStructures:
+            if strToReturn:  # not empty
+                strToReturn += ", "
+            strToReturn += str(currentICEsIMEsStructure.internalIdentifier)
+        return strToReturn
+
     @staticmethod
     def GetListInternIdFromSetEMStructure(setEMStructures):
         strToReturn = ""
@@ -442,6 +616,21 @@ class BasicEMStructure():
             strToReturn += str(currentICEsIMEsStructure.internalIdentifier)
         return strToReturn
 
+
+    @staticmethod
+    def getDigitInEMstructureInternalIdentifier(internalIdentifierSent):
+        #RQ : self.internalIdentifier = "__IMEICEID_BasicEMStructure__" + str(BasicEMStructure.countInternalIdentifier) + "__"
+        matchInternalIdentifierSent = re.match(
+                r'^__IMEICEID_BasicEMStructure__(\d+)__$', internalIdentifierSent)
+        if matchInternalIdentifierSent:
+            digitInInternalIdentifierSent = int(matchInternalIdentifierSent.group(1))
+            return digitInInternalIdentifierSent
+        else:
+            raise RuntimeError(
+                    "Error in getDigitInEMstructureInternalIdentifier: internalIdentifierSent = {} does not match the regex".format(
+                                internalIdentifierSent))
+
+
     # return the name of the attributes in this object
     @staticmethod
     def GetSummaryObjectHeaderAsTsv():
@@ -449,41 +638,47 @@ class BasicEMStructure():
         printSegmentNumber = True
         segmentNumberHeaderStr = ""
         if printSegmentNumber:
-            segmentNumberHeaderStr = "\tsegment number"
+            segmentNumberHeaderStr = "\tSegment_number"
 
         listStrToReturn = []
 
         stToReturnPrefix = ""
-        stToReturnPrefix += "ICE IME Number"
+        stToReturnPrefix += "ICE_IME_id"
         stToReturnPrefix += segmentNumberHeaderStr
+        stToReturnPrefix += "\tGenome_accession"
 
         listStrToReturn.append(stToReturnPrefix)
 
         stToReturnPostfix = ""
-        stToReturnPostfix += "\tICEline format"  # here was Prefix before
+        stToReturnPostfix += "\tICEline_format"
         # stToReturnPostfix += "\tfamily SP conj module Blast"
-        stToReturnPostfix += "\tICE SuperFamily From Blast Of SP Conj Module"  # here was Prefix before
-        stToReturnPostfix += "\tICE Family From Blast Of SP Conj Module"
-        stToReturnPostfix += "\tIME Family From Blast Of SP Conj Module"
-        stToReturnPostfix += "\tfamily SP conj module HMM"
+        stToReturnPostfix += "\tICE_consensus_superfamily_SP_conj_module"
+        stToReturnPostfix += "\tICE_consensus_family_SP_conj_module"
+        #stToReturnPostfix += "\tIME SuperFamily From Blast Of SP Conj Module"
+        stToReturnPostfix += "\tIME_relaxase_family_domains_blast"
+        stToReturnPostfix += "\tHMM_family_SP_conj_module"
 
-        stToReturnPostfix += "\tintegrase upstream"  # here was Prefix before
-        stToReturnPostfix += "\tintegrase downstream"
-        stToReturnPostfix += "\trelaxase"
-        stToReturnPostfix += "\tcoupling protein"
+        stToReturnPostfix += "\tIntegrase_upstream"
+        stToReturnPostfix += "\tIntegrase_downstream"
+        stToReturnPostfix += "\tRelaxase"
+        stToReturnPostfix += "\tCoupling_protein"
         stToReturnPostfix += "\tVirB4"
-        stToReturnPostfix += "\tlist ordered SPs"
+        stToReturnPostfix += "\tList_SP_ordered_genomic_position"
 
-        stToReturnPostfix += "\tSPs conj module to manually review"
-        stToReturnPostfix += "\tIntegrase to manually review"
+        stToReturnPostfix += "\tOther_potential_SP_conj_module_need_manual_curation_and_review"
+        stToReturnPostfix += "\tOther_potential_integrase_need_manual_curation_and_review"
         # stToReturnPostfix += "\tSPs may belong to another ICE / IME"
-        stToReturnPostfix += "\tcomment"
+        stToReturnPostfix += "\tComments_regarding_structure"
         listStrToReturn.append(stToReturnPostfix)
 
         return listStrToReturn
 
     # return the value of the attributes in this object
-    def GetSummaryObjectAsTsv(self, outputPrintCDSNumberInsteadOfProteinIdAndStart, segmentNumberSent):
+    def GetSummaryObjectAsTsv(self, 
+        # outputPrintCDSNumberInsteadOfProteinIdAndStart,
+        segmentNumberSent,
+        catStructConjModuleSendIT,
+        dictIMEICEID2humanReadableIMEICEIIdentifier):
 
         printSegmentNumber = True
         segmentNumberStr = ""
@@ -493,36 +688,62 @@ class BasicEMStructure():
         listStrToReturn = []
 
         stToReturnPrefix = ""
-        stToReturnPrefix += str(self.internalIdentifier)
-        stToReturnPrefix += segmentNumberStr
+        #stToReturnPrefix += str(self.internalIdentifier)
+        stToReturnPrefix += returnDashIfEmptyStringOrNone(dictIMEICEID2humanReadableIMEICEIIdentifier[self.internalIdentifier])
+        stToReturnPrefix += returnDashIfEmptyStringOrNone(segmentNumberStr)
+        genome_accessionStr = ""
+        for spToExtractGenomeAccessionFrom in self.listOrderedSPs:
+            if len(genome_accessionStr) == 0:
+                genome_accessionStr = spToExtractGenomeAccessionFrom.genomeAccession
+            else :
+                if genome_accessionStr != spToExtractGenomeAccessionFrom.genomeAccession:
+                    raise RuntimeError('GetSummaryObjectAsTsv error: genome_accessionStr {} != spToExtractGenomeAccessionFrom.genomeAccession {}'.format(genome_accessionStr, spToExtractGenomeAccessionFrom.genomeAccession))
+        stToReturnPrefix += "\t" + returnDashIfEmptyStringOrNone(genome_accessionStr)
         listStrToReturn.append(stToReturnPrefix)
 
         stToReturnPostfix = ""
-        stToReturnPostfix += "\t" + hit.ListSPs.PrintICElineFormat(self.listOrderedSPs)
-        stToReturnPostfix += "\t" + ", ".join(str(i) for i in sorted(self.setICESuperFamilyFromBlastOfSPConjModule))
-        stToReturnPostfix += "\t" + ", ".join(str(i) for i in sorted(self.setICEFamilyFromBlastOfSPConjModule))
-        stToReturnPostfix += "\t" + ", ".join(str(i) for i in sorted(self.setIMEFamilyFromBlastOfSPConjModule))
-        stToReturnPostfix += "\t" + ", ".join(str(i) for i in sorted(self.setFamilyFromHMMOfSPConjModule))
-        if outputPrintCDSNumberInsteadOfProteinIdAndStart == "NO":
-            stToReturnPostfix += "\t" + hit.ListSPs.GetListProtIdsFromListSP(self.listIntegraseUpstream)
-            stToReturnPostfix += "\t" + hit.ListSPs.GetListProtIdsFromListSP(self.listIntegraseDownstream)
-            stToReturnPostfix += "\t" + hit.ListSPs.GetListProtIdsFromListSP(self.listRelaxase)
-            stToReturnPostfix += "\t" + hit.ListSPs.GetListProtIdsFromListSP(self.listCouplingProtein)
-            stToReturnPostfix += "\t" + hit.ListSPs.GetListProtIdsFromListSP(self.listVirB4)
-            stToReturnPostfix += "\t" + hit.ListSPs.GetListProtIdsFromListSP(self.listOrderedSPs)
-        elif outputPrintCDSNumberInsteadOfProteinIdAndStart == "YES":
-            stToReturnPostfix += "\t" + hit.ListSPs.GetListCDSNumberFromListSP(self.listIntegraseUpstream)
-            stToReturnPostfix += "\t" + hit.ListSPs.GetListCDSNumberFromListSP(self.listIntegraseDownstream)
-            stToReturnPostfix += "\t" + hit.ListSPs.GetListCDSNumberFromListSP(self.listRelaxase)
-            stToReturnPostfix += "\t" + hit.ListSPs.GetListCDSNumberFromListSP(self.listCouplingProtein)
-            stToReturnPostfix += "\t" + hit.ListSPs.GetListCDSNumberFromListSP(self.listVirB4)
-            stToReturnPostfix += "\t" + hit.ListSPs.GetListCDSNumberFromListSP(self.listOrderedSPs)
-        else:
-            raise RuntimeError("Error in GetSummaryObjectAsTsv: unrecognized outputPrintCDSNumberInsteadOfProteinIdAndStart = {}".format(outputPrintCDSNumberInsteadOfProteinIdAndStart))
+        stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(hit.ListSPs.PrintICElineFormat(self.listOrderedSPs, False, ""))
 
-        stToReturnPostfix += "\t" + ", ".join(str(i) for i in sorted(self.setSPConjModuleLocusTagsToManuallyCheck))
-        stToReturnPostfix += "\t" + ", ".join(str(i) for i in sorted(self.setIntegraseLocusTagsToManuallyCheck))
-        stToReturnPostfix += "\t" + self.comment
+        if catStructConjModuleSendIT == "ICE" or catStructConjModuleSendIT == "partial ICE VirB4" or catStructConjModuleSendIT == "partial conj module" or catStructConjModuleSendIT == "unsure" :
+            stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(", ".join(str(i) for i in sorted(self.setICESuperFamilyFromBlastOfSPConjModule)))
+            stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(", ".join(str(i) for i in sorted(self.setICEFamilyFromBlastOfSPConjModule)))
+        else :
+            stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone("")
+            stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone("")
+
+        if catStructConjModuleSendIT == "IME" or catStructConjModuleSendIT == "partial conj module"  :
+            stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(", ".join(str(i) for i in sorted(self.setRelaxase_family_domain_of_most_similar_ref_SPFromBlastOfSPConjModule)))
+        else :
+            stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone("")
+
+        stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(", ".join(str(i) for i in sorted(self.setFamilyFromHMMOfSPConjModule)))
+        # if outputPrintCDSNumberInsteadOfProteinIdAndStart == "NO":
+        stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(hit.ListSPs.GetListProtIdsFromListSP(sorted(self.listIntegraseUpstream, key=lambda x: (x.genomeAccessionRank, x.start), reverse=False))) #key=lambda x: x.start
+        stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(hit.ListSPs.GetListProtIdsFromListSP(sorted(self.listIntegraseDownstream, key=lambda x: (x.genomeAccessionRank, x.start), reverse=False))) #key=lambda x: x.start
+        stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(hit.ListSPs.GetListProtIdsFromListSP(sorted(self.listRelaxase, key=lambda x: (x.genomeAccessionRank, x.start), reverse=False))) #key=lambda x: x.start
+        stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(hit.ListSPs.GetListProtIdsFromListSP(sorted(self.listCouplingProtein, key=lambda x: (x.genomeAccessionRank, x.start), reverse=False))) #key=lambda x: x.start
+        stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(hit.ListSPs.GetListProtIdsFromListSP(sorted(self.listVirB4, key=lambda x: (x.genomeAccessionRank, x.start), reverse=False))) #key=lambda x: x.start
+        stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(hit.ListSPs.GetListProtIdsFromListSP(self.listOrderedSPs))
+        # elif outputPrintCDSNumberInsteadOfProteinIdAndStart == "YES":
+        #     stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(hit.ListSPs.GetListCDSNumberFromListSP(sorted(self.listIntegraseUpstream, key=lambda x: x.start, reverse=False)))
+        #     stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(hit.ListSPs.GetListCDSNumberFromListSP(sorted(self.listIntegraseDownstream, key=lambda x: x.start, reverse=False)))
+        #     stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(hit.ListSPs.GetListCDSNumberFromListSP(sorted(self.listRelaxase, key=lambda x: x.start, reverse=False)))
+        #     stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(hit.ListSPs.GetListCDSNumberFromListSP(sorted(self.listCouplingProtein, key=lambda x: x.start, reverse=False)))
+        #     stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(hit.ListSPs.GetListCDSNumberFromListSP(sorted(self.listVirB4, key=lambda x: x.start, reverse=False)))
+        #     stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(hit.ListSPs.GetListCDSNumberFromListSP(self.listOrderedSPs))
+        # else:
+        #     raise RuntimeError("Error in GetSummaryObjectAsTsv: unrecognized outputPrintCDSNumberInsteadOfProteinIdAndStart = {}".format(outputPrintCDSNumberInsteadOfProteinIdAndStart))
+
+        # stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(", ".join(str(i) for i in sorted(self.setSPConjModuleToManuallyCheck)))
+        stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(hit.ListSPs.GetListProtIdsFromSetSP(self.setSPConjModuleToManuallyCheck))
+        # stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(", ".join(str(i) for i in sorted(self.setIntegraseToManuallyCheck)))
+        stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(hit.ListSPs.GetListProtIdsFromSetSP(self.setIntegraseToManuallyCheck))
+
+        strCommentToPrint = self.comment
+        for IMEICEIDIT, humanReadableIMEICEIIdentifierIT in dictIMEICEID2humanReadableIMEICEIIdentifier.items():
+            strCommentToPrint = strCommentToPrint.replace(IMEICEIDIT, humanReadableIMEICEIIdentifierIT)
+        stToReturnPostfix += "\t" + returnDashIfEmptyStringOrNone(strCommentToPrint)
+
         listStrToReturn.append(stToReturnPostfix)
 
         return listStrToReturn
@@ -541,13 +762,15 @@ class BasicEMStructure():
         # stToReturn += "\t"+prefix+"\"setFamilyFromBlastOfSPConjModule\": \"" + ", ".join(str(i) for i in sorted(self.setFamilyFromBlastOfSPConjModule)) + "\"\n"
         stToReturn += "\t" + prefix + "\"setICESuperFamilyFromBlastOfSPConjModule\": \"" + ", ".join(str(i) for i in sorted(self.setICESuperFamilyFromBlastOfSPConjModule)) + "\"\n"
         stToReturn += "\t" + prefix + "\"setICEFamilyFromBlastOfSPConjModule\": \"" + ", ".join(str(i) for i in sorted(self.setICEFamilyFromBlastOfSPConjModule)) + "\"\n"
-        stToReturn += "\t" + prefix + "\"setIMEFamilyFromBlastOfSPConjModule\": \"" + ", ".join(str(i) for i in sorted(self.setIMEFamilyFromBlastOfSPConjModule)) + "\"\n"
+        stToReturn += "\t" + prefix + "\"setIMESuperFamilyFromBlastOfSPConjModule\": \"" + ", ".join(str(i) for i in sorted(self.setIMESuperFamilyFromBlastOfSPConjModule)) + "\"\n"
 
         stToReturn += "\t" + prefix + "\"setFamilyFromHMMOfSPConjModule\": \"" + ", ".join(str(i) for i in sorted(self.setFamilyFromHMMOfSPConjModule)) + "\"\n"
         stToReturn += "\t" + prefix + "\"listOrderedSPs\": \"" + hit.ListSPs.GetListProtIdsFromListSP(self.listOrderedSPs) + "\"\n"
-        stToReturn += "\t" + prefix + "\"listOrderedSPs as ICElineFormat\": \"" + hit.ListSPs.PrintICElineFormat(self.listOrderedSPs) + "\"\n"
-        stToReturn += "\t" + prefix + "\"setSPConjModuleLocusTagsToManuallyCheck\": \"" + ", ".join(str(i) for i in sorted(self.setSPConjModuleLocusTagsToManuallyCheck)) + "\"\n"
-        stToReturn += "\t" + prefix + "\"setIntegraseLocusTagsToManuallyCheck\": \"" + ", ".join(str(i) for i in sorted(self.setIntegraseLocusTagsToManuallyCheck)) + "\"\n"
+        stToReturn += "\t" + prefix + "\"listOrderedSPs as ICElineFormat\": \"" + hit.ListSPs.PrintICElineFormat(self.listOrderedSPs, False, "") + "\"\n"
+        # stToReturn += "\t" + prefix + "\"setSPConjModuleToManuallyCheck\": \"" + ", ".join(str(i) for i in sorted(self.setSPConjModuleToManuallyCheck)) + "\"\n"
+        stToReturn += "\t" + prefix + "\"setSPConjModuleToManuallyCheck\": \"" + hit.ListSPs.GetListProtIdsFromSetSP(self.setSPConjModuleToManuallyCheck) + "\"\n"
+        # stToReturn += "\t" + prefix + "\"setIntegraseToManuallyCheck\": \"" + ", ".join(str(i) for i in sorted(self.setIntegraseToManuallyCheck)) + "\"\n"
+        stToReturn += "\t" + prefix + "\"setIntegraseToManuallyCheck\": \"" + hit.ListSPs.GetListProtIdsFromSetSP(self.setIntegraseToManuallyCheck) + "\"\n"
         stToReturn += "\t" + prefix + "\"setSPInConflict\": \"" + hit.ListSPs.GetListProtIdsFromSetSP(self.setSPInConflict) + "\"\n"
         stToReturn += "\t" + prefix + "\"idxUpstreamConjugationModuleSPInListSPs\": \"" + str(self.idxUpstreamConjugationModuleSPInListSPs) + "\"\n"
         stToReturn += "\t" + prefix + "\"idxDownstreamConjugationModuleSPInListSPs\": \"" + str(self.idxDownstreamConjugationModuleSPInListSPs) + "\"\n"
@@ -611,16 +834,45 @@ class ICEsIMEsStructure(BasicEMStructure):
         else:
             return False
 
+    def getIterativeMasterMergeStructure(self, listICEsIMEsStructures, levelIteration):
+        if levelIteration > 15 :
+            raise RuntimeError("Error in getIterativeMasterMergeStructure: levelIteration > 15 for structure {}".format(
+                    self.internalIdentifier))
+        if self.delMerging_idxListUpstreamStructure == -1 :
+            return self
+        else :
+            masterMergeStructureIT = listICEsIMEsStructures[self.delMerging_idxListUpstreamStructure]
+            if self.idxInSeedList in masterMergeStructureIT.idxListDownstrStructMerged :
+                if masterMergeStructureIT.delMerging_idxListUpstreamStructure == -1 :
+                    return masterMergeStructureIT
+                else :
+                    levelIteration += 1
+                    return masterMergeStructureIT.getIterativeMasterMergeStructure(listICEsIMEsStructures, levelIteration)
+            else :
+                raise RuntimeError("Error in getIterativeMasterMergeStructure: self.idxInSeedList {} (structure {}) NOT in masterMergeStructureIT.idxListDownstrStructMerged (structure {})".format(
+                    self.idxInSeedList,
+                    self.internalIdentifier,
+                    masterMergeStructureIT.internalIdentifier
+                    ))
+
+
     # This method merge otherICEsIMEsStructureToMerge in this ICEsIMEsStructure
     def mergeWith(self,
-                  otherICEsIMEsStructureToMerge,
-                  groupListSPintoICEsIMEsUsingFamilyInfo,
-                  locusTagMerge2Comment,
-                  locusTagIntegrase2Comment,
-                  useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                  useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance):
+                otherICEsIMEsStructureToMerge,
+                groupListSPintoICEsIMEsUsingFamilyInfo,
+                locusTagMerge2Comment,
+                locusTagIntegrase2Comment,
+                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
+                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
+                allowCheckingForMultipleDistantRelaxase,
+                allowCheckingForMultipleDistantCoupling,
+                allowCheckingForMultipleDistantVirB4):
 
-        if self.internalIdentifier >= otherICEsIMEsStructureToMerge.internalIdentifier:
+        digitInSelfInternalIdentifier = BasicEMStructure.getDigitInEMstructureInternalIdentifier(self.internalIdentifier)
+        digitInotherICEsIMEsStructureToMergeInternalIdentifier = BasicEMStructure.getDigitInEMstructureInternalIdentifier(otherICEsIMEsStructureToMerge.internalIdentifier)
+
+        #if self.internalIdentifier >= otherICEsIMEsStructureToMerge.internalIdentifier:
+        if digitInSelfInternalIdentifier >= digitInotherICEsIMEsStructureToMergeInternalIdentifier:
             raise RuntimeError("Error in mergeWith: self.internalIdentifier {} >= otherICEsIMEsStructureToMerge.internalIdentifier {}".format(
                     self.internalIdentifier,
                     otherICEsIMEsStructureToMerge.internalIdentifier))
@@ -635,7 +887,7 @@ class ICEsIMEsStructure(BasicEMStructure):
                 raise RuntimeError("Error in mergeWith: self.internalIdentifier == lowerBoundMergedInternalIdentifierIT {} and otherICEsIMEsStructureToMerge.internalIdentifier == higherBoundMergedInternalIdentifierIT {}".format(
                         self.internalIdentifier,
                         otherICEsIMEsStructureToMerge.internalIdentifier))
-            if lowerBoundMergedInternalIdentifierIT < self.internalIdentifier < higherBoundMergedInternalIdentifierIT and otherICEsIMEsStructureToMerge.internalIdentifier > higherBoundMergedInternalIdentifierIT:
+            if BasicEMStructure.getDigitInEMstructureInternalIdentifier(lowerBoundMergedInternalIdentifierIT) < BasicEMStructure.getDigitInEMstructureInternalIdentifier(self.internalIdentifier) < BasicEMStructure.getDigitInEMstructureInternalIdentifier(higherBoundMergedInternalIdentifierIT) and BasicEMStructure.getDigitInEMstructureInternalIdentifier(otherICEsIMEsStructureToMerge.internalIdentifier) > BasicEMStructure.getDigitInEMstructureInternalIdentifier(higherBoundMergedInternalIdentifierIT):
                 commitITToAdd = "Cannot merge the ICE / IME structure {} ({}) into the ICE / IME structure {} ({}) because this merge will partly overlap with the already merged structures {} and {}. ".format(
                         str(otherICEsIMEsStructureToMerge.internalIdentifier),
                         hit.ListSPs.GetListProtIdsFromListSP(otherICEsIMEsStructureToMerge.listOrderedSPs),
@@ -652,7 +904,7 @@ class ICEsIMEsStructure(BasicEMStructure):
                 for currSP in otherICEsIMEsStructureToMerge.listOrderedSPs:
                     icescreen_OO.addCommentToLocusTag2Comment(currSP.locusTag, commitITToAdd, locusTagMerge2Comment)
                 return False
-            if lowerBoundMergedInternalIdentifierIT < otherICEsIMEsStructureToMerge.internalIdentifier < higherBoundMergedInternalIdentifierIT and self.internalIdentifier < lowerBoundMergedInternalIdentifierIT:
+            if BasicEMStructure.getDigitInEMstructureInternalIdentifier(lowerBoundMergedInternalIdentifierIT) < BasicEMStructure.getDigitInEMstructureInternalIdentifier(otherICEsIMEsStructureToMerge.internalIdentifier) < BasicEMStructure.getDigitInEMstructureInternalIdentifier(higherBoundMergedInternalIdentifierIT) and BasicEMStructure.getDigitInEMstructureInternalIdentifier(self.internalIdentifier) < BasicEMStructure.getDigitInEMstructureInternalIdentifier(lowerBoundMergedInternalIdentifierIT):
                 commitITToAdd = "Cannot merge the ICE / IME structure {} ({}) into the ICE / IME structure {} ({}) because this merge will partly overlap with the already merged structures {} and {}. ".format(
                         str(otherICEsIMEsStructureToMerge.internalIdentifier),
                         hit.ListSPs.GetListProtIdsFromListSP(otherICEsIMEsStructureToMerge.listOrderedSPs),
@@ -834,9 +1086,11 @@ class ICEsIMEsStructure(BasicEMStructure):
 
             if listUpstreamIntChanged and listDownstreamIntChanged:
                 for currSp in listUpstreamIntChanged:
-                    self.setIntegraseLocusTagsToManuallyCheck.add(currSp.locusTag)
+                    # self.setIntegraseToManuallyCheck.add(currSp.locusTag)
+                    self.setIntegraseToManuallyCheck.add(currSp)
                 for currSp in listDownstreamIntChanged:
-                    self.setIntegraseLocusTagsToManuallyCheck.add(currSp.locusTag)
+                    # self.setIntegraseToManuallyCheck.add(currSp.locusTag)
+                    self.setIntegraseToManuallyCheck.add(currSp)
             elif listUpstreamIntChanged:
                 for currSp in listUpstreamIntChanged:
                     self.listIntegraseUpstream.append(currSp)
@@ -853,7 +1107,7 @@ class ICEsIMEsStructure(BasicEMStructure):
         # deal with listRelaxase
         if otherICEsIMEsStructureToMerge.listRelaxase:
             for currSP in otherICEsIMEsStructureToMerge.listRelaxase:
-                greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(self, currSP, groupListSPintoICEsIMEsUsingFamilyInfo)
+                greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(self, currSP, groupListSPintoICEsIMEsUsingFamilyInfo, allowCheckingForMultipleDistantRelaxase, allowCheckingForMultipleDistantCoupling, allowCheckingForMultipleDistantVirB4)
                 if greenLightAddSPConjugaisonModule:
                     self.addSPToConjugaisonModule(currSP)
                     if len(currSP.setICEsIMEsStructureInConflict) != 0:  # transfert conflict to merged structure
@@ -888,8 +1142,7 @@ class ICEsIMEsStructure(BasicEMStructure):
         # deal with listCouplingProtein
         if otherICEsIMEsStructureToMerge.listCouplingProtein:
             for currSP in otherICEsIMEsStructureToMerge.listCouplingProtein:
-                greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
-                        self, currSP, groupListSPintoICEsIMEsUsingFamilyInfo)
+                greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(self, currSP, groupListSPintoICEsIMEsUsingFamilyInfo, allowCheckingForMultipleDistantRelaxase, allowCheckingForMultipleDistantCoupling, allowCheckingForMultipleDistantVirB4)
                 if greenLightAddSPConjugaisonModule:
                     self.addSPToConjugaisonModule(currSP)
                     if len(currSP.setICEsIMEsStructureInConflict) != 0:  # transfert conflict to merged structure
@@ -927,8 +1180,7 @@ class ICEsIMEsStructure(BasicEMStructure):
         # deal with listVirB4
         if otherICEsIMEsStructureToMerge.listVirB4:
             for currSP in otherICEsIMEsStructureToMerge.listVirB4:
-                greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
-                        self, currSP, groupListSPintoICEsIMEsUsingFamilyInfo)
+                greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(self, currSP, groupListSPintoICEsIMEsUsingFamilyInfo, allowCheckingForMultipleDistantRelaxase, allowCheckingForMultipleDistantCoupling, allowCheckingForMultipleDistantVirB4)
                 if greenLightAddSPConjugaisonModule:
                     self.addSPToConjugaisonModule(currSP)
                     if len(currSP.setICEsIMEsStructureInConflict) != 0:  # transfert conflict to merged structure
@@ -963,7 +1215,7 @@ class ICEsIMEsStructure(BasicEMStructure):
                         raise RuntimeError("Error in mergeWith: not greenLightAddSPConjugaisonModule and not currSP.setICEsIMEsStructureInConflict for merging locus tag {} from structure {} to structure {}".format(
                                 currSP.locusTag, str(otherICEsIMEsStructureToMerge.internalIdentifier), str(self.internalIdentifier)))
 
-        # integrase will be dealt with in method addSPIntegraseUpstreamAndDownstream() launched after merging
+        # integrase will be dealt with in method addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure() launched after merging
 
         # set flags
         self.idxListDownstrStructMerged.append(otherICEsIMEsStructureToMerge.idxInSeedList)
@@ -1184,7 +1436,7 @@ class ICEsIMEsStructure(BasicEMStructure):
                         # found currICEIMEInConflict as
                         # otherICEsIMEsStructureBeingInConflict
                         strBothInternalIdentifier = ""
-                        if self.internalIdentifier < currICEIMEInConflict.internalIdentifier:
+                        if BasicEMStructure.getDigitInEMstructureInternalIdentifier(self.internalIdentifier) < BasicEMStructure.getDigitInEMstructureInternalIdentifier(currICEIMEInConflict.internalIdentifier):
                             strBothInternalIdentifier = str(self.internalIdentifier) + " or " + str(currICEIMEInConflict.internalIdentifier)
                         else:
                             strBothInternalIdentifier = str(currICEIMEInConflict.internalIdentifier) + " or " + str(self.internalIdentifier)
@@ -1201,40 +1453,51 @@ class ICEsIMEsStructure(BasicEMStructure):
 
                         self.removeSPConjugaisonModule(
                                 currSP, None, False, True)
-                        self.setSPConjModuleLocusTagsToManuallyCheck.add(
-                                currSP.locusTag)
+                        # self.setSPConjModuleToManuallyCheck.add(currSP.locusTag)
+                        self.setSPConjModuleToManuallyCheck.add(currSP)
+
 
                         break
 
         if moveSingleSPToCheck == "YES":
-            totalNumberSPSureAndNotSure = len(self.listOrderedSPs) + len(self.setSPConjModuleLocusTagsToManuallyCheck) + len(self.setIntegraseLocusTagsToManuallyCheck)
+            totalNumberSPSureAndNotSure = len(self.listOrderedSPs) + len(self.setSPConjModuleToManuallyCheck) + len(self.setIntegraseToManuallyCheck)
             # single SP, move to unsure
             if totalNumberSPSureAndNotSure <= 1 and len(self.listVirB4) == 0:
                 currSPLocusTag = ""
+                typeCurrSPLocusTagIT = ""
                 for currSP in self.listRelaxase:
                     currSPLocusTag = currSP.locusTag
-                    self.setSPConjModuleLocusTagsToManuallyCheck.add(
-                            currSP.locusTag)
+                    typeCurrSPLocusTagIT = "relaxase"
+                    # self.setSPConjModuleToManuallyCheck.add(currSP.locusTag)
+                    self.setSPConjModuleToManuallyCheck.add(currSP)
                     self.listOrderedSPs.remove(currSP)
                 self.listRelaxase.clear()
                 for currSP in self.listCouplingProtein:
                     currSPLocusTag = currSP.locusTag
-                    self.setSPConjModuleLocusTagsToManuallyCheck.add(
-                            currSP.locusTag)
+                    typeCurrSPLocusTagIT = "coupling protein"
+                    # self.setSPConjModuleToManuallyCheck.add(currSP.locusTag)
+                    self.setSPConjModuleToManuallyCheck.add(currSP)
                     self.listOrderedSPs.remove(currSP)
                 self.listCouplingProtein.clear()
                 for currSP in self.listVirB4:
                     currSPLocusTag = currSP.locusTag
-                    self.setSPConjModuleLocusTagsToManuallyCheck.add(
-                            currSP.locusTag)
+                    typeCurrSPLocusTagIT = "VirB4"
+                    # self.setSPConjModuleToManuallyCheck.add(currSP.locusTag)
+                    self.setSPConjModuleToManuallyCheck.add(currSP)
                     self.listOrderedSPs.remove(currSP)
                 self.listVirB4.clear()
                 self.resetSPFamiliesAfterDeletion()
-                commentITToAdd = "The SP {} ".format(currSPLocusTag)\
-                    + "is not a VirB4, constitutes a conjugaison module by"\
-                    + " itself, and no integrase has been attributed to the "\
-                    + "element {}".format(self.internalIdentifier)\
-                    + ", please manually check. "
+
+                commentITToAdd = "The SP {}".format(currSPLocusTag)\
+                    + " seems to be an isolated "+typeCurrSPLocusTagIT\
+                    + " and is therefore not reported as an ICE / IME structure by ICEscreen."\
+                    + " Please manually check if it is a false positive or for the potential"\
+                    + " presence of other undetected SP in its genomic neighborhood."
+                # commentITToAdd = "The SP {} ".format(currSPLocusTag)\
+                #     + "is not a VirB4, constitutes a conjugaison module by"\
+                #     + " itself, and no integrase has been attributed to the "\
+                #     + "element {}".format(self.internalIdentifier)\
+                #     + ", please manually check. "
                 if commentITToAdd not in self.comment:
                     self.comment += commentITToAdd
                 icescreen_OO.addCommentToLocusTag2Comment(currSPLocusTag,
@@ -1244,8 +1507,10 @@ class ICEsIMEsStructure(BasicEMStructure):
         # last assignPutativeTypeStructure
         assignPutativeTypeStructure(self, maxNumberCDSForFilterIMESize)
 
-    def findIdxInSeedListMostUpstreamICEsIMEsStructureNested(self):
-        idxInSeedListMostUpstreamICEsIMEsStructureNested = -1
+
+
+    def findIdxInSeedListMostUpstreamICEsIMEsStructureMerged(self):
+        idxInSeedListMostUpstreamICEsIMEsStructureMerged = -1
         for idxICEsIMEsStructureOrIntegraseMerged in self.idxListDownstrStructMerged:
             matchObjICEsIMEsStructMerged = re.match(
                     r'^(\d+)$', str(idxICEsIMEsStructureOrIntegraseMerged))
@@ -1262,26 +1527,26 @@ class ICEsIMEsStructure(BasicEMStructure):
                 idxICEsIMEsStructureOrIntegraseMerged = int(matchObjDownstreamIntegraseMerged.group(1))
             else:
                 raise RuntimeError(
-                        "Error in findIdxInSeedListMostUpstreamICEsIMEsStructureNested: unrecognized idxICEsIMEsStructureOrIntegraseMerged = {} for ICEsIMEsStructures {}".format(
+                        "Error in findIdxInSeedListMostUpstreamICEsIMEsStructureMerged: unrecognized idxICEsIMEsStructureOrIntegraseMerged = {} for ICEsIMEsStructures {}".format(
                                     str(idxICEsIMEsStructureOrIntegraseMerged),
                                     self.internalIdentifier))
 
-            if idxInSeedListMostUpstreamICEsIMEsStructureNested == -1:
-                idxInSeedListMostUpstreamICEsIMEsStructureNested = idxICEsIMEsStructureOrIntegraseMerged
-            elif idxICEsIMEsStructureOrIntegraseMerged < idxInSeedListMostUpstreamICEsIMEsStructureNested:
-                idxInSeedListMostUpstreamICEsIMEsStructureNested = idxICEsIMEsStructureOrIntegraseMerged
-        if idxInSeedListMostUpstreamICEsIMEsStructureNested == -1:
-            idxInSeedListMostUpstreamICEsIMEsStructureNested = self.idxInSeedList
-        elif idxInSeedListMostUpstreamICEsIMEsStructureNested > self.idxInSeedList:
-            idxInSeedListMostUpstreamICEsIMEsStructureNested = self.idxInSeedList
+            if idxInSeedListMostUpstreamICEsIMEsStructureMerged == -1:
+                idxInSeedListMostUpstreamICEsIMEsStructureMerged = idxICEsIMEsStructureOrIntegraseMerged
+            elif idxICEsIMEsStructureOrIntegraseMerged < idxInSeedListMostUpstreamICEsIMEsStructureMerged:
+                idxInSeedListMostUpstreamICEsIMEsStructureMerged = idxICEsIMEsStructureOrIntegraseMerged
+        if idxInSeedListMostUpstreamICEsIMEsStructureMerged == -1:
+            idxInSeedListMostUpstreamICEsIMEsStructureMerged = self.idxInSeedList
+        elif idxInSeedListMostUpstreamICEsIMEsStructureMerged > self.idxInSeedList:
+            idxInSeedListMostUpstreamICEsIMEsStructureMerged = self.idxInSeedList
             # raise RuntimeError("Error in fillUpColocalizedOtherICEsIMEs
-            # Structures: idxInSeedListMostUpstreamICEsIMEsStructureNested
+            # Structures: idxInSeedListMostUpstreamICEsIMEsStructureMerged
             # == -1 for ICEsIMEsStructures {}"\
             #                   .format(self.internalIdentifier))
-        return idxInSeedListMostUpstreamICEsIMEsStructureNested
+        return idxInSeedListMostUpstreamICEsIMEsStructureMerged
 
-    def findIdxInSeedListMostDownstreamICEsIMEsStructureNested(self):
-        idxInSeedListMostDownstreamICEsIMEsStructureNested = -1
+    def findIdxInSeedListMostDownstreamICEsIMEsStructureMerged(self):
+        idxInSeedListMostDownstreamICEsIMEsStructureMerged = -1
         for idxICEsIMEsStructureOrIntegraseMerged in self.idxListDownstrStructMerged:
             matchObjICEsIMEsStructMerged = re.match(
                     r'^(\d+)$', str(idxICEsIMEsStructureOrIntegraseMerged))
@@ -1298,23 +1563,21 @@ class ICEsIMEsStructure(BasicEMStructure):
                 idxICEsIMEsStructureOrIntegraseMerged = int(matchObjDownstreamIntegraseMerged.group(1))
             else:
                 raise RuntimeError(
-                        "Error in findIdxInSeedListMostDownstreamICEsIMEsStructureNested: unrecognized idxICEsIMEsStructureOrIntegraseMerged = {} for ICEsIMEsStructures {}".format(
+                        "Error in findIdxInSeedListMostDownstreamICEsIMEsStructureMerged: unrecognized idxICEsIMEsStructureOrIntegraseMerged = {} for ICEsIMEsStructures {}".format(
                             str(idxICEsIMEsStructureOrIntegraseMerged),
                             self.internalIdentifier))
 
-            if idxInSeedListMostDownstreamICEsIMEsStructureNested == -1:
-                idxInSeedListMostDownstreamICEsIMEsStructureNested = idxICEsIMEsStructureOrIntegraseMerged
-            elif idxICEsIMEsStructureOrIntegraseMerged > idxInSeedListMostDownstreamICEsIMEsStructureNested:
-                idxInSeedListMostDownstreamICEsIMEsStructureNested = idxICEsIMEsStructureOrIntegraseMerged
+            if idxInSeedListMostDownstreamICEsIMEsStructureMerged == -1:
+                idxInSeedListMostDownstreamICEsIMEsStructureMerged = idxICEsIMEsStructureOrIntegraseMerged
+            elif idxICEsIMEsStructureOrIntegraseMerged > idxInSeedListMostDownstreamICEsIMEsStructureMerged:
+                idxInSeedListMostDownstreamICEsIMEsStructureMerged = idxICEsIMEsStructureOrIntegraseMerged
 
-        if idxInSeedListMostDownstreamICEsIMEsStructureNested < self.idxInSeedList:
-            idxInSeedListMostDownstreamICEsIMEsStructureNested = self.idxInSeedList
-            # raise RuntimeError(
-            # "Error in fillUpColocalizedOtherICEsIMEsStructures:
-            # idxInSeedListMostDownstreamICEsIMEsStructureNested == -1
-            # for ICEsIMEsStructures {}"\
-            #                   .format(self.internalIdentifier))
-        return idxInSeedListMostDownstreamICEsIMEsStructureNested
+        if idxInSeedListMostDownstreamICEsIMEsStructureMerged < self.idxInSeedList:
+            idxInSeedListMostDownstreamICEsIMEsStructureMerged = self.idxInSeedList
+
+        return idxInSeedListMostDownstreamICEsIMEsStructureMerged
+
+
 
     def fillUpColocalizedOtherICEsIMEsStructures(self, listICEsIMEsStructure):
         # try to fill up:
@@ -1332,13 +1595,13 @@ class ICEsIMEsStructure(BasicEMStructure):
             # idxListDownstrStructMerged.append("I>" +
             # listICEsIMEsStructuresGuests[-1].idxInSeedList)
 
-            idxInSeedListMostUpstreamICEsIMEsStructureNested = self.findIdxInSeedListMostUpstreamICEsIMEsStructureNested()
-            idxInSeedListMostDownstreamICEsIMEsStructureNested = self.findIdxInSeedListMostDownstreamICEsIMEsStructureNested()
+            idxInSeedListMostUpstreamICEsIMEsStructureMerged = self.findIdxInSeedListMostUpstreamICEsIMEsStructureMerged()
+            idxInSeedListMostDownstreamICEsIMEsStructureMerged = self.findIdxInSeedListMostDownstreamICEsIMEsStructureMerged()
 
             # deal with all downstream nested ICEsIMEsStructures:
-            if idxInSeedListMostUpstreamICEsIMEsStructureNested < self.idxInSeedList:
+            if idxInSeedListMostUpstreamICEsIMEsStructureMerged < self.idxInSeedList:
                 for currIndex in range(
-                        idxInSeedListMostUpstreamICEsIMEsStructureNested,
+                        idxInSeedListMostUpstreamICEsIMEsStructureMerged,
                         # was idxInSeedListOfDownstreamICEsIMEsStructureMerged
                         self.idxInSeedList):
                     currGuestICEsIMEsStructure = listICEsIMEsStructure[currIndex]
@@ -1348,11 +1611,11 @@ class ICEsIMEsStructure(BasicEMStructure):
                             currGuestICEsIMEsStructure)
                     currGuestICEsIMEsStructure.setHostNestedICEsIMEsStructure.add(self)
             # deal with all downstream nested ICEsIMEsStructures:
-            if idxInSeedListMostDownstreamICEsIMEsStructureNested > self.idxInSeedList + 1:
+            if idxInSeedListMostDownstreamICEsIMEsStructureMerged > self.idxInSeedList + 1:
                 for currIndex in range(
                         self.idxInSeedList + 1,
                         # was idxInSeedListOfDownstreamICEsIMEsStructureMerged
-                        idxInSeedListMostDownstreamICEsIMEsStructureNested):
+                        idxInSeedListMostDownstreamICEsIMEsStructureMerged):
                     currGuestICEsIMEsStructure = listICEsIMEsStructure[currIndex]
                     if currGuestICEsIMEsStructure.delMerging_idxListUpstreamStructure >= 0:
                         continue
@@ -1363,7 +1626,7 @@ class ICEsIMEsStructure(BasicEMStructure):
             # in setOtherICEsIMEsStructureColocalized
             for currIndex in range(
                     # was self.idxInSeedList
-                    0, idxInSeedListMostUpstreamICEsIMEsStructureNested):
+                    0, idxInSeedListMostUpstreamICEsIMEsStructureMerged):
                 currColocalizedStructure = listICEsIMEsStructure[currIndex]
                 if currColocalizedStructure.delMerging_idxListUpstreamStructure >= 0:
                     continue
@@ -1372,7 +1635,7 @@ class ICEsIMEsStructure(BasicEMStructure):
             # add all other downstream colocalized ICEsIMEsStructure
             for currIndex in range(
                     # was idxInSeedListOfDownstreamICEsIMEsStructureMerged
-                    idxInSeedListMostDownstreamICEsIMEsStructureNested + 1,
+                    idxInSeedListMostDownstreamICEsIMEsStructureMerged + 1,
                     len(listICEsIMEsStructure)):
                 currColocalizedStructure = listICEsIMEsStructure[currIndex]
                 if currColocalizedStructure.delMerging_idxListUpstreamStructure >= 0:
@@ -1409,6 +1672,110 @@ class ICEsIMEsStructure(BasicEMStructure):
                 self.setOtherICEsIMEsStructureColocalized.add(
                         currColocalizedStructure)
 
+
+
+    @staticmethod
+    def getICEsIMEsStructureUpstreamOfICEsIMEsStructure(ICEsIMEsStructureSent, listICEsIMEsStructures, returnNoneIfDelMerging):
+        # for currICEsIMEsStructureToTest in listICEsIMEsStructures:
+        #     if currICEsIMEsStructureToTest == ICEsIMEsStructureSent:
+        #         #found our ICEsIMEsStructureSent
+
+        if ICEsIMEsStructureSent not in listICEsIMEsStructures :
+            raise RuntimeError(
+                        "Error in getICEsIMEsStructureUpstreamOfICEsIMEsStructure: ICEsIMEsStructureSent = {} not found in list listICEsIMEsStructures {}".format(
+                            ICEsIMEsStructureSent.internalIdentifier,
+                            BasicEMStructure.GetListInternIdFromListEMStructure(listICEsIMEsStructures)))
+
+        idxCurrICEsIMEsStructure = ICEsIMEsStructureSent.findIdxInSeedListMostUpstreamICEsIMEsStructureMerged()
+
+        if idxCurrICEsIMEsStructure == 0:
+            return None
+        else:
+            upstreamOfICEsIMEsStructure = listICEsIMEsStructures[idxCurrICEsIMEsStructure-1]
+            if upstreamOfICEsIMEsStructure.delMerging_idxListUpstreamStructure == -1 :
+                return upstreamOfICEsIMEsStructure
+            else :
+                if returnNoneIfDelMerging :
+                    return None
+                else :
+                    return upstreamOfICEsIMEsStructure.getIterativeMasterMergeStructure(listICEsIMEsStructures, 0)
+        # raise RuntimeError(
+        #                 "Error in getICEsIMEsStructureUpstreamOfICEsIMEsStructure: ICEsIMEsStructureSent = {} not found in list listICEsIMEsStructures {}".format(
+        #                     ICEsIMEsStructureSent.internalIdentifier,
+        #                     BasicEMStructure.GetListInternIdFromListEMStructure(listICEsIMEsStructures)))
+
+
+    @staticmethod
+    def IsThereAnIntegraseBetweenThoseTwoConjModule(ICEsIMEsStructureOne, ICEsIMEsStructureTwo, listSPs, setIntegraseTypeToCheck) :
+        idx_StructureOne_MostUpstrSp = ICEsIMEsStructureOne.findMostUpstrSpNotIntegr().idxInListSP
+        idx_StructureOne_MostDownstrSp = ICEsIMEsStructureOne.findMostDownstrSpNotIntegr().idxInListSP
+        idx_StructureTwo_MostUpstrSp = ICEsIMEsStructureTwo.findMostUpstrSpNotIntegr().idxInListSP
+        idx_StructureTwo_MostDownstrSp = ICEsIMEsStructureTwo.findMostDownstrSpNotIntegr().idxInListSP
+
+        if idx_StructureOne_MostUpstrSp > idx_StructureTwo_MostUpstrSp and idx_StructureOne_MostDownstrSp < idx_StructureTwo_MostDownstrSp :
+            # ICEsIMEsStructureOne is guest of ICEsIMEsStructureTwo
+            return False
+        elif idx_StructureOne_MostUpstrSp < idx_StructureTwo_MostUpstrSp and idx_StructureOne_MostDownstrSp > idx_StructureTwo_MostDownstrSp :
+            # ICEsIMEsStructureTwo is guest of ICEsIMEsStructureOne
+            return False
+        elif idx_StructureOne_MostDownstrSp < idx_StructureTwo_MostUpstrSp :
+            # ICEsIMEsStructureOne is upstream of ICEsIMEsStructureTwo
+            sliceListSPsToConsider = listSPs[idx_StructureOne_MostDownstrSp+1:idx_StructureTwo_MostUpstrSp]
+            for SPToCheckIfIntegrase in sliceListSPsToConsider :
+                if SPToCheckIfIntegrase.SPType in setIntegraseTypeToCheck:
+                    return True
+            return False
+        elif idx_StructureTwo_MostDownstrSp < idx_StructureOne_MostUpstrSp :
+            # ICEsIMEsStructureTwo is upstream of ICEsIMEsStructureOne
+            sliceListSPsToConsider = listSPs[idx_StructureTwo_MostDownstrSp+1:idx_StructureOne_MostUpstrSp]
+            for SPToCheckIfIntegrase in sliceListSPsToConsider :
+                if SPToCheckIfIntegrase.SPType in setIntegraseTypeToCheck:
+                    return True
+            return False
+        else :
+            raise RuntimeError(
+                "Error in IsThereAnIntegraseBetweenThoseTwoConjModule: unrecognized positioning ofICEsIMEsStructureOne = {} (idx_StructureOne_MostUpstrSp {} - idx_StructureOne_MostDownstrSp {}) and ICEsIMEsStructureTwo = {} (idx_StructureTwo_MostUpstrSp {} - idx_StructureTwo_MostDownstrSp {})".format(
+                    ICEsIMEsStructureOne.internalIdentifier,
+                    str(idx_StructureOne_MostUpstrSp),
+                    str(idx_StructureOne_MostDownstrSp),
+                    ICEsIMEsStructureTwo.internalIdentifier,
+                    str(idx_StructureTwo_MostUpstrSp),
+                    str(idx_StructureTwo_MostDownstrSp)
+                    ))
+
+
+
+
+    @staticmethod
+    def getICEsIMEsStructureDownstreamOfICEsIMEsStructure(ICEsIMEsStructureSent, listICEsIMEsStructures, returnNoneIfDelMerging):
+        # for idxCurrICEsIMEsStructure, currICEsIMEsStructureToTest in enumerate(listICEsIMEsStructures):
+        #     if currICEsIMEsStructureToTest == ICEsIMEsStructureSent:
+        #         #found our ICEsIMEsStructureSent
+        if ICEsIMEsStructureSent not in listICEsIMEsStructures :
+            raise RuntimeError(
+                "Error in getICEsIMEsStructureDownstreamOfICEsIMEsStructure: ICEsIMEsStructureSent = {} not found in list listICEsIMEsStructures {}".format(
+                    ICEsIMEsStructureSent.internalIdentifier,
+                    BasicEMStructure.GetListInternIdFromListEMStructure(listICEsIMEsStructures)))
+
+        idxCurrICEsIMEsStructure = ICEsIMEsStructureSent.findIdxInSeedListMostDownstreamICEsIMEsStructureMerged()
+
+        if idxCurrICEsIMEsStructure == len(listICEsIMEsStructures)-1:
+            return None
+        else:
+
+            downstreamOfICEsIMEsStructureIT = listICEsIMEsStructures[idxCurrICEsIMEsStructure+1]
+            if downstreamOfICEsIMEsStructureIT.delMerging_idxListUpstreamStructure == -1 :
+                return downstreamOfICEsIMEsStructureIT
+            else :
+                if returnNoneIfDelMerging :
+                    return None
+                else :
+                    return downstreamOfICEsIMEsStructureIT.getIterativeMasterMergeStructure(listICEsIMEsStructures, 0)
+        # raise RuntimeError(
+        #                 "Error in getICEsIMEsStructureDownstreamOfICEsIMEsStructure: ICEsIMEsStructureSent = {} not found in list listICEsIMEsStructures {}".format(
+        #                     ICEsIMEsStructureSent.internalIdentifier,
+        #                     BasicEMStructure.GetListInternIdFromListEMStructure(listICEsIMEsStructures)))
+
     @staticmethod
     def GetSummaryObjectHeaderAsTsv():
         listStrFromSuper = BasicEMStructure.GetSummaryObjectHeaderAsTsv()
@@ -1418,12 +1785,12 @@ class ICEsIMEsStructure(BasicEMStructure):
         listStrToReturn = []
         stToReturnPrefix = ""
         stToReturnPrefix += strFromSuperPrefix
-        stToReturnPrefix += "\tcategory of element"
+        stToReturnPrefix += "\tCategory_of_element"
         # stToReturnPrefix += "\tcategory of conj module"
-        stToReturnPrefix += "\tcategory of integrase"
-        stToReturnPrefix += "\thost ICE / IME"
-        stToReturnPrefix += "\tguest ICE / IME"
-        stToReturnPrefix += "\tother ICE / IME colocalized"
+        stToReturnPrefix += "\tCategory_of_integrase"
+        stToReturnPrefix += "\tHost_ICE_IME_ids"
+        stToReturnPrefix += "\tGuest_ICE_IME_ids"
+        stToReturnPrefix += "\tColocalized_ICE_IME_ids"
         stToReturnPrefix += strFromSuperPostfix
         listStrToReturn.append(stToReturnPrefix)
 
@@ -1433,24 +1800,42 @@ class ICEsIMEsStructure(BasicEMStructure):
         return listStrToReturn
 
     def GetSummaryObjectAsTsv(self,
-                              outputPrintCDSNumberInsteadOfProteinIdAndStart,
-                              segmentNumberSent):
-        listStrFromSuper = super(ICEsIMEsStructure, self).GetSummaryObjectAsTsv(outputPrintCDSNumberInsteadOfProteinIdAndStart, segmentNumberSent)
+                            #   outputPrintCDSNumberInsteadOfProteinIdAndStart,
+                              segmentNumberSent,
+                              dictIMEICEID2humanReadableIMEICEIIdentifier):
+
+        listStrFromSuper = super(ICEsIMEsStructure, self).GetSummaryObjectAsTsv(
+                # outputPrintCDSNumberInsteadOfProteinIdAndStart,
+                segmentNumberSent,
+                self.catStructConjModule,
+                dictIMEICEID2humanReadableIMEICEIIdentifier)
         strFromSuperPrefix = listStrFromSuper[0]
         strFromSuperPostfix = listStrFromSuper[1]
 
         listStrToReturn = []
         stToReturnPrefix = ""
         stToReturnPrefix += strFromSuperPrefix
-        stToReturnPrefix += "\t" + self.catStructWholeElem
+        stToReturnPrefix += "\t" + returnDashIfEmptyStringOrNone(self.catStructWholeElem)
         # stToReturnPrefix += "\t"+self.catStructConjModule
-        stToReturnPrefix += "\t" + self.categoryRegardingIntegrase
-        stToReturnPrefix += "\t" + BasicEMStructure.GetListInternIdFromSetEMStructure(
-                    self.setHostNestedICEsIMEsStructure)
-        stToReturnPrefix += "\t" + BasicEMStructure.GetListInternIdFromSetEMStructure(
+        stToReturnPrefix += "\t" + returnDashIfEmptyStringOrNone(self.categoryRegardingIntegrase)
+
+        strHostNestedICEsIMEsStructureToPrint = BasicEMStructure.GetListInternIdFromSetEMStructure(self.setHostNestedICEsIMEsStructure)
+        for IMEICEIDIT, humanReadableIMEICEIIdentifierIT in dictIMEICEID2humanReadableIMEICEIIdentifier.items():
+            strHostNestedICEsIMEsStructureToPrint = strHostNestedICEsIMEsStructureToPrint.replace(IMEICEIDIT, humanReadableIMEICEIIdentifierIT)
+        stToReturnPrefix += "\t" + returnDashIfEmptyStringOrNone(strHostNestedICEsIMEsStructureToPrint)
+
+        strGuestsNestedICEsIMEsStructureToPrint = BasicEMStructure.GetListInternIdFromSetEMStructure(
                     self.setGuestsNestedICEsIMEsStructure)
-        stToReturnPrefix += "\t" + BasicEMStructure.GetListInternIdFromSetEMStructure(
+        for IMEICEIDIT, humanReadableIMEICEIIdentifierIT in dictIMEICEID2humanReadableIMEICEIIdentifier.items():
+            strGuestsNestedICEsIMEsStructureToPrint = strGuestsNestedICEsIMEsStructureToPrint.replace(IMEICEIDIT, humanReadableIMEICEIIdentifierIT)
+        stToReturnPrefix += "\t" + returnDashIfEmptyStringOrNone(strGuestsNestedICEsIMEsStructureToPrint)
+
+        strOtherICEsIMEsStructureColocalizedToPrint = BasicEMStructure.GetListInternIdFromSetEMStructure(
                     self.setOtherICEsIMEsStructureColocalized)
+        for IMEICEIDIT, humanReadableIMEICEIIdentifierIT in dictIMEICEID2humanReadableIMEICEIIdentifier.items():
+            strOtherICEsIMEsStructureColocalizedToPrint = strOtherICEsIMEsStructureColocalizedToPrint.replace(IMEICEIDIT, humanReadableIMEICEIIdentifierIT)
+        stToReturnPrefix += "\t" + returnDashIfEmptyStringOrNone(strOtherICEsIMEsStructureColocalizedToPrint)
+
         stToReturnPrefix += strFromSuperPostfix
         listStrToReturn.append(stToReturnPrefix)
 

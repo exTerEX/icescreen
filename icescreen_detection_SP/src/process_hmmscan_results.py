@@ -164,7 +164,8 @@ def get_hmmscan_df(tsvpath):
     data[columns] = pd.DataFrame(targets_info, columns=columns)
 
     # Split ICEscreen CDS identifier into multiple columns
-    columns = ["CDS_num", "CDS", "CDS_strand", "CDS_start", "CDS_end"]
+    #columns = ["CDS_num", "CDS", "CDS_strand", "CDS_start", "CDS_end"]
+    columns = ["CDS_num", "CDS_locus_tag", "CDS_protein_id", "Genome_accession", "Genome_accession_rank", "CDS_strand", "CDS_start", "CDS_end"]
     cds_identifiers = np.vectorize(split_identifier)(data["query_name"])
     cds_identifiers = np.transpose(cds_identifiers)
     data[columns] = pd.DataFrame(cds_identifiers, columns=columns)
@@ -346,16 +347,16 @@ def pretty_df(df):
 
     # Rename columns
     cols = {"target_name": "Profile_ID",
-            "tlen": "Profile_length",
+            "tlen": "Length_of_matching_HMM_profile",
             "query_name": "#ICEscreen_ID",
             "qlen": "CDS_length",
-            "E-value": "E-value_hmm",
-            "i-Evalue": "i-Evalue_hmm",
-            "domain_score": "Score_hmm",
-            "domain_bias": "Bias_hmm",
-            "seq_score": "Global_score",
-            "seq_bias": "Global_bias",
-            "description_of_target": "Profile_description"}
+            "E-value": "HMM_ali_E-value",
+            "i-Evalue": "HMM_ali_i-Evalue",
+            "domain_score": "HMM_ali_Score",
+            "domain_bias": "HMM_ali_Bias",
+            "seq_score": "HMM_ali_Global_score",
+            "seq_bias": "HMM_ali_Global_bias",
+            "description_of_target": "Description_of_matching_HMM_profile"}
 
     df = df.rename(columns=cols)
 
@@ -372,15 +373,17 @@ def reorder_columns(df):
     """
 
     # Reorder columns
-    cols_common = ['#ICEscreen_ID', 'CDS_num', 'CDS', 'CDS_strand',
-                   'CDS_start', 'CDS_end', 'CDS_length', 'CDS_Protein_type',
-                   'Profile_description', 'Profile_ID', 'Profile_name',
-                   'Profile_length', 'Ali_len_HMM', 'Ali_len_CDS',
-                   'hmm_coord_from', 'hmm_coord_to', 'ali_coord_from',
-                   'ali_coord_to', 'i-Evalue_hmm', 'E-value_hmm', 'Score_hmm',
-                   'Bias_hmm', '#_domain', 'of_domain', 'Global_score',
-                   'Global_bias', 'HMM_coverage', 'CDS_coverage',
-                   'Possible_SP']
+    cols_common = ['#ICEscreen_ID', "CDS_num",
+                    #"CDS",
+                    "Genome_accession", "Genome_accession_rank", "CDS_locus_tag", "CDS_protein_id",
+                    'CDS_strand', "CDS_start", "CDS_end", 'CDS_length', 'CDS_Protein_type',
+                    'Description_of_matching_HMM_profile', 'Profile_ID', 'Profile_name',
+                    'Length_of_matching_HMM_profile', 'Ali_len_HMM', 'Ali_len_CDS',
+                    'hmm_coord_from', 'hmm_coord_to', 'ali_coord_from',
+                    'ali_coord_to', 'HMM_ali_i-Evalue', 'HMM_ali_E-value', 'HMM_ali_Score',
+                    'HMM_ali_Bias', '#_domain', 'of_domain', 'HMM_ali_Global_score',
+                    'HMM_ali_Global_bias', 'HMM_coverage', 'CDS_coverage',
+                    'Possible_SP']
 
     cols_validation = list(df.columns)
 
@@ -407,14 +410,16 @@ if __name__ == "__main__":
 
     # If no results
     if len(data.index) == 0:
-        cols = ["#ICEscreen_ID", "CDS_num", "CDS", "CDS_strand", "CDS_start",
-                "CDS_end", "CDS_length", "CDS_Protein_type",
-                "Profile_description", "Profile_ID", "Profile_name",
-                "Profile_length", "Ali_len_HMM", "Ali_len_CDS",
+        cols = ["#ICEscreen_ID", "CDS_num",
+                #"CDS",
+                "Genome_accession", "Genome_accession_rank", "CDS_locus_tag", "CDS_protein_id",
+                "CDS_strand", "CDS_start", "CDS_end", "CDS_length", "CDS_Protein_type",
+                "Description_of_matching_HMM_profile", "Profile_ID", "Profile_name",
+                "Length_of_matching_HMM_profile", "Ali_len_HMM", "Ali_len_CDS",
                 "hmm_coord_from", "hmm_coord_to", "ali_coord_from",
-                "ali_coord_to", "i-Evalue_hmm", "E-value_hmm", "Score_hmm",
-                "Bias_hmm", "#_domain", "of_domain", "Global_score",
-                "Global_bias", "HMM_coverage", "CDS_coverage", "Possible_SP",
+                "ali_coord_to", "HMM_ali_i-Evalue", "HMM_ali_E-value", "HMM_ali_Score",
+                "HMM_ali_Bias", "#_domain", "of_domain", "HMM_ali_Global_score",
+                "HMM_ali_Global_bias", "HMM_coverage", "CDS_coverage", "Possible_SP",
                 "i-Evalue_cutoff", "i-Evalue_OK", "CDS_coverage_cutoff",
                 "CDS_coverage_OK", "HMM_coverage_cutoff", "HMM_coverage_OK"]
         data = pd.DataFrame(columns=cols)
