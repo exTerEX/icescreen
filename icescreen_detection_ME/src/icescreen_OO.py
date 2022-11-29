@@ -1043,16 +1043,16 @@ def main():
             allowAdjacentIntegraseOnlyForSer
         )
 
-        rulesMergeICEIMEStructures.tryMergeFragmentedSPs(
-                listICEsIMEsStructures,
-                locusTagMerge2Comment,
-                locusTagIntegrase2Comment,
-                groupListSPintoICEsIMEsUsingFamilyInfo,
-                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
-                maxOverlappingAliLenghtFragmentedSPs,
-                maxCDSDistanceToMergeFragmentedSPs
-                )
+        # rulesMergeICEIMEStructures.tryMergeFragmentedSPs(
+        #         listICEsIMEsStructures,
+        #         locusTagMerge2Comment,
+        #         locusTagIntegrase2Comment,
+        #         groupListSPintoICEsIMEsUsingFamilyInfo,
+        #         useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
+        #         useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
+        #         maxOverlappingAliLenghtFragmentedSPs,
+        #         maxCDSDistanceToMergeFragmentedSPs
+        #         )
 # - improvment to do : deteccte SP fragmentées. Test 1 segment 16 : WP_158396091.1 should be merged with WP_158396083.1
 # Blast_ali_start_Query_blast	Blast_ali_end_Query_blast
 # WP_158396083.1 : 1.0	279.0
