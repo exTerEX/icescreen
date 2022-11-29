@@ -3,14 +3,14 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - python >=3.7
-  - pandas >=1.4.1
-  - snakemake-minimal >=6.0.5
-  - biopython >=1.78
-  - bcbio-gff >=0.6.6
+  - python >=3.9
+  - pandas >=1.5.2
+  - snakemake-minimal >=7.18.2
+  - biopython >=1.80
+  - bcbio-gff >=0.6.9
   - blast =2.12
   - hmmer =3.3.2
-
+    
 # OLD dependancies too complicated and unstable because of versions
 #  - python>=3.7,<4
 #  - snakemake>=6.0.5,<7
