@@ -412,11 +412,11 @@ def buildSameFamilyMergeStructures(currListSPs, locusTagMerge2Comment,
 
 def checkAndPerformMergeFragmentedForSpecificTypeSP(
     typeOfSPConsideredForFragmentsIT,
-    spTypeIT2ICEsIMEsStructure,
+    spTypeIT2ListICEsIMEsStructure,
     allowCheckingForMultipleDistantRelaxaseIT,
     allowCheckingForMultipleDistantCouplingIT,
     allowCheckingForMultipleDistantVirB4IT,
-    listKeysSPTypeIT2ali_start_end_Query_blast,
+    # listKeysSPTypeIT2ali_start_end_Query_blast,
     groupListSPintoICEsIMEsUsingFamilyInfo,
     maxOverlappingAliLenghtFragmentedSPs,
     locusTagMerge2Comment,
@@ -427,70 +427,80 @@ def checkAndPerformMergeFragmentedForSpecificTypeSP(
     ):
 
     #print("* Starting checkAndPerformMergeFragmentedForSpecificTypeSP for typeOfSPConsideredForFragmentsIT = {}".format(typeOfSPConsideredForFragmentsIT))
-
+    
     SPTypeIT2setComplementarySPTypeIT = {}
-    for (SPTypeIT1IT, SPTypeIT2IT) in list(itertools.combinations(listKeysSPTypeIT2ali_start_end_Query_blast, 2)) :
+    mergeToPerformMostUpstreamICEIMEThatWillHoldTheMerge2ListCurrICEIMEStructToMerge = {}
+    mergeToPerformCurrICEIMEStructToMerge2ListMostUpstreamICEIMEThatWillHoldTheMerge = {}
+
+    for (SPTypeIT1IT, SPTypeIT2IT) in list(itertools.combinations(list(spTypeIT2ListICEsIMEsStructure.keys()), 2)) :
         if SPTypeIT1IT.Blast_ali_start_Query_blast == -1 or SPTypeIT1IT.Blast_ali_end_Query_blast == -1 or SPTypeIT2IT.Blast_ali_start_Query_blast == -1 or SPTypeIT2IT.Blast_ali_end_Query_blast == -1:
             continue
 
-        # compatible IME_superfamily_of_most_similar_ref_SP and ICE_superfamily_of_most_similar_ref_SP
-        greenLightFamilyInfoTest1 = rulesSeedSPExtension.testSPFamilyInfoCompatibilityWithICEsIMEsStructure(
-            SPTypeIT1IT,
-            spTypeIT2ICEsIMEsStructure[SPTypeIT2IT],
-            groupListSPintoICEsIMEsUsingFamilyInfo)
-        greenLightFamilyInfoTest2 = rulesSeedSPExtension.testSPFamilyInfoCompatibilityWithICEsIMEsStructure(
-            SPTypeIT2IT,
-            spTypeIT2ICEsIMEsStructure[SPTypeIT1IT],
-            groupListSPintoICEsIMEsUsingFamilyInfo)
-        if greenLightFamilyInfoTest1 and greenLightFamilyInfoTest2 :
-            # if SPTypeIT : same SPTypeIT_family_domain_of_most_similar_ref_SPFromBlast
-            ifSPTypeITSameSPTypeITFamilyDomain = True
-            if SPTypeIT1IT.SPType == "Relaxase" and SPTypeIT2IT.SPType == "Relaxase" :
-                if SPTypeIT1IT.Relaxase_family_domain_of_most_similar_ref_SPFromBlast != SPTypeIT2IT.Relaxase_family_domain_of_most_similar_ref_SPFromBlast :
-                    ifSPTypeITSameSPTypeITFamilyDomain = False
-            if ifSPTypeITSameSPTypeITFamilyDomain :
-                overlapIT = commonMethods.overlap_bounded_intervals(
-                    SPTypeIT1IT.Blast_ali_start_Query_blast,
-                    SPTypeIT1IT.Blast_ali_end_Query_blast,
-                    SPTypeIT2IT.Blast_ali_start_Query_blast,
-                    SPTypeIT2IT.Blast_ali_end_Query_blast,
-                    SPTypeIT1IT.genomeAccessionRank,
-                    SPTypeIT2IT.genomeAccessionRank
-                    )
-                if overlapIT < maxOverlappingAliLenghtFragmentedSPs :
-                    #Those 2 SPs do not overlap much, they are complementary
+        # spTypeIT2ListICEsIMEsStructure is LIST in case of CDS that can be in numerous different structure possibly
+        listSPTypeIT1IT_structureIT = spTypeIT2ListICEsIMEsStructure[SPTypeIT1IT]
+        listSPTypeIT2IT_structureIT = spTypeIT2ListICEsIMEsStructure[SPTypeIT2IT]
 
-                    # check that there is no other SP attached to their structure in between the potential parts of the fragmented SP
-                    if SPTypeIT1IT.CDSPositionInGenome < SPTypeIT2IT.CDSPositionInGenome :
-                        if spTypeIT2ICEsIMEsStructure[SPTypeIT1IT].listOrderedSPs[-1] is not SPTypeIT1IT or spTypeIT2ICEsIMEsStructure[SPTypeIT2IT].listOrderedSPs[0] is not SPTypeIT2IT :
-                            commentITToAdd = "{} could complement the other fragment {} to form a single {} but there are other SPs attributed to their structures in between which render their merging impossible, please manually review. ".format(SPTypeIT1IT.locusTag, SPTypeIT2IT.locusTag, typeOfSPConsideredForFragmentsIT)
-                            if commentITToAdd not in spTypeIT2ICEsIMEsStructure[SPTypeIT1IT].comment:
-                                spTypeIT2ICEsIMEsStructure[SPTypeIT1IT].comment += commentITToAdd
-                            if commentITToAdd not in spTypeIT2ICEsIMEsStructure[SPTypeIT2IT].comment:
-                                spTypeIT2ICEsIMEsStructure[SPTypeIT2IT].comment += commentITToAdd
-                            icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1IT.locusTag, commentITToAdd, locusTagMerge2Comment)
-                            icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2IT.locusTag, commentITToAdd, locusTagMerge2Comment)
-                            continue
-                    else :
-                        if spTypeIT2ICEsIMEsStructure[SPTypeIT1IT].listOrderedSPs[0] is not SPTypeIT1IT or spTypeIT2ICEsIMEsStructure[SPTypeIT2IT].listOrderedSPs[-1] is not SPTypeIT2IT :
-                            commentITToAdd = "{} could complement the other fragment {} to form a single {} but there are other SPs attributed to their structures in between which render their merging impossible, please manually review. ".format(SPTypeIT1IT.locusTag, SPTypeIT2IT.locusTag, typeOfSPConsideredForFragmentsIT)
-                            if commentITToAdd not in spTypeIT2ICEsIMEsStructure[SPTypeIT1IT].comment:
-                                spTypeIT2ICEsIMEsStructure[SPTypeIT1IT].comment += commentITToAdd
-                            if commentITToAdd not in spTypeIT2ICEsIMEsStructure[SPTypeIT2IT].comment:
-                                spTypeIT2ICEsIMEsStructure[SPTypeIT2IT].comment += commentITToAdd
-                            icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1IT.locusTag, commentITToAdd, locusTagMerge2Comment)
-                            icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2IT.locusTag, commentITToAdd, locusTagMerge2Comment)
-                            continue
+        for SPTypeIT1IT_structureIT in listSPTypeIT1IT_structureIT :
+            for SPTypeIT2IT_structureIT in listSPTypeIT2IT_structureIT:
+                # compatible IME_superfamily_of_most_similar_ref_SP and ICE_superfamily_of_most_similar_ref_SP
+                greenLightFamilyInfoTest1 = rulesSeedSPExtension.testSPFamilyInfoCompatibilityWithICEsIMEsStructure(
+                    SPTypeIT1IT,
+                    SPTypeIT2IT_structureIT,
+                    groupListSPintoICEsIMEsUsingFamilyInfo)
+                greenLightFamilyInfoTest2 = rulesSeedSPExtension.testSPFamilyInfoCompatibilityWithICEsIMEsStructure(
+                    SPTypeIT2IT,
+                    SPTypeIT1IT_structureIT,
+                    groupListSPintoICEsIMEsUsingFamilyInfo)
+                if greenLightFamilyInfoTest1 and greenLightFamilyInfoTest2 :
+                    # if SPTypeIT : same SPTypeIT_family_domain_of_most_similar_ref_SPFromBlast
+                    ifSPTypeITSameSPTypeITFamilyDomain = True
+                    if SPTypeIT1IT.SPType == "Relaxase" and SPTypeIT2IT.SPType == "Relaxase" :
+                        if SPTypeIT1IT.Relaxase_family_domain_of_most_similar_ref_SPFromBlast != SPTypeIT2IT.Relaxase_family_domain_of_most_similar_ref_SPFromBlast :
+                            ifSPTypeITSameSPTypeITFamilyDomain = False
+                    if ifSPTypeITSameSPTypeITFamilyDomain :
+                        overlapIT = commonMethods.overlap_bounded_intervals(
+                            SPTypeIT1IT.Blast_ali_start_Query_blast,
+                            SPTypeIT1IT.Blast_ali_end_Query_blast,
+                            SPTypeIT2IT.Blast_ali_start_Query_blast,
+                            SPTypeIT2IT.Blast_ali_end_Query_blast,
+                            SPTypeIT1IT.genomeAccessionRank,
+                            SPTypeIT2IT.genomeAccessionRank
+                            )
+                        if overlapIT < maxOverlappingAliLenghtFragmentedSPs :
+                            #Those 2 SPs do not overlap much, they are complementary
+
+                            # check that there is no other SP attached to their structure in between the potential parts of the fragmented SP
+                            if SPTypeIT1IT.CDSPositionInGenome < SPTypeIT2IT.CDSPositionInGenome :
+                                if SPTypeIT1IT_structureIT.listOrderedSPs[-1] is not SPTypeIT1IT or SPTypeIT2IT_structureIT.listOrderedSPs[0] is not SPTypeIT2IT :
+                                    commentITToAdd = "{} could complement the other fragment {} to form a single {} but there are other SPs attributed to their structures in between which render their merging impossible, please manually review. ".format(SPTypeIT1IT.locusTag, SPTypeIT2IT.locusTag, typeOfSPConsideredForFragmentsIT)
+                                    if commentITToAdd not in SPTypeIT1IT_structureIT.comment:
+                                        SPTypeIT1IT_structureIT.comment += commentITToAdd
+                                    if commentITToAdd not in SPTypeIT2IT_structureIT.comment:
+                                        SPTypeIT2IT_structureIT.comment += commentITToAdd
+                                    icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1IT.locusTag, commentITToAdd, locusTagMerge2Comment)
+                                    icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2IT.locusTag, commentITToAdd, locusTagMerge2Comment)
+                                    continue
+                            else :
+                                if SPTypeIT1IT_structureIT.listOrderedSPs[0] is not SPTypeIT1IT or SPTypeIT2IT_structureIT.listOrderedSPs[-1] is not SPTypeIT2IT :
+                                    commentITToAdd = "{} could complement the other fragment {} to form a single {} but there are other SPs attributed to their structures in between which render their merging impossible, please manually review. ".format(SPTypeIT1IT.locusTag, SPTypeIT2IT.locusTag, typeOfSPConsideredForFragmentsIT)
+                                    if commentITToAdd not in SPTypeIT1IT_structureIT.comment:
+                                        SPTypeIT1IT_structureIT.comment += commentITToAdd
+                                    if commentITToAdd not in SPTypeIT2IT_structureIT.comment:
+                                        SPTypeIT2IT_structureIT.comment += commentITToAdd
+                                    icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1IT.locusTag, commentITToAdd, locusTagMerge2Comment)
+                                    icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2IT.locusTag, commentITToAdd, locusTagMerge2Comment)
+                                    continue
+
+                            if SPTypeIT1IT in SPTypeIT2setComplementarySPTypeIT :
+                                setComplementarySPTypeIT = SPTypeIT2setComplementarySPTypeIT[SPTypeIT1IT]
+                                setComplementarySPTypeIT.add(SPTypeIT2IT)
+                            else :
+                                setComplementarySPTypeIT = set()
+                                setComplementarySPTypeIT.add(SPTypeIT2IT)
+                                SPTypeIT2setComplementarySPTypeIT[SPTypeIT1IT] = setComplementarySPTypeIT
 
 
-                    if SPTypeIT1IT in SPTypeIT2setComplementarySPTypeIT :
-                        setComplementarySPTypeIT = SPTypeIT2setComplementarySPTypeIT[SPTypeIT1IT]
-                        setComplementarySPTypeIT.add(SPTypeIT2IT)
-                    else :
-                        setComplementarySPTypeIT = set()
-                        setComplementarySPTypeIT.add(SPTypeIT2IT)
-                        SPTypeIT2setComplementarySPTypeIT[SPTypeIT1IT] = setComplementarySPTypeIT
-
+    
     for SPTypeIT1IT, setComplementarySPTypeIT1IT in SPTypeIT2setComplementarySPTypeIT.items():
 
         # check that the other setComplementary are coherent
@@ -503,10 +513,10 @@ def checkAndPerformMergeFragmentedForSpecificTypeSP(
                         booleanAllComplementarySPTypeITAreCoherent = False
                         # SPTypeIT1IT could complement the fragments setComplementarySPTypeIT1IT to form a single SPTypeIT SP but SPTypeIT2IT was found to complement the fragment SPTypeITToAssertForCoherence as well, please manually review.
                         commentITToAdd = "{} could complement the fragments {} to form a single {} but {} was found to complement the fragment {} as well, please manually review. ".format(SPTypeIT1IT.locusTag, hit.ListSPs.GetListProtIdsFromSetSP(setComplementarySPTypeIT1IT), typeOfSPConsideredForFragmentsIT, SPTypeIT2IT.locusTag, SPTypeITToAssertForCoherence.locusTag)
-                        if commentITToAdd not in spTypeIT2ICEsIMEsStructure[SPTypeIT1IT].comment:
-                            spTypeIT2ICEsIMEsStructure[SPTypeIT1IT].comment += commentITToAdd
-                        if commentITToAdd not in spTypeIT2ICEsIMEsStructure[SPTypeIT2IT].comment:
-                            spTypeIT2ICEsIMEsStructure[SPTypeIT2IT].comment += commentITToAdd
+                        if commentITToAdd not in SPTypeIT1IT_structureIT.comment:
+                            SPTypeIT1IT_structureIT.comment += commentITToAdd
+                        if commentITToAdd not in SPTypeIT2IT_structureIT.comment:
+                            SPTypeIT2IT_structureIT.comment += commentITToAdd
                         icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                         icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2IT.locusTag, commentITToAdd, locusTagMerge2Comment)
 
@@ -533,10 +543,13 @@ def checkAndPerformMergeFragmentedForSpecificTypeSP(
                     atLeastOneOverlapITGreaterEqualThanMaxAllowed = True
                     # listComplementarySPsToCheckFurther were checked to complement each other as fragments to form a single SPTypeIT SP, but SPTypeIT1ToCheckFurtherIT was found to overlap with SPTypeIT2ToCheckFurtherIT, please manually review.
                     commentITToAdd = "{} were checked to complement each other as fragments to form a single {}, but {} was found to overlap with {}, please manually review. ".format(hit.ListSPs.GetListProtIdsFromListSP(listComplementarySPsToCheckFurther), typeOfSPConsideredForFragmentsIT, SPTypeIT1ToCheckFurtherIT.locusTag, SPTypeIT2ToCheckFurtherIT.locusTag)
-                    if commentITToAdd not in spTypeIT2ICEsIMEsStructure[SPTypeIT1ToCheckFurtherIT].comment:
-                        spTypeIT2ICEsIMEsStructure[SPTypeIT1ToCheckFurtherIT].comment += commentITToAdd
-                    if commentITToAdd not in spTypeIT2ICEsIMEsStructure[SPTypeIT2ToCheckFurtherIT].comment:
-                        spTypeIT2ICEsIMEsStructure[SPTypeIT2ToCheckFurtherIT].comment += commentITToAdd
+
+                    for ICEsIMEsStructure_IT in spTypeIT2ListICEsIMEsStructure[SPTypeIT1ToCheckFurtherIT]:
+                        if commentITToAdd not in ICEsIMEsStructure_IT.comment:
+                            ICEsIMEsStructure_IT.comment += commentITToAdd
+                    for ICEsIMEsStructure_IT in spTypeIT2ListICEsIMEsStructure[SPTypeIT2ToCheckFurtherIT]:
+                        if commentITToAdd not in ICEsIMEsStructure_IT.comment:
+                            ICEsIMEsStructure_IT.comment += commentITToAdd
                     icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1ToCheckFurtherIT.locusTag, commentITToAdd, locusTagMerge2Comment)
                     icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2ToCheckFurtherIT.locusTag, commentITToAdd, locusTagMerge2Comment)
 
@@ -549,10 +562,17 @@ def checkAndPerformMergeFragmentedForSpecificTypeSP(
                         atLeastOneCombinationGreaterThenMaxCDSDistanceToMergeFragmentedSPs = True
                         # listComplementarySPsToCheckFurther were checked to complement each other as fragments to form a single SPTypeIT SP, but SPTypeIT1ToCheckFurtherIT was found to be further away to SPTypeIT2ToCheckFurtherIT than cutoff, please manually review.
                         commentITToAdd = "{} were checked to complement each other as fragments to form a single {}, but {} was found to be further away to {} than cutoff {}, please manually review. ".format(hit.ListSPs.GetListProtIdsFromListSP(listComplementarySPsToCheckFurther), typeOfSPConsideredForFragmentsIT, SPTypeIT1ToCheckFurtherIT.locusTag, SPTypeIT2ToCheckFurtherIT.locusTag, str(maxCDSDistanceToMergeFragmentedSPs))
-                        if commentITToAdd not in spTypeIT2ICEsIMEsStructure[SPTypeIT1ToCheckFurtherIT].comment:
-                            spTypeIT2ICEsIMEsStructure[SPTypeIT1ToCheckFurtherIT].comment += commentITToAdd
-                        if commentITToAdd not in spTypeIT2ICEsIMEsStructure[SPTypeIT2ToCheckFurtherIT].comment:
-                            spTypeIT2ICEsIMEsStructure[SPTypeIT2ToCheckFurtherIT].comment += commentITToAdd
+
+                        for ICEsIMEsStructure_IT in spTypeIT2ListICEsIMEsStructure[SPTypeIT1ToCheckFurtherIT]:
+                            if commentITToAdd not in ICEsIMEsStructure_IT.comment:
+                                ICEsIMEsStructure_IT.comment += commentITToAdd
+                        for ICEsIMEsStructure_IT in spTypeIT2ListICEsIMEsStructure[SPTypeIT2ToCheckFurtherIT]:
+                            if commentITToAdd not in ICEsIMEsStructure_IT.comment:
+                                ICEsIMEsStructure_IT.comment += commentITToAdd
+                        # if commentITToAdd not in spTypeIT2ListICEsIMEsStructure[SPTypeIT1ToCheckFurtherIT].comment:
+                        #     spTypeIT2ListICEsIMEsStructure[SPTypeIT1ToCheckFurtherIT].comment += commentITToAdd
+                        # if commentITToAdd not in spTypeIT2ListICEsIMEsStructure[SPTypeIT2ToCheckFurtherIT].comment:
+                        #     spTypeIT2ListICEsIMEsStructure[SPTypeIT2ToCheckFurtherIT].comment += commentITToAdd
                         icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1ToCheckFurtherIT.locusTag, commentITToAdd, locusTagMerge2Comment)
                         icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2ToCheckFurtherIT.locusTag, commentITToAdd, locusTagMerge2Comment)
 
@@ -560,60 +580,129 @@ def checkAndPerformMergeFragmentedForSpecificTypeSP(
                 if not atLeastOneCombinationGreaterThenMaxCDSDistanceToMergeFragmentedSPs :
                     #OK those listComplementarySPsToCheckFurther can be merged together
 
-                    firstStructureToMergeBcFragmented = -1
-                    secondToLastSetStructuresToMergeBcFragmented = set()
-                    for indexInListComplementarySPsToCheckFurther, complementarySPsToCheckFurtherIT in enumerate(listComplementarySPsToCheckFurther):
-                        if indexInListComplementarySPsToCheckFurther == 0 :
-                            firstStructureToMergeBcFragmented = spTypeIT2ICEsIMEsStructure[complementarySPsToCheckFurtherIT]
+                    #https://stackoverflow.com/questions/798854/all-combinations-of-a-list-of-lists
+                    productcombination_listOfListOfStructureToMergeBcFragmented = []
+                    for complementarySPsToCheckFurtherIT in listComplementarySPsToCheckFurther:
+                        productcombination_listOfListOfStructureToMergeBcFragmented.append(spTypeIT2ListICEsIMEsStructure[complementarySPsToCheckFurtherIT])
+                    listCombination_TupleStructuresToMergeBcFragmented = list(itertools.product(*productcombination_listOfListOfStructureToMergeBcFragmented))
+                    #a = [[1,2,3],[4,5,6],[7,8,9,10]]
+                    # [(1, 4, 7), (1, 4, 8), (1, 4, 9), (1, 4, 10), (1, 5, 7), (1, 5, 8), (1, 5, 9), (1, 5, 10), ... (3, 6, 8), (3, 6, 9), (3, 6, 10)]
+                    for tupleStructuresToMergeBcFragmentedIT in listCombination_TupleStructuresToMergeBcFragmented:
+                        firstStructureToMergeBcFragmented = -1
+                        secondToLastSetStructuresToMergeBcFragmented = set()
+                        for structureToMergeBcFragmentedIT in tupleStructuresToMergeBcFragmentedIT:
+                            if firstStructureToMergeBcFragmented == -1:
+                                firstStructureToMergeBcFragmented = structureToMergeBcFragmentedIT
+                            else :
+                                secondToLastSetStructuresToMergeBcFragmented.add(structureToMergeBcFragmentedIT)
+
+                        # firstStructureToMergeBcFragmented = -1
+                        # secondToLastSetStructuresToMergeBcFragmented = set()
+                        # for indexInListComplementarySPsToCheckFurther, complementarySPsToCheckFurtherIT in enumerate(listComplementarySPsToCheckFurther):
+                        #     if indexInListComplementarySPsToCheckFurther == 0 :
+                        #         firstStructureToMergeBcFragmented = spTypeIT2ListICEsIMEsStructure[complementarySPsToCheckFurtherIT]
+                        #     else :
+                        #         if spTypeIT2ListICEsIMEsStructure[complementarySPsToCheckFurtherIT] is not firstStructureToMergeBcFragmented :
+                        #             secondToLastSetStructuresToMergeBcFragmented.add(spTypeIT2ListICEsIMEsStructure[complementarySPsToCheckFurtherIT])                    
+                        if firstStructureToMergeBcFragmented == -1 :
+                            raise RuntimeError(
+                                "Error in checkAndPerformMergeFragmentedForSpecificTypeSP: firstStructureToMergeBcFragmented == -1 for {}".format(hit.ListSPs.GetListProtIdsFromListSP(listComplementarySPsToCheckFurther)))
+                        if len(secondToLastSetStructuresToMergeBcFragmented) == 0 :
+                            raise RuntimeError(
+                                "Error in checkAndPerformMergeFragmentedForSpecificTypeSP: len(secondToLastSetStructuresToMergeBcFragmented) == 0 for {}".format(hit.ListSPs.GetListProtIdsFromListSP(listComplementarySPsToCheckFurther)))
+
+                        (mostUpstreamICEIMEThatWillHoldTheMerge, listICEIMECompatibleToMerge) = getmostUpstreamICEIMEThatWillHoldTheMergeAndlistSecondaryICEIMECompatibleToMerge(
+                                firstStructureToMergeBcFragmented,
+                                secondToLastSetStructuresToMergeBcFragmented,
+                                groupListSPintoICEsIMEsUsingFamilyInfo,
+                                allowCheckingForMultipleDistantRelaxaseIT,
+                                allowCheckingForMultipleDistantCouplingIT,
+                                allowCheckingForMultipleDistantVirB4IT)
+                        #print("mostUpstreamICEIMEThatWillHoldTheMerge = {}".format(mostUpstreamICEIMEThatWillHoldTheMerge)) # , hit.ListSPs.GetListProtIdsFromListSP(mostUpstreamICEIMEThatWillHoldTheMerge.listOrderedSPs)
+                        #print("listICEIMECompatibleToMerge = {}".format(listICEIMECompatibleToMerge))
+
+                        if mostUpstreamICEIMEThatWillHoldTheMerge and len(listICEIMECompatibleToMerge) > 0:
+                            # add comment that listComplementarySPsToCheckFurther can be merged together in structure and SP
+                            commentITToAdd = "{} complement each other as fragments to form a single {}. ".format(hit.ListSPs.GetListProtIdsFromListSP(listComplementarySPsToCheckFurther), typeOfSPConsideredForFragmentsIT)
+                            for SPsTthatComplementAsFragmentIT in listComplementarySPsToCheckFurther:
+                                icescreen_OO.addCommentToLocusTag2Comment(SPsTthatComplementAsFragmentIT.locusTag, commentITToAdd, locusTagMerge2Comment)
+                            if commentITToAdd not in mostUpstreamICEIMEThatWillHoldTheMerge.comment:
+                                mostUpstreamICEIMEThatWillHoldTheMerge.comment += commentITToAdd
+                            for currICEIMEStructToMerge in listICEIMECompatibleToMerge:
+                                if commentITToAdd not in currICEIMEStructToMerge.comment:
+                                    currICEIMEStructToMerge.comment += commentITToAdd
+
+                                if mostUpstreamICEIMEThatWillHoldTheMerge in mergeToPerformMostUpstreamICEIMEThatWillHoldTheMerge2ListCurrICEIMEStructToMerge :
+                                    listCurrICEIMEStructToMergeIT = mergeToPerformMostUpstreamICEIMEThatWillHoldTheMerge2ListCurrICEIMEStructToMerge[mostUpstreamICEIMEThatWillHoldTheMerge]
+                                    listCurrICEIMEStructToMergeIT.append(currICEIMEStructToMerge)
+                                else :
+                                    listCurrICEIMEStructToMergeIT = []
+                                    listCurrICEIMEStructToMergeIT.append(currICEIMEStructToMerge)
+                                    mergeToPerformMostUpstreamICEIMEThatWillHoldTheMerge2ListCurrICEIMEStructToMerge[mostUpstreamICEIMEThatWillHoldTheMerge] = listCurrICEIMEStructToMergeIT
+                                if currICEIMEStructToMerge in mergeToPerformCurrICEIMEStructToMerge2ListMostUpstreamICEIMEThatWillHoldTheMerge :
+                                    listMostUpstreamICEIMEThatWillHoldTheMerge = mergeToPerformCurrICEIMEStructToMerge2ListMostUpstreamICEIMEThatWillHoldTheMerge[currICEIMEStructToMerge]
+                                    listMostUpstreamICEIMEThatWillHoldTheMerge.append(mostUpstreamICEIMEThatWillHoldTheMerge)
+                                else:
+                                    listMostUpstreamICEIMEThatWillHoldTheMerge = []
+                                    listMostUpstreamICEIMEThatWillHoldTheMerge.append(mostUpstreamICEIMEThatWillHoldTheMerge)
+                                    mergeToPerformCurrICEIMEStructToMerge2ListMostUpstreamICEIMEThatWillHoldTheMerge[currICEIMEStructToMerge] = listMostUpstreamICEIMEThatWillHoldTheMerge
+                                # performedAMergeEvent_partOfMultipleMergeEvents = mostUpstreamICEIMEThatWillHoldTheMerge.mergeWith(
+                                #         currICEIMEStructToMerge,
+                                #         groupListSPintoICEsIMEsUsingFamilyInfo, locusTagMerge2Comment,
+                                #         locusTagIntegrase2Comment,
+                                #         useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
+                                #         useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
+                                #         allowCheckingForMultipleDistantRelaxaseIT,
+                                #         allowCheckingForMultipleDistantCouplingIT,
+                                #         allowCheckingForMultipleDistantVirB4IT)
                         else :
-                            if spTypeIT2ICEsIMEsStructure[complementarySPsToCheckFurtherIT] is not firstStructureToMergeBcFragmented :
-                                secondToLastSetStructuresToMergeBcFragmented.add(spTypeIT2ICEsIMEsStructure[complementarySPsToCheckFurtherIT])                    
-                    if firstStructureToMergeBcFragmented == -1 :
-                        raise RuntimeError(
-                            "Error in checkAndPerformMergeFragmentedForSpecificTypeSP: firstStructureToMergeBcFragmented == -1 for {}".format(hit.ListSPs.GetListProtIdsFromListSP(listComplementarySPsToCheckFurther)))
-                    if len(secondToLastSetStructuresToMergeBcFragmented) == 0 :
-                        raise RuntimeError(
-                            "Error in checkAndPerformMergeFragmentedForSpecificTypeSP: len(secondToLastSetStructuresToMergeBcFragmented) == 0 for {}".format(hit.ListSPs.GetListProtIdsFromListSP(listComplementarySPsToCheckFurther)))
+                            # add comment that listComplementarySPsToCheckFurther can be merged together in structure and SP
+                            commentITToAdd = "{} complement each other as fragments to form a single {} but their structures couldn't be merged, please check. ".format(hit.ListSPs.GetListProtIdsFromListSP(listComplementarySPsToCheckFurther), typeOfSPConsideredForFragmentsIT)
+                            for SPsTthatComplementAsFragmentIT in listComplementarySPsToCheckFurther:
+                                icescreen_OO.addCommentToLocusTag2Comment(SPsTthatComplementAsFragmentIT.locusTag, commentITToAdd, locusTagMerge2Comment)
+                                # if commentITToAdd not in spTypeIT2ListICEsIMEsStructure[SPsTthatComplementAsFragmentIT].comment:
+                                #     spTypeIT2ListICEsIMEsStructure[SPsTthatComplementAsFragmentIT].comment += commentITToAdd
+                                for ICEsIMEsStructure_IT in spTypeIT2ListICEsIMEsStructure[SPsTthatComplementAsFragmentIT]:
+                                    if commentITToAdd not in ICEsIMEsStructure_IT.comment:
+                                        ICEsIMEsStructure_IT.comment += commentITToAdd
+                     
+    # mergeToPerformMostUpstreamICEIMEThatWillHoldTheMerge2ListCurrICEIMEStructToMerge = {}
+    # mergeToPerformCurrICEIMEStructToMerge2ListMostUpstreamICEIMEThatWillHoldTheMerge = {}
+    for keyMostUpstreamICEIMEThatWillHoldTheMergeIT, valueListCurrICEIMEStructToMergeIT in mergeToPerformMostUpstreamICEIMEThatWillHoldTheMerge2ListCurrICEIMEStructToMerge.items():
+        if len(valueListCurrICEIMEStructToMergeIT) == 1:
+            currICEIMEStructToMergeIT = valueListCurrICEIMEStructToMergeIT[0]
+            listMostUpstreamICEIMEThatWillHoldTheMergeIT = mergeToPerformCurrICEIMEStructToMerge2ListMostUpstreamICEIMEThatWillHoldTheMerge[currICEIMEStructToMergeIT]
+            if len(listMostUpstreamICEIMEThatWillHoldTheMergeIT) == 1:
+                if listMostUpstreamICEIMEThatWillHoldTheMergeIT[0] != keyMostUpstreamICEIMEThatWillHoldTheMergeIT :
+                    raise RuntimeError("Error in checkAndPerformMergeFragmentedForSpecificTypeSP: listMostUpstreamICEIMEThatWillHoldTheMergeIT[0] {} != keyMostUpstreamICEIMEThatWillHoldTheMergeIT {}".format(
+                        listMostUpstreamICEIMEThatWillHoldTheMergeIT[0].internalIdentifier, keyMostUpstreamICEIMEThatWillHoldTheMergeIT.internalIdentifier))
+                else :
+                    performedAMergeEvent_partOfMultipleMergeEvents = keyMostUpstreamICEIMEThatWillHoldTheMergeIT.mergeWith(
+                        currICEIMEStructToMergeIT,
+                        groupListSPintoICEsIMEsUsingFamilyInfo, locusTagMerge2Comment,
+                        locusTagIntegrase2Comment,
+                        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
+                        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
+                        allowCheckingForMultipleDistantRelaxaseIT,
+                        allowCheckingForMultipleDistantCouplingIT,
+                        allowCheckingForMultipleDistantVirB4IT)
+            else :
+                # if len(listMostUpstreamICEIMEThatWillHoldTheMergeIT) != 1:
+                commentITToAdd = "Because of SP fragment merge, the downstream structure {} ({}) could be merge to multiple structures {} including the most upstream ICE IME that should hold the merge {} ({}), please manually check. ".format(currICEIMEStructToMergeIT.internalIdentifier, hit.ListSPs.GetListProtIdsFromListSP(currICEIMEStructToMergeIT.listOrderedSPs), EMStructure.BasicEMStructure.getGetListInternIdFromListEMStructure(listMostUpstreamICEIMEThatWillHoldTheMergeIT), keyMostUpstreamICEIMEThatWillHoldTheMergeIT.internalIdentifier, hit.ListSPs.GetListProtIdsFromListSP(keyMostUpstreamICEIMEThatWillHoldTheMergeIT.listOrderedSPs))
+                for SPOfcurrICEIMEStructToMergeIT in currICEIMEStructToMergeIT.listOrderedSPs:
+                    icescreen_OO.addCommentToLocusTag2Comment(SPOfcurrICEIMEStructToMergeIT.locusTag, commentITToAdd, locusTagMerge2Comment)
+                if commentITToAdd not in currICEIMEStructToMergeIT.comment:
+                    currICEIMEStructToMergeIT.comment += commentITToAdd
 
-                    (mostUpstreamICEIMEThatWillHoldTheMerge, listICEIMECompatibleToMerge) = getmostUpstreamICEIMEThatWillHoldTheMergeAndlistSecondaryICEIMECompatibleToMerge(
-                            firstStructureToMergeBcFragmented,
-                            secondToLastSetStructuresToMergeBcFragmented,
-                            groupListSPintoICEsIMEsUsingFamilyInfo,
-                            allowCheckingForMultipleDistantRelaxaseIT,
-                            allowCheckingForMultipleDistantCouplingIT,
-                            allowCheckingForMultipleDistantVirB4IT)
-                    #print("mostUpstreamICEIMEThatWillHoldTheMerge = {}".format(mostUpstreamICEIMEThatWillHoldTheMerge)) # , hit.ListSPs.GetListProtIdsFromListSP(mostUpstreamICEIMEThatWillHoldTheMerge.listOrderedSPs)
-                    #print("listICEIMECompatibleToMerge = {}".format(listICEIMECompatibleToMerge))
+        else :
+            # len(valueListCurrICEIMEStructToMergeIT) != 1, can not choose which structure to merge
+            commentITToAdd = "Because of SP fragment merge, the most upstream ICE IME that should hold the merge {} ({}) could be merge to multiple structures {}, please manually check. ".format(keyMostUpstreamICEIMEThatWillHoldTheMergeIT.internalIdentifier, hit.ListSPs.GetListProtIdsFromListSP(keyMostUpstreamICEIMEThatWillHoldTheMergeIT.listOrderedSPs), EMStructure.BasicEMStructure.getGetListInternIdFromListEMStructure(valueListCurrICEIMEStructToMergeIT))
+            for SPOfkeyMostUpstreamICEIMEThatWillHoldTheMergeIT in keyMostUpstreamICEIMEThatWillHoldTheMergeIT.listOrderedSPs:
+                icescreen_OO.addCommentToLocusTag2Comment(SPOfkeyMostUpstreamICEIMEThatWillHoldTheMergeIT.locusTag, commentITToAdd, locusTagMerge2Comment)
+            if commentITToAdd not in keyMostUpstreamICEIMEThatWillHoldTheMergeIT.comment:
+                keyMostUpstreamICEIMEThatWillHoldTheMergeIT.comment += commentITToAdd
 
-                    if mostUpstreamICEIMEThatWillHoldTheMerge and len(listICEIMECompatibleToMerge) > 0:
-                        # add comment that listComplementarySPsToCheckFurther can be merged together in structure and SP
-                        commentITToAdd = "{} complement each other as fragments to form a single {}. ".format(hit.ListSPs.GetListProtIdsFromListSP(listComplementarySPsToCheckFurther), typeOfSPConsideredForFragmentsIT)
-                        for SPsTthatComplementAsFragmentIT in listComplementarySPsToCheckFurther:
-                            icescreen_OO.addCommentToLocusTag2Comment(SPsTthatComplementAsFragmentIT.locusTag, commentITToAdd, locusTagMerge2Comment)
-                        if commentITToAdd not in mostUpstreamICEIMEThatWillHoldTheMerge.comment:
-                            mostUpstreamICEIMEThatWillHoldTheMerge.comment += commentITToAdd
-                        for currICEIMEStructToMerge in listICEIMECompatibleToMerge:
-                            if commentITToAdd not in currICEIMEStructToMerge.comment:
-                                currICEIMEStructToMerge.comment += commentITToAdd
-                            performedAMergeEvent_partOfMultipleMergeEvents = mostUpstreamICEIMEThatWillHoldTheMerge.mergeWith(
-                                    currICEIMEStructToMerge,
-                                    groupListSPintoICEsIMEsUsingFamilyInfo, locusTagMerge2Comment,
-                                    locusTagIntegrase2Comment,
-                                    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                                    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
-                                    allowCheckingForMultipleDistantRelaxaseIT,
-                                    allowCheckingForMultipleDistantCouplingIT,
-                                    allowCheckingForMultipleDistantVirB4IT)
-                    else :
-                        # add comment that listComplementarySPsToCheckFurther can be merged together in structure and SP
-                        commentITToAdd = "{} complement each other as fragments to form a single {} but their structures couldn't be merged, please check. ".format(hit.ListSPs.GetListProtIdsFromListSP(listComplementarySPsToCheckFurther), typeOfSPConsideredForFragmentsIT)
-                        for SPsTthatComplementAsFragmentIT in listComplementarySPsToCheckFurther:
-                            icescreen_OO.addCommentToLocusTag2Comment(SPsTthatComplementAsFragmentIT.locusTag, commentITToAdd, locusTagMerge2Comment)
-                            if commentITToAdd not in spTypeIT2ICEsIMEsStructure[SPsTthatComplementAsFragmentIT].comment:
-                                spTypeIT2ICEsIMEsStructure[SPsTthatComplementAsFragmentIT].comment += commentITToAdd
-                            
-                                    
-                                    
+
 
 def tryMergeFragmentedSPs(
     listICEsIMEsStructures,
@@ -641,12 +730,12 @@ def tryMergeFragmentedSPs(
     # maxOverlappingAliLenghtFragmentedSPs = 40
     # maxCDSDistanceToMergeFragmentedSPs = 150
 
-    relaxase2ali_start_end_Query_blast = {}
-    couplingProtein2ali_start_end_Query_blast = {}
-    virB42ali_start_end_Query_blast = {}
-    relaxase2ICEsIMEsStructure = {}
-    couplingProtein2ICEsIMEsStructure = {}
-    virB42ICEsIMEsStructure = {}
+    # relaxase2ali_start_end_Query_blast = {}
+    # couplingProtein2ali_start_end_Query_blast = {}
+    # virB42ali_start_end_Query_blast = {}
+    relaxase2ListICEsIMEsStructure = {}
+    couplingProtein2ListICEsIMEsStructure = {}
+    virB42ListICEsIMEsStructure = {}
     #firstStructureInListICEsIMEsStructures = -1
     #secondToLastStructuresAsSetFromListICEsIMEsStructures = set()
 
@@ -655,47 +744,59 @@ def tryMergeFragmentedSPs(
 
         if currICEsIMEsStructure.delMerging_idxListUpstreamStructure != -1 :
             continue
-        # if indexInListICEsIMEsStructuresIT == 0 :
-        #     firstStructureInListICEsIMEsStructures = currICEsIMEsStructure
-        # else :
-        #     secondToLastStructuresAsSetFromListICEsIMEsStructures.add(currICEsIMEsStructure)
 
         for relaxaseIT in currICEsIMEsStructure.listRelaxase:
-            if relaxaseIT in relaxase2ali_start_end_Query_blast :
-                raise RuntimeError(
-                    "Error in tryMergeFragmentedSPs: relaxaseIT {} in relaxase2ali_start_end_Query_blast".format(relaxaseIT.locusTag))
-            relaxase2ali_start_end_Query_blast[relaxaseIT] = (relaxaseIT.Blast_ali_start_Query_blast, relaxaseIT.Blast_ali_end_Query_blast)
-            if relaxaseIT in relaxase2ICEsIMEsStructure :
-                raise RuntimeError(
-                    "Error in tryMergeFragmentedSPs: relaxaseIT {} in relaxase2ICEsIMEsStructure".format(relaxaseIT.locusTag))
-            relaxase2ICEsIMEsStructure[relaxaseIT] = currICEsIMEsStructure
+            # if relaxaseIT in relaxase2ali_start_end_Query_blast :
+            #     raise RuntimeError(
+            #         "Error in tryMergeFragmentedSPs: relaxaseIT {} in relaxase2ali_start_end_Query_blast".format(relaxaseIT.locusTag))
+            # relaxase2ali_start_end_Query_blast[relaxaseIT] = (relaxaseIT.Blast_ali_start_Query_blast, relaxaseIT.Blast_ali_end_Query_blast)
+            if relaxaseIT in relaxase2ListICEsIMEsStructure :
+                # raise RuntimeError(
+                #     "Error in tryMergeFragmentedSPs: relaxaseIT {} in relaxase2ListICEsIMEsStructure".format(relaxaseIT.locusTag))
+                listICEsIMEsStructureIT = relaxase2ListICEsIMEsStructure[relaxaseIT]
+                listICEsIMEsStructureIT.append(currICEsIMEsStructure)
+            else :
+                listICEsIMEsStructureIT = []
+                listICEsIMEsStructureIT.append(currICEsIMEsStructure)
+                relaxase2ListICEsIMEsStructure[relaxaseIT] = listICEsIMEsStructureIT
+
         for couplingProteinIT in currICEsIMEsStructure.listCouplingProtein:
-            if couplingProteinIT in couplingProtein2ali_start_end_Query_blast :
-                raise RuntimeError(
-                    "Error in tryMergeFragmentedSPs: couplingProteinIT {} in couplingProtein2ali_start_end_Query_blast".format(couplingProteinIT.locusTag))
-            couplingProtein2ali_start_end_Query_blast[couplingProteinIT] = (couplingProteinIT.Blast_ali_start_Query_blast, couplingProteinIT.Blast_ali_end_Query_blast)
-            if couplingProteinIT in couplingProtein2ICEsIMEsStructure :
-                raise RuntimeError(
-                    "Error in tryMergeFragmentedSPs: couplingProteinIT {} in couplingProtein2ICEsIMEsStructure".format(couplingProteinIT.locusTag))
-            couplingProtein2ICEsIMEsStructure[couplingProteinIT] = currICEsIMEsStructure
+            # if couplingProteinIT.locusTag == "C3706_RS03660" :
+            #     print("currICEsIMEsStructure {} ({}): couplingProteinIT.locusTag = {}".format(currICEsIMEsStructure.internalIdentifier, hit.ListSPs.GetListProtIdsFromListSP(currICEsIMEsStructure.listOrderedSPs), couplingProteinIT.locusTag))
+            if couplingProteinIT in couplingProtein2ListICEsIMEsStructure :
+                # raise RuntimeError(
+                #     "Error in tryMergeFragmentedSPs: couplingProteinIT {} in couplingProtein2ListICEsIMEsStructure".format(couplingProteinIT.locusTag))
+                listICEsIMEsStructureIT = couplingProtein2ListICEsIMEsStructure[couplingProteinIT]
+                listICEsIMEsStructureIT.append(currICEsIMEsStructure)
+            else :
+                listICEsIMEsStructureIT = []
+                listICEsIMEsStructureIT.append(currICEsIMEsStructure)
+                couplingProtein2ListICEsIMEsStructure[couplingProteinIT] = listICEsIMEsStructureIT
+
         for virB4IT in currICEsIMEsStructure.listVirB4:
-            if virB4IT in virB42ali_start_end_Query_blast :
-                raise RuntimeError(
-                    "Error in tryMergeFragmentedSPs: virB4IT {} in virB42ali_start_end_Query_blast".format(virB4IT.locusTag))
-            virB42ali_start_end_Query_blast[virB4IT] = (virB4IT.Blast_ali_start_Query_blast, virB4IT.Blast_ali_end_Query_blast)
-            if virB4IT in virB42ICEsIMEsStructure :
-                raise RuntimeError(
-                    "Error in tryMergeFragmentedSPs: virB4IT {} in virB42ICEsIMEsStructure".format(virB4IT.locusTag))
-            virB42ICEsIMEsStructure[virB4IT] = currICEsIMEsStructure
+            # if virB4IT in virB42ali_start_end_Query_blast :
+            #     raise RuntimeError(
+            #         "Error in tryMergeFragmentedSPs: virB4IT {} in virB42ali_start_end_Query_blast".format(virB4IT.locusTag))
+            # virB42ali_start_end_Query_blast[virB4IT] = (virB4IT.Blast_ali_start_Query_blast, virB4IT.Blast_ali_end_Query_blast)
+            if virB4IT in virB42ListICEsIMEsStructure :
+                # raise RuntimeError(
+                #     "Error in tryMergeFragmentedSPs: virB4IT {} in virB42ListICEsIMEsStructure".format(virB4IT.locusTag))
+                listICEsIMEsStructureIT = virB42ListICEsIMEsStructure[virB4IT]
+                listICEsIMEsStructureIT.append(currICEsIMEsStructure)
+            else :
+                listICEsIMEsStructureIT = []
+                listICEsIMEsStructureIT.append(currICEsIMEsStructure)
+                virB42ListICEsIMEsStructure[virB4IT] = listICEsIMEsStructureIT
+                #virB42ListICEsIMEsStructure[virB4IT] = currICEsIMEsStructure
 
     # "Relaxase"
     checkAndPerformMergeFragmentedForSpecificTypeSP(
         "Relaxase",
-        relaxase2ICEsIMEsStructure,
+        relaxase2ListICEsIMEsStructure,
         True,
         False,
         False,
-        list(relaxase2ali_start_end_Query_blast.keys()),
+        # list(relaxase2ali_start_end_Query_blast.keys()),
         groupListSPintoICEsIMEsUsingFamilyInfo,
         maxOverlappingAliLenghtFragmentedSPs,
         locusTagMerge2Comment,
@@ -707,11 +808,11 @@ def tryMergeFragmentedSPs(
     # "Coupling protein"
     checkAndPerformMergeFragmentedForSpecificTypeSP(
         "Coupling protein",
-        couplingProtein2ICEsIMEsStructure,
+        couplingProtein2ListICEsIMEsStructure,
         False,
         True,
         False,
-        list(couplingProtein2ali_start_end_Query_blast.keys()),
+        # list(couplingProtein2ali_start_end_Query_blast.keys()),
         groupListSPintoICEsIMEsUsingFamilyInfo,
         maxOverlappingAliLenghtFragmentedSPs,
         locusTagMerge2Comment,
@@ -723,11 +824,11 @@ def tryMergeFragmentedSPs(
     # "VirB4"
     checkAndPerformMergeFragmentedForSpecificTypeSP(
         "VirB4",
-        virB42ICEsIMEsStructure,
+        virB42ListICEsIMEsStructure,
         False,
         False,
         True,
-        list(virB42ali_start_end_Query_blast.keys()),
+        # list(virB42ali_start_end_Query_blast.keys()),
         groupListSPintoICEsIMEsUsingFamilyInfo,
         maxOverlappingAliLenghtFragmentedSPs,
         locusTagMerge2Comment,
