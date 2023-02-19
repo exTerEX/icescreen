@@ -26,4 +26,6 @@ ICEscreen is developed by J. Lao, T. Lacroix, C. Coluzzi, G. Guédon, N. Leblond
 **External links**
 
 - Software heritage hal INRAE: https://hal.archives-ouvertes.fr/hal-03610196
-	
+- DOI: https://doi.org/10.57745/EV2ZHI (https://entrepot.recherche.data.gouv.fr/dataset.xhtml?persistentId=doi:10.57745/EV2ZHI)
+- INRAE digital asset: https://actif-numerique.inrae.fr/ansci/app/systeme-information/810
+

@@ -2,6 +2,11 @@
 To access the different releases, see https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/releases
 
 
+## v1.1.1, February 2023
+#### Minor changes
+* Set version of dependency biopython =1.80 instead of biopython >=1.80. biopython version 1.81 is incompatible with bcbio-gff version 0.6.9, it throws an ImportError: cannot import name 'UnknownSeq' from 'Bio.Seq'. See https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/6 for more details.
+
+
 ## v1.1.0, November 2022
 #### Major changes
 * v1.1.0 (November 2022) of the signature proteins database, see log file icescreen_detection_SP/database/blastdb/LOG/log_signature_proteins_database.md for more details.

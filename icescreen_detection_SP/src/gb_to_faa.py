@@ -111,7 +111,8 @@ def gb_to_faa(record, sequence_type, feature_type, codon_table_if_unspecified_in
         strand = feature.location.strand
 
         # Initialization of temp_seq and protId variables
-        temp_seq = 'Genbank file is not a Genbank full'
+        temp_record = ''
+        temp_seq = ''
         locus_tagIT = ""
         protein_idIT = ""
 
@@ -214,9 +215,10 @@ def gb_to_faa(record, sequence_type, feature_type, codon_table_if_unspecified_in
                 temp_record = SeqRecord(temp_seq, id = header, \
                 description = '', annotations={"molecule_type": "protein"})
                 
-            new_records.append(temp_record)
-            # Increment counter
-            counter += 1
+            if len(str(temp_seq)) > 0:
+                new_records.append(temp_record)
+                # Increment counter
+                counter += 1
     return (new_records, counter, dictLocusTags, dictGenomeIds)
 
 
