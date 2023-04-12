@@ -312,7 +312,7 @@ class BasicEMStructure():
             self.listOrderedSPs.append(SPtoAdd)
         self.refreshListIdxOrderedSPs()
 
-        if SPtoAdd.SPDetectedByBlast == 1:
+        if SPtoAdd.SPDetectedByBlast == 1 and not SPtoAdd.pseudo and len(SPtoAdd.listSiblingFragmentedSP) == 0 :
             # if len(SPtoAdd.setSPFamilyFromBlast) != 0:# add only if not empty or null
             #    for currFamilyFromBlast in SPtoAdd.setSPFamilyFromBlast: #there can be SP with multiple families (i.e. PF01719-PF00910)
             #        if currFamilyFromBlast: # add only if not empty or null
@@ -337,7 +337,7 @@ class BasicEMStructure():
         self.inferICEFamilyFromBlastOfSPConjModule()
 
         # elif SPtoAdd.SPDetectedByHMM == 1:
-        if SPtoAdd.SPDetectedByHMM == 1:
+        if SPtoAdd.SPDetectedByHMM == 1 and not SPtoAdd.pseudo and len(SPtoAdd.listSiblingFragmentedSP) == 0 :
             if len(SPtoAdd.setSPFamilyFromHMM) != 0:  # add only if not empty or null
                 for currFamilyFromHMM in SPtoAdd.setSPFamilyFromHMM:
                     if currFamilyFromHMM:  # add only if not empty or null
@@ -388,16 +388,20 @@ class BasicEMStructure():
 
     # check if we need to add upstream subsequent SP of the conjugation module to an anchor. This may result in SP attributed to multiple anchors.
     def addPotentialUpstreamSPInConflict(
-            self,
-            listSPs,
-            idxCurrentSP,
-            listICEsIMEsStructures,
-            groupListSPintoICEsIMEsUsingFamilyInfo,
-            useFamilyInfoToTryToResolveSPModuleConjConflict,
-            useDistanceCDSInfoToTryToResolveSPModuleConjConflict,
-            SPsInSameFamilyMergeStructures2SameFamilyMergeStructure,
-            listSameFamilyMergeStructures):
-        idxSPsUpstreamToCheck = idxCurrentSP - len(self.listOrderedSPs)
+            self
+            , listSPs
+            # , idxCurrentSP
+            , listICEsIMEsStructures
+            , groupListSPintoICEsIMEsUsingFamilyInfo
+            , useFamilyInfoToTryToResolveSPModuleConjConflict
+            , useDistanceCDSInfoToTryToResolveSPModuleConjConflict
+            , SPsInSameFamilyMergeStructures2SameFamilyMergeStructure
+            # , listSameFamilyMergeStructures
+            ):
+        
+        # idxSPsUpstreamToCheck = idxCurrentSP - len(self.listOrderedSPs) # OLD
+        idxSPsUpstreamToCheck = self.findMostUpstrSpNotIntegr().idxInListSP - 1
+
         if idxSPsUpstreamToCheck >= 0:
             listSPsUpstream = listSPs[:(idxSPsUpstreamToCheck + 1)]
             for currentSP in reversed(listSPsUpstream):
@@ -432,38 +436,44 @@ class BasicEMStructure():
                             False)
                 if greenLightAddSPConjugaisonModule:
 
-                    upstreamICEsIMEsStructure = listICEsIMEsStructures[-1]
+                    # listICEsIMEsStructures can now be the full list
+                    # upstreamICEsIMEsStructure = listICEsIMEsStructures[-1] # OLD WAY, listICEsIMEsStructures.append(currentICEsIMEsStructure) CHECK was after addPotentialUpstreamSPInConflict initially
+                    upstreamICEsIMEsStructure = ICEsIMEsStructure.getICEsIMEsStructureUpstreamOfICEsIMEsStructure(self, listICEsIMEsStructures, True)
+
                     if listICEsIMEsStructures:
                         pass
                     else:
                         raise RuntimeError("Error in addPotentialUpstreamSPInConflict: listICEsIMEsStructures is empty for internalIdentifier = {}".format(str(self.internalIdentifier)))
 
-                    resolveStatus = self.tryResolveSPConjugaisonModuleConflictWithUpstreamICEsIMEsStruct(
-                            currentSP,
-                            upstreamICEsIMEsStructure,
-                            groupListSPintoICEsIMEsUsingFamilyInfo,
-                            useFamilyInfoToTryToResolveSPModuleConjConflict,
-                            useDistanceCDSInfoToTryToResolveSPModuleConjConflict)
-                    if resolveStatus == 0:
-                        # the conflict could not be resolved, both ICEsIMEsStructure keep the currentSP
-                        # print("HERE 0 the conflict could not be resolved, both ICEsIMEsStructure keep the currentSP = {} ; {} ({}) ; {} ({})" \
-                        #      .format(currentSP.locusTag,\
-                        #              self.internalIdentifier, \
-                        #              hit.ListSPs.GetListProtIdsFromListSP(self.listOrderedSPs), \
-                        #              upstreamICEsIMEsStructure.internalIdentifier, \
-                        #              hit.ListSPs.GetListProtIdsFromListSP(upstreamICEsIMEsStructure.listOrderedSPs)))
-                        self.addSPToConjugaisonModule(currentSP)
-                        currentSP.setICEsIMEsStructureInConflict.add(self)
-                        currentSP.setICEsIMEsStructureInConflict.add(upstreamICEsIMEsStructure)
-                        self.setSPInConflict.add(currentSP)
-                        upstreamICEsIMEsStructure.setSPInConflict.add(currentSP)
-                    elif resolveStatus == 1:
-                        # the currentSP was attributed to this (self) ICEsIMEsStructure
-                        self.addSPToConjugaisonModule(currentSP)
-                        upstreamICEsIMEsStructure.removeSPConjugaisonModule(currentSP, self, True, False)
-                    elif resolveStatus == 2:
-                        # the SPInConflict was attributed to upstreamICEsIMEsStructure
+                    if upstreamICEsIMEsStructure is None:
                         break
+                    else:
+                        resolveStatus = self.tryResolveSPConjugaisonModuleConflictWithUpstreamICEsIMEsStruct(
+                                currentSP,
+                                upstreamICEsIMEsStructure,
+                                groupListSPintoICEsIMEsUsingFamilyInfo,
+                                useFamilyInfoToTryToResolveSPModuleConjConflict,
+                                useDistanceCDSInfoToTryToResolveSPModuleConjConflict)
+                        if resolveStatus == 0:
+                            # the conflict could not be resolved, both ICEsIMEsStructure keep the currentSP
+                            # print("HERE 0 the conflict could not be resolved, both ICEsIMEsStructure keep the currentSP = {} ; {} ({}) ; {} ({})" \
+                            #      .format(currentSP.locusTag,\
+                            #              self.internalIdentifier, \
+                            #              hit.ListSPs.GetListProtIdsFromListSP(self.listOrderedSPs), \
+                            #              upstreamICEsIMEsStructure.internalIdentifier, \
+                            #              hit.ListSPs.GetListProtIdsFromListSP(upstreamICEsIMEsStructure.listOrderedSPs)))
+                            self.addSPToConjugaisonModule(currentSP)
+                            currentSP.setICEsIMEsStructureInConflict.add(self)
+                            currentSP.setICEsIMEsStructureInConflict.add(upstreamICEsIMEsStructure)
+                            self.setSPInConflict.add(currentSP)
+                            upstreamICEsIMEsStructure.setSPInConflict.add(currentSP)
+                        elif resolveStatus == 1:
+                            # the currentSP was attributed to this (self) ICEsIMEsStructure
+                            self.addSPToConjugaisonModule(currentSP)
+                            upstreamICEsIMEsStructure.removeSPConjugaisonModule(currentSP, self, True, False)
+                        elif resolveStatus == 2:
+                            # the SPInConflict was attributed to upstreamICEsIMEsStructure
+                            break
                 else:  # not greenLightAddSPConjugaisonModule
                     break
 
@@ -855,7 +865,6 @@ class ICEsIMEsStructure(BasicEMStructure):
                     masterMergeStructureIT.internalIdentifier
                     ))
 
-
     # This method merge otherICEsIMEsStructureToMerge in this ICEsIMEsStructure
     def mergeWith(self,
                 otherICEsIMEsStructureToMerge,
@@ -1117,12 +1126,16 @@ class ICEsIMEsStructure(BasicEMStructure):
                             self.setSPInConflict.add(currSP)
                             otherICEsIMEsStructureToMerge.setSPInConflict.remove(currSP)
                         else:
-                            raise RuntimeError("Error in mergeWith: currSP.setICEsIMEsStructureInConflict for {} but not otherICEsIMEsStructureToMerge in currSP.setICEsIMEsStructureInConflict ({} not in [{}]) during merge of structure {} to structure {}".format(
+                            raise RuntimeError("Error in mergeWith listRelaxase: currSP.setICEsIMEsStructureInConflict for {} but not otherICEsIMEsStructureToMerge in currSP.setICEsIMEsStructureInConflict ({} ({}) not in [{}]) during merge of structure {} ({}) to structure {} ({})".format(
                                     currSP.locusTag,
                                     str(otherICEsIMEsStructureToMerge.internalIdentifier),
+                                    hit.ListSPs.GetListProtIdsFromListSP(otherICEsIMEsStructureToMerge.listOrderedSPs),
                                     BasicEMStructure.GetListInternIdFromSetEMStructure(currSP.setICEsIMEsStructureInConflict),
                                     str(otherICEsIMEsStructureToMerge.internalIdentifier),
-                                    str(self.internalIdentifier)))
+                                    hit.ListSPs.GetListProtIdsFromListSP(otherICEsIMEsStructureToMerge.listOrderedSPs),
+                                    str(self.internalIdentifier),
+                                    hit.ListSPs.GetListProtIdsFromListSP(self.listOrderedSPs)
+                                    ))
                 else:
                     if len(currSP.setICEsIMEsStructureInConflict) != 0:  # SP in conflict were not checked in the method scoreMergeTwoICEsIMEsStructures
 
@@ -1135,13 +1148,19 @@ class ICEsIMEsStructure(BasicEMStructure):
                         icescreen_OO.addCommentToLocusTag2Comment(currSP.locusTag, commitITToAdd, locusTagMerge2Comment)
 
                     else:
-                        raise RuntimeError("Error in mergeWith: not greenLightAddSPConjugaisonModule and not currSP.setICEsIMEsStructureInConflict for merging locus tag {} from structure {} to structure {}".format(
+                        raise RuntimeError("Error in mergeWith listRelaxase: not greenLightAddSPConjugaisonModule and not currSP.setICEsIMEsStructureInConflict for merging locus tag {} from structure {} ({}) to structure {} ({})".format(
                                 currSP.locusTag,
                                 str(otherICEsIMEsStructureToMerge.internalIdentifier),
-                                str(self.internalIdentifier)))
+                                hit.ListSPs.GetListProtIdsFromListSP(otherICEsIMEsStructureToMerge.listOrderedSPs),
+                                str(self.internalIdentifier),
+                                hit.ListSPs.GetListProtIdsFromListSP(self.listOrderedSPs)
+                                ))
         # deal with listCouplingProtein
         if otherICEsIMEsStructureToMerge.listCouplingProtein:
             for currSP in otherICEsIMEsStructureToMerge.listCouplingProtein:
+
+                # print("{} ({}) and {} : groupListSPintoICEsIMEsUsingFamilyInfo {} ; allowCheckingForMultipleDistantRelaxase {} ; allowCheckingForMultipleDistantCoupling {} ; allowCheckingForMultipleDistantVirB4 {}".format(self.internalIdentifier, hit.ListSPs.GetListProtIdsFromListSP(self.listOrderedSPs), currSP.locusTag, groupListSPintoICEsIMEsUsingFamilyInfo, allowCheckingForMultipleDistantRelaxase, allowCheckingForMultipleDistantCoupling, allowCheckingForMultipleDistantVirB4))
+
                 greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(self, currSP, groupListSPintoICEsIMEsUsingFamilyInfo, allowCheckingForMultipleDistantRelaxase, allowCheckingForMultipleDistantCoupling, allowCheckingForMultipleDistantVirB4)
                 if greenLightAddSPConjugaisonModule:
                     self.addSPToConjugaisonModule(currSP)
@@ -1152,13 +1171,16 @@ class ICEsIMEsStructure(BasicEMStructure):
                             self.setSPInConflict.add(currSP)
                             otherICEsIMEsStructureToMerge.setSPInConflict.remove(currSP)
                         else:
-                            raise RuntimeError("Error in mergeWith: currSP.setICEsIMEsStructureInConflict for {} but not otherICEsIMEsStructureToMerge.internalIdentifier in currSP.setICEsIMEsStructureInConflict ({} not in [{}]) during merge of structure {} to structure {}".format(
+                            raise RuntimeError("Error in mergeWith listCouplingProtein : currSP.setICEsIMEsStructureInConflict for {} but not otherICEsIMEsStructureToMerge.internalIdentifier in currSP.setICEsIMEsStructureInConflict ({} ({}) not in [{}]) during merge of structure {} ({}) to structure {} ({})".format(
                                     currSP.locusTag,
                                     str(otherICEsIMEsStructureToMerge.internalIdentifier),
+                                    hit.ListSPs.GetListProtIdsFromListSP(otherICEsIMEsStructureToMerge.listOrderedSPs),
                                     BasicEMStructure.GetListInternIdFromSetEMStructure(currSP.setICEsIMEsStructureInConflict),
                                     str(otherICEsIMEsStructureToMerge.internalIdentifier),
-                                    str(self.internalIdentifier)))
-
+                                    hit.ListSPs.GetListProtIdsFromListSP(otherICEsIMEsStructureToMerge.listOrderedSPs),
+                                    str(self.internalIdentifier),
+                                    hit.ListSPs.GetListProtIdsFromListSP(self.listOrderedSPs)
+                                    ))
                 else:
                     if len(currSP.setICEsIMEsStructureInConflict) != 0:
 
@@ -1173,10 +1195,14 @@ class ICEsIMEsStructure(BasicEMStructure):
                         # self.comment += "The coupling protein {} of the ICE / IME structure to merge could not be added during the merge event to this ICE / IME structure, but this coupling protein could have been attributed to multiple ICE / IME structures anyway: {}. " \
                         #    .format( currSP.locusTag, BasicEMStructure.GetListInternIdFromSetEMStructure(currSP.setICEsIMEsStructureInConflict) )
                     else:
-                        raise RuntimeError("Error in mergeWith: not greenLightAddSPConjugaisonModule and not currSP.setICEsIMEsStructureInConflict for merging locus tag {} from structure {} to structure {}".format(
+                        # do not work for structure that are made of merged SP (SP that were fusioned because split be an element)
+                        raise RuntimeError("Error in mergeWith listCouplingProtein: not greenLightAddSPConjugaisonModule and not currSP.setICEsIMEsStructureInConflict for merging locus tag {} from structure {} ({}) to structure {} ({})".format(
                                 currSP.locusTag,
                                 str(otherICEsIMEsStructureToMerge.internalIdentifier),
-                                str(self.internalIdentifier)))
+                                hit.ListSPs.GetListProtIdsFromListSP(otherICEsIMEsStructureToMerge.listOrderedSPs),
+                                str(self.internalIdentifier),
+                                hit.ListSPs.GetListProtIdsFromListSP(self.listOrderedSPs)
+                                ))
         # deal with listVirB4
         if otherICEsIMEsStructureToMerge.listVirB4:
             for currSP in otherICEsIMEsStructureToMerge.listVirB4:
@@ -1190,12 +1216,16 @@ class ICEsIMEsStructure(BasicEMStructure):
                             self.setSPInConflict.add(currSP)
                             otherICEsIMEsStructureToMerge.setSPInConflict.remove(currSP)
                         else:
-                            raise RuntimeError("Error in mergeWith: currSP.setICEsIMEsStructureInConflict for {} but not otherICEsIMEsStructureToMerge.internalIdentifier in currSP.setICEsIMEsStructureInConflict ({} not in [{}]) during merge of structure {} to structure {}".format(
+                            raise RuntimeError("Error in mergeWith listVirB4: currSP.setICEsIMEsStructureInConflict for {} but not otherICEsIMEsStructureToMerge.internalIdentifier in currSP.setICEsIMEsStructureInConflict ({} ({}) not in [{}]) during merge of structure {} ({}) to structure {} ({})".format(
                                     currSP.locusTag,
                                     str(otherICEsIMEsStructureToMerge.internalIdentifier),
+                                    hit.ListSPs.GetListProtIdsFromListSP(otherICEsIMEsStructureToMerge.listOrderedSPs),
                                     BasicEMStructure.GetListInternIdFromSetEMStructure(currSP.setICEsIMEsStructureInConflict),
                                     str(otherICEsIMEsStructureToMerge.internalIdentifier),
-                                    str(self.internalIdentifier)))
+                                    hit.ListSPs.GetListProtIdsFromListSP(otherICEsIMEsStructureToMerge.listOrderedSPs),
+                                    str(self.internalIdentifier),
+                                    hit.ListSPs.GetListProtIdsFromListSP(self.listOrderedSPs)
+                                    ))
 
                 else:
                     if len(currSP.setICEsIMEsStructureInConflict) != 0:
@@ -1212,8 +1242,13 @@ class ICEsIMEsStructure(BasicEMStructure):
                         # self.comment += "The VirB4 {} of the ICE / IME structure to merge could not be added during the merge event to this ICE / IME structure, but this VirB4 could have been attributed to multiple ICE / IME structures anyway: {}. " \
                         #    .format( currSP.locusTag, BasicEMStructure.GetListInternIdFromSetEMStructure(currSP.setICEsIMEsStructureInConflict) )
                     else:
-                        raise RuntimeError("Error in mergeWith: not greenLightAddSPConjugaisonModule and not currSP.setICEsIMEsStructureInConflict for merging locus tag {} from structure {} to structure {}".format(
-                                currSP.locusTag, str(otherICEsIMEsStructureToMerge.internalIdentifier), str(self.internalIdentifier)))
+                        raise RuntimeError("Error in mergeWith listVirB4: not greenLightAddSPConjugaisonModule and not currSP.setICEsIMEsStructureInConflict for merging locus tag {} from structure {} ({}) to structure {} ({})".format(
+                                currSP.locusTag,
+                                str(otherICEsIMEsStructureToMerge.internalIdentifier),
+                                hit.ListSPs.GetListProtIdsFromListSP(otherICEsIMEsStructureToMerge.listOrderedSPs),
+                                str(self.internalIdentifier),
+                                hit.ListSPs.GetListProtIdsFromListSP(self.listOrderedSPs)
+                                ))
 
         # integrase will be dealt with in method addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure() launched after merging
 
@@ -1411,7 +1446,7 @@ class ICEsIMEsStructure(BasicEMStructure):
     # if SP in conflict, int that have a different family than SP proteins
     def finalizeICEIMEStruct(self, listICEsIMEsStructures, maxNumberCDSForFilterIMESize, moveSingleSPToCheck, locusTag2Comment):
 
-        self.fillUpColocalizedOtherICEsIMEsStructures(listICEsIMEsStructures)
+        self.fillUpColocalizedOtherICEsIMEsStructures(listICEsIMEsStructures, moveSingleSPToCheck)
 
         for currSP in self.listOrderedSPs:
             if len(currSP.setICEsIMEsStructureInConflict) != 0:
@@ -1450,14 +1485,40 @@ class ICEsIMEsStructure(BasicEMStructure):
                                 currSP.locusTag,
                                 commentITToAdd,
                                 locusTag2Comment)
-
                         self.removeSPConjugaisonModule(
                                 currSP, None, False, True)
                         # self.setSPConjModuleToManuallyCheck.add(currSP.locusTag)
                         self.setSPConjModuleToManuallyCheck.add(currSP)
-
-
                         break
+
+        # add comment in structure if SP has listSiblingFragmentedSP
+        for currSP in self.listOrderedSPs:
+            if len(currSP.listSiblingFragmentedSP) > 0:
+                commentITToAdd = "{} complement each other as fragments to form a single {}. ".format(hit.ListSPs.GetListProtIdsFromListSP(currSP.listSiblingFragmentedSP), currSP.SPType)
+                if commentITToAdd not in self.comment:
+                    self.comment += commentITToAdd
+                # icescreen_OO.addCommentToLocusTag2Comment(
+                #         currSP.locusTag,
+                #         commentITToAdd,
+                #         locusTag2Comment)
+        for currSP in self.setSPConjModuleToManuallyCheck:
+            if len(currSP.listSiblingFragmentedSP) > 0:
+                commentITToAdd = "{} complement each other as fragments to form a single {}. ".format(hit.ListSPs.GetListProtIdsFromListSP(currSP.listSiblingFragmentedSP), currSP.SPType)
+                if commentITToAdd not in self.comment:
+                    self.comment += commentITToAdd
+                # icescreen_OO.addCommentToLocusTag2Comment(
+                #         currSP.locusTag,
+                #         commentITToAdd,
+                #         locusTag2Comment)
+        for currSP in self.setIntegraseToManuallyCheck:
+            if len(currSP.listSiblingFragmentedSP) > 0:
+                commentITToAdd = "{} complement each other as fragments to form a single {}. ".format(hit.ListSPs.GetListProtIdsFromListSP(currSP.listSiblingFragmentedSP), currSP.SPType)
+                if commentITToAdd not in self.comment:
+                    self.comment += commentITToAdd
+                # icescreen_OO.addCommentToLocusTag2Comment(
+                #         currSP.locusTag,
+                #         commentITToAdd,
+                #         locusTag2Comment)
 
         if moveSingleSPToCheck == "YES":
             totalNumberSPSureAndNotSure = len(self.listOrderedSPs) + len(self.setSPConjModuleToManuallyCheck) + len(self.setIntegraseToManuallyCheck)
@@ -1579,98 +1640,129 @@ class ICEsIMEsStructure(BasicEMStructure):
 
 
 
-    def fillUpColocalizedOtherICEsIMEsStructures(self, listICEsIMEsStructure):
+    def fillUpColocalizedOtherICEsIMEsStructures(self, listICEsIMEsStructure, moveSingleSPToCheck):
+
         # try to fill up:
         # ICEsIMEsStructures.setHostNestedICEsIMEsStructure
         # ICEsIMEsStructures.setGuestsNestedICEsIMEsStructure
         # ICEsIMEsStructures.setOtherICEsIMEsStructureColocalized
         if self.delMerging_idxListUpstreamStructure >= 0:
             return  # skip If delMerging_idxListUpstreamStructure
-        if len(self.idxListDownstrStructMerged) > 0:
 
-            # find most upstream ICE IME struct that is nested
-            # (self.idxInSeedList or idxListDownstrStructMerged I<" +
-            # listICEsIMEsStructuresGuests[-1].idxInSeedList)
-            # find most downtream ICE IME struct that is nested RQ: can be
-            # idxListDownstrStructMerged.append("I>" +
-            # listICEsIMEsStructuresGuests[-1].idxInSeedList)
+        # moveSingleSPToCheck, do not report
+        if moveSingleSPToCheck == "YES":
+            totalNumberSPSureAndNotSure = len(self.listOrderedSPs) + len(self.setSPConjModuleToManuallyCheck) + len(self.setIntegraseToManuallyCheck)
+            if totalNumberSPSureAndNotSure <= 1 and len(self.listVirB4) == 0:
+            # single SP
+                return
 
-            idxInSeedListMostUpstreamICEsIMEsStructureMerged = self.findIdxInSeedListMostUpstreamICEsIMEsStructureMerged()
-            idxInSeedListMostDownstreamICEsIMEsStructureMerged = self.findIdxInSeedListMostDownstreamICEsIMEsStructureMerged()
+        self_mostUpstreamStart = -1
+        for SPsIT in self.listOrderedSPs:
+            if len(SPsIT.setICEsIMEsStructureInConflict) > 0:
+                continue
+            self_mostUpstreamStart = SPsIT.CDSPositionInGenome
+            break
+        if self_mostUpstreamStart == -1:
+            raise RuntimeError(
+                "Error in fillUpColocalizedOtherICEsIMEsStructures: self_mostUpstreamStart == -1 for ICEsIMEsStructure {} ({}) (start {})".format(
+                    self.internalIdentifier,
+                    hit.ListSPs.GetListProtIdsFromListSP(self.listOrderedSPs),
+                    str(self_mostUpstreamStart)
+                    ))
+        #self_mostUpstreamStart = self.listOrderedSPs[0].CDSPositionInGenome
+        self_mostUpstreamStop = -1
+        for SPsIT in reversed(self.listOrderedSPs):
+            if len(SPsIT.setICEsIMEsStructureInConflict) > 0:
+                continue
+            self_mostUpstreamStop = SPsIT.CDSPositionInGenome
+            break
+        if self_mostUpstreamStop == -1:
+            raise RuntimeError(
+                "Error in fillUpColocalizedOtherICEsIMEsStructures: self_mostUpstreamStop == -1 for ICEsIMEsStructure {} ({}) (start {} - stop {})".format(
+                    self.internalIdentifier,
+                    hit.ListSPs.GetListProtIdsFromListSP(self.listOrderedSPs),
+                    str(self_mostUpstreamStart),
+                    str(self_mostUpstreamStop)
+                    ))
+        #self_mostUpstreamStop = self.listOrderedSPs[-1].CDSPositionInGenome
 
-            # deal with all downstream nested ICEsIMEsStructures:
-            if idxInSeedListMostUpstreamICEsIMEsStructureMerged < self.idxInSeedList:
-                for currIndex in range(
-                        idxInSeedListMostUpstreamICEsIMEsStructureMerged,
-                        # was idxInSeedListOfDownstreamICEsIMEsStructureMerged
-                        self.idxInSeedList):
-                    currGuestICEsIMEsStructure = listICEsIMEsStructure[currIndex]
-                    if currGuestICEsIMEsStructure.delMerging_idxListUpstreamStructure >= 0:
-                        continue
-                    self.setGuestsNestedICEsIMEsStructure.add(
-                            currGuestICEsIMEsStructure)
-                    currGuestICEsIMEsStructure.setHostNestedICEsIMEsStructure.add(self)
-            # deal with all downstream nested ICEsIMEsStructures:
-            if idxInSeedListMostDownstreamICEsIMEsStructureMerged > self.idxInSeedList + 1:
-                for currIndex in range(
-                        self.idxInSeedList + 1,
-                        # was idxInSeedListOfDownstreamICEsIMEsStructureMerged
-                        idxInSeedListMostDownstreamICEsIMEsStructureMerged):
-                    currGuestICEsIMEsStructure = listICEsIMEsStructure[currIndex]
-                    if currGuestICEsIMEsStructure.delMerging_idxListUpstreamStructure >= 0:
-                        continue
-                    self.setGuestsNestedICEsIMEsStructure.add(currGuestICEsIMEsStructure)
-                    currGuestICEsIMEsStructure.setHostNestedICEsIMEsStructure.add(self)
+        for ICEsIMEsStructureIT in listICEsIMEsStructure:
 
-            # add all other upstream colocalized ICEsIMEsStructure
-            # in setOtherICEsIMEsStructureColocalized
-            for currIndex in range(
-                    # was self.idxInSeedList
-                    0, idxInSeedListMostUpstreamICEsIMEsStructureMerged):
-                currColocalizedStructure = listICEsIMEsStructure[currIndex]
-                if currColocalizedStructure.delMerging_idxListUpstreamStructure >= 0:
+            if moveSingleSPToCheck == "YES":
+                totalNumberSPSureAndNotSure = len(ICEsIMEsStructureIT.listOrderedSPs) + len(ICEsIMEsStructureIT.setSPConjModuleToManuallyCheck) + len(ICEsIMEsStructureIT.setIntegraseToManuallyCheck)
+                if totalNumberSPSureAndNotSure <= 1 and len(ICEsIMEsStructureIT.listVirB4) == 0:
+                # single SP
                     continue
-                self.setOtherICEsIMEsStructureColocalized.add(
-                        currColocalizedStructure)
-            # add all other downstream colocalized ICEsIMEsStructure
-            for currIndex in range(
-                    # was idxInSeedListOfDownstreamICEsIMEsStructureMerged
-                    idxInSeedListMostDownstreamICEsIMEsStructureMerged + 1,
-                    len(listICEsIMEsStructure)):
-                currColocalizedStructure = listICEsIMEsStructure[currIndex]
-                if currColocalizedStructure.delMerging_idxListUpstreamStructure >= 0:
+
+            #ICEsIMEsStructureIT_mostUpstreamStart = ICEsIMEsStructureIT.listOrderedSPs[0].CDSPositionInGenome
+            ICEsIMEsStructureIT_mostUpstreamStart = -1
+            for SPsIT in ICEsIMEsStructureIT.listOrderedSPs:
+                if len(SPsIT.setICEsIMEsStructureInConflict) > 0:
                     continue
-                self.setOtherICEsIMEsStructureColocalized.add(
-                        currColocalizedStructure)
-        # else add all other colocalized ICEsIMEsStructure in
-        # setOtherICEsIMEsStructureColocalized
-        else:
-            for currIndex in range(0, len(listICEsIMEsStructure)):
-                currColocalizedStructure = listICEsIMEsStructure[currIndex]
-                if currColocalizedStructure.delMerging_idxListUpstreamStructure >= 0:
+                ICEsIMEsStructureIT_mostUpstreamStart = SPsIT.CDSPositionInGenome
+                break
+            if ICEsIMEsStructureIT_mostUpstreamStart == -1:
+                raise RuntimeError(
+                    "Error in fillUpColocalizedOtherICEsIMEsStructures: ICEsIMEsStructureIT_mostUpstreamStart == -1 for ICEsIMEsStructure {} ({}) (start {})".format(
+                        ICEsIMEsStructureIT.internalIdentifier,
+                        hit.ListSPs.GetListProtIdsFromListSP(ICEsIMEsStructureIT.listOrderedSPs),
+                        str(ICEsIMEsStructureIT_mostUpstreamStart)
+                        ))
+            #ICEsIMEsStructureIT_mostUpstreamStop = ICEsIMEsStructureIT.listOrderedSPs[-1].CDSPositionInGenome
+            ICEsIMEsStructureIT_mostUpstreamStop = -1
+            for SPsIT in reversed(ICEsIMEsStructureIT.listOrderedSPs):
+                if len(SPsIT.setICEsIMEsStructureInConflict) > 0:
                     continue
-                if currIndex == self.idxInSeedList:
-                    continue  # skip if i == idxInSeedList, do not add self
-                isAlsoGuestsICEsIMEsStructure = False
-                for currentGuestsICEsIMEsStructure in sorted(
-                        self.setGuestsNestedICEsIMEsStructure,
-                        key=lambda x: x.internalIdentifier, reverse=False):
-                    if currColocalizedStructure.internalIdentifier == currentGuestsICEsIMEsStructure.internalIdentifier:
-                        isAlsoGuestsICEsIMEsStructure = True
-                        break
-                if isAlsoGuestsICEsIMEsStructure:
-                    continue
-                isAlsoHostICEsIMEsStructure = False
-                for currentHostICEsIMEsStructure in sorted(
-                        self.setHostNestedICEsIMEsStructure,
-                        key=lambda x: x.internalIdentifier, reverse=False):
-                    if currColocalizedStructure.internalIdentifier == currentHostICEsIMEsStructure.internalIdentifier:
-                        isAlsoHostICEsIMEsStructure = True
-                        break
-                if isAlsoHostICEsIMEsStructure:
-                    continue
-                self.setOtherICEsIMEsStructureColocalized.add(
-                        currColocalizedStructure)
+                ICEsIMEsStructureIT_mostUpstreamStop = SPsIT.CDSPositionInGenome
+                break
+            if ICEsIMEsStructureIT_mostUpstreamStop == -1:
+                raise RuntimeError(
+                    "Error in fillUpColocalizedOtherICEsIMEsStructures: ICEsIMEsStructureIT_mostUpstreamStop == -1 for ICEsIMEsStructure {} ({}) (start {} - stop {})".format(
+                        ICEsIMEsStructureIT.internalIdentifier,
+                        hit.ListSPs.GetListProtIdsFromListSP(ICEsIMEsStructureIT.listOrderedSPs),
+                        str(ICEsIMEsStructureIT_mostUpstreamStart),
+                        str(ICEsIMEsStructureIT_mostUpstreamStop)
+                        ))
+
+            # print("ICEsIMEsStructure {} ({}) (start {} - stop {}) and ICEsIMEsStructure {} ({}) (start {} - stop {}).".format(
+            #                 self.internalIdentifier,
+            #                 hit.ListSPs.GetListProtIdsFromListSP(self.listOrderedSPs),
+            #                 str(self_mostUpstreamStart),
+            #                 str(self_mostUpstreamStop),
+            #                 ICEsIMEsStructureIT.internalIdentifier,
+            #                 hit.ListSPs.GetListProtIdsFromListSP(ICEsIMEsStructureIT.listOrderedSPs),
+            #                 str(ICEsIMEsStructureIT_mostUpstreamStart),
+            #                 str(ICEsIMEsStructureIT_mostUpstreamStop)
+            #                 ))
+
+            if ICEsIMEsStructureIT == self:
+                # print(" -> ICEsIMEsStructureIT == self")
+                continue
+            elif ICEsIMEsStructureIT.delMerging_idxListUpstreamStructure >= 0:
+                # print(" -> ICEsIMEsStructureIT.delMerging_idxListUpstreamStructure >= 0")
+                continue
+            elif self_mostUpstreamStop <= ICEsIMEsStructureIT_mostUpstreamStart or ICEsIMEsStructureIT_mostUpstreamStop <= self_mostUpstreamStart :
+                # print(" -> setOtherICEsIMEsStructureColocalized")
+                self.setOtherICEsIMEsStructureColocalized.add(ICEsIMEsStructureIT)
+            elif self_mostUpstreamStart <= ICEsIMEsStructureIT_mostUpstreamStart and self_mostUpstreamStop >= ICEsIMEsStructureIT_mostUpstreamStop :
+                # print(" -> setGuestsNestedICEsIMEsStructure")
+                self.setGuestsNestedICEsIMEsStructure.add(ICEsIMEsStructureIT)
+            elif ICEsIMEsStructureIT_mostUpstreamStart <= self_mostUpstreamStart and ICEsIMEsStructureIT_mostUpstreamStop >= self_mostUpstreamStop:
+                # print(" -> setHostNestedICEsIMEsStructure")
+                self.setHostNestedICEsIMEsStructure.add(ICEsIMEsStructureIT)
+            else :
+                raise RuntimeError(
+                        "Error in fillUpColocalizedOtherICEsIMEsStructures: unrecognized case for ICEsIMEsStructure {} ({}) (start {} - stop {}) and ICEsIMEsStructure {} ({}) (start {} - stop {}).".format(
+                            self.internalIdentifier,
+                            hit.ListSPs.GetListProtIdsFromListSP(self.listOrderedSPs),
+                            str(self_mostUpstreamStart),
+                            str(self_mostUpstreamStop),
+                            ICEsIMEsStructureIT.internalIdentifier,
+                            hit.ListSPs.GetListProtIdsFromListSP(ICEsIMEsStructureIT.listOrderedSPs),
+                            str(ICEsIMEsStructureIT_mostUpstreamStart),
+                            str(ICEsIMEsStructureIT_mostUpstreamStop)
+                            ))
+
 
 
 
@@ -1682,8 +1774,9 @@ class ICEsIMEsStructure(BasicEMStructure):
 
         if ICEsIMEsStructureSent not in listICEsIMEsStructures :
             raise RuntimeError(
-                        "Error in getICEsIMEsStructureUpstreamOfICEsIMEsStructure: ICEsIMEsStructureSent = {} not found in list listICEsIMEsStructures {}".format(
+                        "Error in getICEsIMEsStructureUpstreamOfICEsIMEsStructure: ICEsIMEsStructureSent = {} ({}) not found in list listICEsIMEsStructures {}".format(
                             ICEsIMEsStructureSent.internalIdentifier,
+                            hit.ListSPs.GetListProtIdsFromListSP(ICEsIMEsStructureSent.listOrderedSPs),
                             BasicEMStructure.GetListInternIdFromListEMStructure(listICEsIMEsStructures)))
 
         idxCurrICEsIMEsStructure = ICEsIMEsStructureSent.findIdxInSeedListMostUpstreamICEsIMEsStructureMerged()
@@ -1711,12 +1804,65 @@ class ICEsIMEsStructure(BasicEMStructure):
         idx_StructureOne_MostDownstrSp = ICEsIMEsStructureOne.findMostDownstrSpNotIntegr().idxInListSP
         idx_StructureTwo_MostUpstrSp = ICEsIMEsStructureTwo.findMostUpstrSpNotIntegr().idxInListSP
         idx_StructureTwo_MostDownstrSp = ICEsIMEsStructureTwo.findMostDownstrSpNotIntegr().idxInListSP
-
         if idx_StructureOne_MostUpstrSp > idx_StructureTwo_MostUpstrSp and idx_StructureOne_MostDownstrSp < idx_StructureTwo_MostDownstrSp :
             # ICEsIMEsStructureOne is guest of ICEsIMEsStructureTwo
             return False
         elif idx_StructureOne_MostUpstrSp < idx_StructureTwo_MostUpstrSp and idx_StructureOne_MostDownstrSp > idx_StructureTwo_MostDownstrSp :
             # ICEsIMEsStructureTwo is guest of ICEsIMEsStructureOne
+            return False
+        elif idx_StructureOne_MostUpstrSp < idx_StructureTwo_MostUpstrSp and idx_StructureOne_MostDownstrSp >= idx_StructureTwo_MostUpstrSp :
+            # ICEsIMEsStructureOne is upstream of ICEsIMEsStructureTwo but they share one or more SP (SP in conflict)
+            if len(ICEsIMEsStructureOne.findMostDownstrSpNotIntegr().setICEsIMEsStructureInConflict) == 0:
+                raise RuntimeError(
+                    "Error in IsThereAnIntegraseBetweenThoseTwoConjModule: ICEsIMEsStructureOne is upstream of ICEsIMEsStructureTwo but they share one or more SP (SP in conflict) and len(ICEsIMEsStructureOne.findMostDownstrSpNotIntegr().setICEsIMEsStructureInConflict) == 0 ofICEsIMEsStructureOne = {} (list genes = {}) (idx_StructureOne_MostUpstrSp {} - idx_StructureOne_MostDownstrSp {}) and ICEsIMEsStructureTwo = {} (list genes = {}) (idx_StructureTwo_MostUpstrSp {} - idx_StructureTwo_MostDownstrSp {})".format(
+                        ICEsIMEsStructureOne.internalIdentifier,
+                        hit.ListSPs.GetListProtIdsFromListSP(ICEsIMEsStructureOne.listOrderedSPs),
+                        str(idx_StructureOne_MostUpstrSp),
+                        str(idx_StructureOne_MostDownstrSp),
+                        ICEsIMEsStructureTwo.internalIdentifier,
+                        hit.ListSPs.GetListProtIdsFromListSP(ICEsIMEsStructureTwo.listOrderedSPs),
+                        str(idx_StructureTwo_MostUpstrSp),
+                        str(idx_StructureTwo_MostDownstrSp)
+                        ))
+            if len(ICEsIMEsStructureTwo.findMostUpstrSpNotIntegr().setICEsIMEsStructureInConflict) == 0:
+                raise RuntimeError(
+                    "Error in IsThereAnIntegraseBetweenThoseTwoConjModule: ICEsIMEsStructureOne is upstream of ICEsIMEsStructureTwo but they share one or more SP (SP in conflict) and len(ICEsIMEsStructureTwo.findMostUpstrSpNotIntegr().setICEsIMEsStructureInConflict) == 0 ofICEsIMEsStructureOne = {} (list genes = {}) (idx_StructureOne_MostUpstrSp {} - idx_StructureOne_MostDownstrSp {}) and ICEsIMEsStructureTwo = {} (list genes = {}) (idx_StructureTwo_MostUpstrSp {} - idx_StructureTwo_MostDownstrSp {})".format(
+                        ICEsIMEsStructureOne.internalIdentifier,
+                        hit.ListSPs.GetListProtIdsFromListSP(ICEsIMEsStructureOne.listOrderedSPs),
+                        str(idx_StructureOne_MostUpstrSp),
+                        str(idx_StructureOne_MostDownstrSp),
+                        ICEsIMEsStructureTwo.internalIdentifier,
+                        hit.ListSPs.GetListProtIdsFromListSP(ICEsIMEsStructureTwo.listOrderedSPs),
+                        str(idx_StructureTwo_MostUpstrSp),
+                        str(idx_StructureTwo_MostDownstrSp)
+                        ))
+            return False
+        elif idx_StructureTwo_MostUpstrSp < idx_StructureOne_MostUpstrSp and idx_StructureTwo_MostDownstrSp >= idx_StructureOne_MostUpstrSp :
+            # ICEsIMEsStructureTwo is upstream of ICEsIMEsStructureOne but they share one or more SP (SP in conflict)
+            if len(ICEsIMEsStructureTwo.findMostDownstrSpNotIntegr().setICEsIMEsStructureInConflict) == 0:
+                raise RuntimeError(
+                    "Error in IsThereAnIntegraseBetweenThoseTwoConjModule: ICEsIMEsStructureTwo is upstream of ICEsIMEsStructureOne but they share one or more SP (SP in conflict) and len(ICEsIMEsStructureTwo.findMostDownstrSpNotIntegr().setICEsIMEsStructureInConflict) == 0 ofICEsIMEsStructureOne = {} (list genes = {}) (idx_StructureOne_MostUpstrSp {} - idx_StructureOne_MostDownstrSp {}) and ICEsIMEsStructureTwo = {} (list genes = {}) (idx_StructureTwo_MostUpstrSp {} - idx_StructureTwo_MostDownstrSp {})".format(
+                        ICEsIMEsStructureOne.internalIdentifier,
+                        hit.ListSPs.GetListProtIdsFromListSP(ICEsIMEsStructureOne.listOrderedSPs),
+                        str(idx_StructureOne_MostUpstrSp),
+                        str(idx_StructureOne_MostDownstrSp),
+                        ICEsIMEsStructureTwo.internalIdentifier,
+                        hit.ListSPs.GetListProtIdsFromListSP(ICEsIMEsStructureTwo.listOrderedSPs),
+                        str(idx_StructureTwo_MostUpstrSp),
+                        str(idx_StructureTwo_MostDownstrSp)
+                        ))
+            if len(ICEsIMEsStructureOne.findMostUpstrSpNotIntegr().setICEsIMEsStructureInConflict) == 0:
+                raise RuntimeError(
+                    "Error in IsThereAnIntegraseBetweenThoseTwoConjModule: ICEsIMEsStructureTwo is upstream of ICEsIMEsStructureOne but they share one or more SP (SP in conflict) and len(ICEsIMEsStructureOne.findMostUpstrSpNotIntegr().setICEsIMEsStructureInConflict) == 0 ofICEsIMEsStructureOne = {} (list genes = {}) (idx_StructureOne_MostUpstrSp {} - idx_StructureOne_MostDownstrSp {}) and ICEsIMEsStructureTwo = {} (list genes = {}) (idx_StructureTwo_MostUpstrSp {} - idx_StructureTwo_MostDownstrSp {})".format(
+                        ICEsIMEsStructureOne.internalIdentifier,
+                        hit.ListSPs.GetListProtIdsFromListSP(ICEsIMEsStructureOne.listOrderedSPs),
+                        str(idx_StructureOne_MostUpstrSp),
+                        str(idx_StructureOne_MostDownstrSp),
+                        ICEsIMEsStructureTwo.internalIdentifier,
+                        hit.ListSPs.GetListProtIdsFromListSP(ICEsIMEsStructureTwo.listOrderedSPs),
+                        str(idx_StructureTwo_MostUpstrSp),
+                        str(idx_StructureTwo_MostDownstrSp)
+                        ))
             return False
         elif idx_StructureOne_MostDownstrSp < idx_StructureTwo_MostUpstrSp :
             # ICEsIMEsStructureOne is upstream of ICEsIMEsStructureTwo
@@ -1734,11 +1880,13 @@ class ICEsIMEsStructure(BasicEMStructure):
             return False
         else :
             raise RuntimeError(
-                "Error in IsThereAnIntegraseBetweenThoseTwoConjModule: unrecognized positioning ofICEsIMEsStructureOne = {} (idx_StructureOne_MostUpstrSp {} - idx_StructureOne_MostDownstrSp {}) and ICEsIMEsStructureTwo = {} (idx_StructureTwo_MostUpstrSp {} - idx_StructureTwo_MostDownstrSp {})".format(
+                "Error in IsThereAnIntegraseBetweenThoseTwoConjModule: unrecognized positioning ofICEsIMEsStructureOne = {} (list genes = {}) (idx_StructureOne_MostUpstrSp {} - idx_StructureOne_MostDownstrSp {}) and ICEsIMEsStructureTwo = {} (list genes = {}) (idx_StructureTwo_MostUpstrSp {} - idx_StructureTwo_MostDownstrSp {})".format(
                     ICEsIMEsStructureOne.internalIdentifier,
+                    hit.ListSPs.GetListProtIdsFromListSP(ICEsIMEsStructureOne.listOrderedSPs),
                     str(idx_StructureOne_MostUpstrSp),
                     str(idx_StructureOne_MostDownstrSp),
                     ICEsIMEsStructureTwo.internalIdentifier,
+                    hit.ListSPs.GetListProtIdsFromListSP(ICEsIMEsStructureTwo.listOrderedSPs),
                     str(idx_StructureTwo_MostUpstrSp),
                     str(idx_StructureTwo_MostDownstrSp)
                     ))

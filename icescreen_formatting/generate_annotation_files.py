@@ -485,8 +485,8 @@ def make_element_features(CDS_dict, elm_info):
         return(None)
 
     # Get 1st SP's start index and last SP's end index to get range of element
-    element_start_idx = sp_feats[0].location.nofuzzy_start
-    element_end_idx = sp_feats[-1].location.nofuzzy_end # change here ?
+    element_start_idx = int(sp_feats[0].location.start) # sp_feats[0].location.nofuzzy_start
+    element_end_idx = int(sp_feats[-1].location.end) # sp_feats[-1].location.nofuzzy_end
 
     # Then create Bio.SeqFeature.FeatureLocation object
     element_location = FeatureLocation(element_start_idx,
@@ -651,8 +651,8 @@ def write_GFF3(listRecordsToWrite, outfile):
 
         for feat in myrecord.features:
             feat_type = feat.type
-            start = feat.location.nofuzzy_start + 1
-            end = feat.location.nofuzzy_end
+            start = int(feat.location.start) + 1 # feat.location.nofuzzy_start + 1
+            end = int(feat.location.end) # feat.location.nofuzzy_end
             score = "."
             strand = strand_dict[feat.location.strand]
 

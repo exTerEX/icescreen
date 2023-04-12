@@ -17,18 +17,19 @@ Mobilizable element (R+C with distance between consecutive SPs <= 14 CDS):	0
 Partial ICE (at least V):	1
 Other partial element (R+C, R+V, V+C with distance between consecutive SPs > 14 CDS):	0
 ## Composite elements
-Total nested elements (partial or complete):	4
-Host element:	2
-Guest element:	2
+Total nested elements (partial or complete):	2
+Host element:	1
+Guest element:	1
 Element that are both host and guest:	0
 
-##### Signature proteins #####
+##### Signature proteins (SPs) #####
 ## Total SPs detected
 Total SPs:	57
 Total Integrase:	22
 Total Relaxase:	15
 Total Coupling protein:	12
 Total VirB4:	8
+Fragmented SPs:	0
 ## Unassigned SPs
 Unassigned SPs:	8
 Unassigned Integrase:	7

@@ -22,13 +22,14 @@ Host element:	2
 Guest element:	3
 Element that are both host and guest:	0
 
-##### Signature proteins #####
+##### Signature proteins (SPs) #####
 ## Total SPs detected
 Total SPs:	69
 Total Integrase:	22
 Total Relaxase:	21
 Total Coupling protein:	14
 Total VirB4:	12
+Fragmented SPs:	0
 ## Unassigned SPs
 Unassigned SPs:	16
 Unassigned Integrase:	13

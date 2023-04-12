@@ -81,7 +81,8 @@ def determineIfResultSPFileHasMultipleGenomeAccesion(pathInputFile):
             countIterRow += 1
 
     if len(dictGenomeAccesion) == 0:
-        raise RuntimeError('determineIfResultSPFileHasMultipleGenomeAccesion error: len(dictGenomeAccesion) == 0 for file {}'.format(str(pathInputFile)))
+        # raise RuntimeError('determineIfResultSPFileHasMultipleGenomeAccesion error: len(dictGenomeAccesion) == 0 for file {}'.format(str(pathInputFile)))
+        return False # no Genome Accesion means no hits found
     elif len(dictGenomeAccesion) == 1:
         return False
     else:

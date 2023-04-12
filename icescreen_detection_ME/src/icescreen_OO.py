@@ -42,10 +42,9 @@ import commonMethods
 setIntegraseTyrNames = {"Tyrosine integrase"}
 # setIntegraseSerNames = {"IntSer", "SerInt"}
 setIntegraseSerNames = {"Serine integrase"}
+setIntegraseDDENames = {"DDE transposase"}
 setIntegraseNames = set()
-setIntegraseNames.update(setIntegraseTyrNames, setIntegraseSerNames)
-# setIntegraseNames.add("DDE")
-setIntegraseNames.add("DDE transposase")
+setIntegraseNames.update(setIntegraseTyrNames, setIntegraseSerNames, setIntegraseDDENames)
 # regexSplitBlastFamilyIntoTokens = '-|\||;|; |\n|, |,' # not multi familly in file detectedSP yet
 segmentIdx2startGenomicRegion = {}
 segmentIdx2stopGenomicRegion = {}
@@ -108,11 +107,10 @@ def printAllICEsIMEsStructureToInputFile(
     dictGenomeAccnum2totalNumberUnaffectedCoupling = {}
     dictGenomeAccnum2totalNumberVirb4 = {}
     dictGenomeAccnum2totalNumberUnaffectedVirb4 = {}
-
+    dictGenomeAccnum2totalsetFragmentedSP = {}
     dictLocusTagSure2ICEIMEInternalId = {}
     dictLocusTagNotSure2ICEIMEInternalId = {}
     dictLocusTag2segmentNumber = {}
-
 
     for idx, currListAllICEsIMEsStructure in enumerate(listOfListAllICEsIMEsStructure):
         for currICEIMEStructure in currListAllICEsIMEsStructure:
@@ -125,16 +123,16 @@ def printAllICEsIMEsStructureToInputFile(
                     setInternalId = set()
                     setInternalId.add(currICEIMEStructure.internalIdentifier)
                     dictLocusTagSure2ICEIMEInternalId[currSP.locusTag] = setInternalId
+                if currSP.genomeAccession in dictGenomeAccnum2totalsetFragmentedSP:
+                    setFragmentedSPIT = dictGenomeAccnum2totalsetFragmentedSP[currSP.genomeAccession]
+                    if len(currSP.listSiblingFragmentedSP) > 0:
+                        setFragmentedSPIT.add(currSP)
+                else :
+                    setFragmentedSPIT = set()
+                    if len(currSP.listSiblingFragmentedSP) > 0:
+                        setFragmentedSPIT.add(currSP)
+                    dictGenomeAccnum2totalsetFragmentedSP[currSP.genomeAccession] = setFragmentedSPIT
 
-            # for currSPLocusTags in currICEIMEStructure.setSPConjModuleToManuallyCheck:
-            #     dictLocusTag2segmentNumber[currSPLocusTags] = idx + 1
-            #     if currSPLocusTags in dictLocusTagNotSure2ICEIMEInternalId:
-            #         setInternalId = dictLocusTagNotSure2ICEIMEInternalId[currSPLocusTags]
-            #         setInternalId.add(currICEIMEStructure.internalIdentifier)
-            #     else:
-            #         setInternalId = set()
-            #         setInternalId.add(currICEIMEStructure.internalIdentifier)
-            #         dictLocusTagNotSure2ICEIMEInternalId[currSPLocusTags] = setInternalId
             for currSPConjModuleToManuallyCheckIT in currICEIMEStructure.setSPConjModuleToManuallyCheck:
                 dictLocusTag2segmentNumber[currSPConjModuleToManuallyCheckIT.locusTag] = idx + 1
                 if currSPConjModuleToManuallyCheckIT.locusTag in dictLocusTagNotSure2ICEIMEInternalId:
@@ -144,15 +142,17 @@ def printAllICEsIMEsStructureToInputFile(
                     setInternalId = set()
                     setInternalId.add(currICEIMEStructure.internalIdentifier)
                     dictLocusTagNotSure2ICEIMEInternalId[currSPConjModuleToManuallyCheckIT.locusTag] = setInternalId
-            # for currSPLocusTags in currICEIMEStructure.setIntegraseToManuallyCheck:
-            #     dictLocusTag2segmentNumber[currSPLocusTags] = idx + 1
-            #     if currSPLocusTags in dictLocusTagNotSure2ICEIMEInternalId:
-            #         setInternalId = dictLocusTagNotSure2ICEIMEInternalId[currSPLocusTags]
-            #         setInternalId.add(currICEIMEStructure.internalIdentifier)
-            #     else:
-            #         setInternalId = set()
-            #         setInternalId.add(currICEIMEStructure.internalIdentifier)
-            #         dictLocusTagNotSure2ICEIMEInternalId[currSPLocusTags] = setInternalId
+                if currSPConjModuleToManuallyCheckIT.genomeAccession in dictGenomeAccnum2totalsetFragmentedSP:
+                    setFragmentedSPIT = dictGenomeAccnum2totalsetFragmentedSP[currSPConjModuleToManuallyCheckIT.genomeAccession]
+                    if len(currSPConjModuleToManuallyCheckIT.listSiblingFragmentedSP) > 0:
+                        setFragmentedSPIT.add(currSPConjModuleToManuallyCheckIT)
+                else :
+                    setFragmentedSPIT = set()
+                    if len(currSPConjModuleToManuallyCheckIT.listSiblingFragmentedSP) > 0:
+                        setFragmentedSPIT.add(currSPConjModuleToManuallyCheckIT)
+                    dictGenomeAccnum2totalsetFragmentedSP[currSPConjModuleToManuallyCheckIT.genomeAccession] = setFragmentedSPIT
+
+                    
             for currSPIntegraseToManuallyCheckIT in currICEIMEStructure.setIntegraseToManuallyCheck:
                 dictLocusTag2segmentNumber[currSPIntegraseToManuallyCheckIT.locusTag] = idx + 1
                 if currSPIntegraseToManuallyCheckIT.locusTag in dictLocusTagNotSure2ICEIMEInternalId:
@@ -162,6 +162,15 @@ def printAllICEsIMEsStructureToInputFile(
                     setInternalId = set()
                     setInternalId.add(currICEIMEStructure.internalIdentifier)
                     dictLocusTagNotSure2ICEIMEInternalId[currSPIntegraseToManuallyCheckIT.locusTag] = setInternalId
+                if currSPIntegraseToManuallyCheckIT.genomeAccession in dictGenomeAccnum2totalsetFragmentedSP:
+                    setFragmentedSPIT = dictGenomeAccnum2totalsetFragmentedSP[currSPIntegraseToManuallyCheckIT.genomeAccession]
+                    if len(currSPIntegraseToManuallyCheckIT.listSiblingFragmentedSP) > 0:
+                        setFragmentedSPIT.add(currSPIntegraseToManuallyCheckIT)
+                else :
+                    setFragmentedSPIT = set()
+                    if len(currSPIntegraseToManuallyCheckIT.listSiblingFragmentedSP) > 0:
+                        setFragmentedSPIT.add(currSPIntegraseToManuallyCheckIT)
+                    dictGenomeAccnum2totalsetFragmentedSP[currSPIntegraseToManuallyCheckIT.genomeAccession] = setFragmentedSPIT
 
 
 
@@ -352,7 +361,7 @@ def printAllICEsIMEsStructureToInputFile(
                     raise RuntimeError(
                             'printAllICEsIMEsStructureToInputFile error: unrecognized SPType {} for LocusTag {}'.format(
                                     currSPType, currSPLocusTag))
-
+                
             countIterRow += 1
 
     csvfile.close()
@@ -374,7 +383,9 @@ def printAllICEsIMEsStructureToInputFile(
         dictGenomeAccnum2totalNumberCoupling,
         dictGenomeAccnum2totalNumberUnaffectedCoupling,
         dictGenomeAccnum2totalNumberVirb4,
-        dictGenomeAccnum2totalNumberUnaffectedVirb4)
+        dictGenomeAccnum2totalNumberUnaffectedVirb4,
+        dictGenomeAccnum2totalsetFragmentedSP
+        )
 
 
 
@@ -997,115 +1008,127 @@ def main():
     # for currSP in SPsWholeGenome.list:
     #    print("{}".format(currSP.GetObjectAsJson()))
 
-    listOfListOfColocalizedSPs = SPsWholeGenome.splitListOrderedSPsByColocalizion(maxNumberCDSForSplitSPsByColocalizion)
-    listOfListAllICEsIMEsStructure = []  # [ICEsIMEsStructure] the outer broader list correspond to segments, while each inner sub-list correspond to ICEsIMEsStructure within the segments
-    listOfListSPsLonelyIntegrases = []  # [SP] the outer broader list correspond to segments, while each inner sub-list correspond to integrase that are not assigned to any ICE or IME structures
-    locusTagIntegrase2Comment = {}  # locusTagIntegrase2Comment is a dictionary used to store the comments that will be visible in the output files for each integrase
-    locusTagFinalize2Comment = {}  # locusTagFinalize2Comment is a dictionary generated at the last step of the algorithm and  used to store the comments that will be visible in the output files for each SP
-    locusTagMerge2Comment = {}  # locusTagMerge2Comment is a dictionary generated at the merge step to find nested structures and used to store the comments that will be visible in the output files for each SP
+    listOfListOfColocalizedSPs = SPsWholeGenome.splitListOrderedSPs_colocalizeByMaxNumberCDS(maxNumberCDSForSplitSPsByColocalizion)
+    listOfListAllICEsIMEsStructure = [] # [ICEsIMEsStructure] the outer broader list correspond to segments, while each inner sub-list correspond to ICEsIMEsStructure within the segments
+    listOfListSPsLonelyIntegrases = [] # [SP] the outer broader list correspond to segments, while each inner sub-list correspond to integrase that are not assigned to any ICE or IME structures
+    locusTagIntegrase2Comment = {} # locusTagIntegrase2Comment is a dictionary used to store the comments that will be visible in the output files for each integrase
+    locusTagFinalize2Comment = {} # locusTagFinalize2Comment is a dictionary generated at the last step of the algorithm and  used to store the comments that will be visible in the output files for each SP
+    locusTagMerge2Comment = {} # locusTagMerge2Comment is a dictionary generated at the merge step to find nested structures and used to store the comments that will be visible in the output files for each SP
 
-    # The following algorithm generates listOfListAllICEsIMEsStructure and listOfListSPsLonelyIntegrases from listOfListOfColocalizedSPs
+    # make ListOfSubsegmentListColocalizedSPs accordingly to FragmentedSPs
+    listOfSegmentListOfSubsegmentListColocalizedSPs_afterSecondSplitByFragmentedSPs = []
     for currListSPs in listOfListOfColocalizedSPs:
-        # for testing
-        # print("--------------------- Colocalized: -------------------")
-        # for currSP in currListSPs.list:
-        #    print("{}".format(currSP.GetObjectAsJson()))
         currListSPs.fillUpIdxOfSPsInListSP()
-
-        listSameFamilyMergeStructures = []  # listSameFamilyMergeStructures contains information about the SPs that belong to the same family and that should be grouped in priority.
-        SPsInSameFamilyMergeStructures2SameFamilyMergeStructure = {}  # key = SP, value = EMStructureMerged
-        if useFamilyInfoToTryToResolveSPModuleConjConflict == "YES":
-            (listSameFamilyMergeStructures,
-             SPsInSameFamilyMergeStructures2SameFamilyMergeStructure) = rulesMergeICEIMEStructures.buildSameFamilyMergeStructures(
-                     currListSPs.list,
-                     locusTagMerge2Comment,
-                     groupListSPintoICEsIMEsUsingFamilyInfo)
-
-        # seedICEsIMEsStructure is a method that initiate anchors from subsequent SPs of the conjugation module. Anchors will eventually be finalized as ICEs and IME structures.
-        listICEsIMEsStructures = currListSPs.seedICEsIMEsStructure(
-                groupListSPintoICEsIMEsUsingFamilyInfo,
-                useFamilyInfoToTryToResolveSPModuleConjConflict,
-                useDistanceCDSInfoToTryToResolveSPModuleConjConflict,
-                allowAdjacentIntegraseOnlyForSer,
-                locusTagIntegrase2Comment,
-                SPsInSameFamilyMergeStructures2SameFamilyMergeStructure,
-                listSameFamilyMergeStructures,
-                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance)
-
-        # checkForObviousIntegraseUpstreamAndDownstreamToAdd
-        rulesAddIntegrases.addObviousIntegraseUpstreamAndDownstream_priorMerging(
-            listICEsIMEsStructures,
-            currListSPs.list,
+        currListSPs.searchForFragmentedSPs(
+            #currListSPs.list,
+            locusTagMerge2Comment,
             locusTagIntegrase2Comment,
+            groupListSPintoICEsIMEsUsingFamilyInfo,
             useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
             useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
-            allowAdjacentIntegraseOnlyForSer
-        )
+            maxOverlappingAliLenghtFragmentedSPs,
+            maxCDSDistanceToMergeFragmentedSPs
+            )
+        listOfListOfColocalizedSPs_newTakingIntoConsiderationSplitByFragmentedSPs = currListSPs.splitListOrderedSPs_colocalizeByFragmentedSPs(locusTagMerge2Comment)
+        listOfSegmentListOfSubsegmentListColocalizedSPs_afterSecondSplitByFragmentedSPs.append(listOfListOfColocalizedSPs_newTakingIntoConsiderationSplitByFragmentedSPs)
 
-        rulesMergeICEIMEStructures.tryMergeFragmentedSPs(
+
+    # The following algorithm generates listOfListAllICEsIMEsStructure and listOfListSPsLonelyIntegrases from listOfListOfColocalizedSPs
+    #OLD for currListSPs in listOfListOfColocalizedSPs:
+    for segmentListOfSubsegmentListColocalizedSPs_afterSecondSplitByFragmentedSPsIT in listOfSegmentListOfSubsegmentListColocalizedSPs_afterSecondSplitByFragmentedSPs: # search ICEIMEStrucutre in subsegments
+
+        tmpBuildUp_listICEsIMEsStructures = []
+        tmpBuildUp_currListSPs = hit.ListSPs()
+
+        for currListSPs in segmentListOfSubsegmentListColocalizedSPs_afterSecondSplitByFragmentedSPsIT:
+
+            currListSPs.fillUpIdxOfSPsInListSP()
+
+            listSameFamilyMergeStructures = []  # listSameFamilyMergeStructures contains information about the SPs that belong to the same family and that should be grouped in priority.
+            SPsInSameFamilyMergeStructures2SameFamilyMergeStructure = {}  # key = SP, value = EMStructureMerged
+            if useFamilyInfoToTryToResolveSPModuleConjConflict == "YES":
+                (listSameFamilyMergeStructures,
+                SPsInSameFamilyMergeStructures2SameFamilyMergeStructure) = rulesMergeICEIMEStructures.buildSameFamilyMergeStructures(
+                        currListSPs.list,
+                        locusTagMerge2Comment,
+                        groupListSPintoICEsIMEsUsingFamilyInfo)
+
+
+            # seedICEsIMEsStructure is a method that initiate anchors from subsequent SPs of the conjugation module. Anchors will eventually be finalized as ICEs and IME structures.
+            listICEsIMEsStructures = currListSPs.seedICEsIMEsStructure(
+                    groupListSPintoICEsIMEsUsingFamilyInfo,
+                    useFamilyInfoToTryToResolveSPModuleConjConflict,
+                    useDistanceCDSInfoToTryToResolveSPModuleConjConflict,
+                    allowAdjacentIntegraseOnlyForSer,
+                    locusTagIntegrase2Comment,
+                    SPsInSameFamilyMergeStructures2SameFamilyMergeStructure,
+                    listSameFamilyMergeStructures,
+                    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
+                    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance)
+
+            # integrase can now be SP.listSiblingFragmentedSP too
+            # checkForObviousIntegraseUpstreamAndDownstreamToAdd
+            rulesAddIntegrases.addObviousIntegraseUpstreamAndDownstream_priorMerging(
                 listICEsIMEsStructures,
-                locusTagMerge2Comment,
+                currListSPs.list,
                 locusTagIntegrase2Comment,
-                groupListSPintoICEsIMEsUsingFamilyInfo,
                 useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
                 useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
-                maxOverlappingAliLenghtFragmentedSPs,
-                maxCDSDistanceToMergeFragmentedSPs
-                )
-# - improvment to do : deteccte SP fragmentées. Test 1 segment 16 : WP_158396091.1 should be merged with WP_158396083.1
-# Blast_ali_start_Query_blast	Blast_ali_end_Query_blast
-# WP_158396083.1 : 1.0	279.0
-# WP_158396091.1 : 251.0	432.0
-# maxOverlappingAliLenghtFragmentedSPs = 40
-# same protein type
-# maxCDSDistanceToMergeFragmentedSPs = 150
-# compatible IME_superfamily_of_most_similar_ref_SP and ICE_superfamily_of_most_similar_ref_SP
-# if relaxase : same Relaxase_family_domain_of_most_similar_ref_SP
+                allowAdjacentIntegraseOnlyForSer
+            )
+
+            # tryMergeSameFamilyStructures merge distant anchors of SPs of the conjugation module that are of the same family
+            rulesMergeICEIMEStructures.tryMergeSameFamilyStructures(
+                    listICEsIMEsStructures,
+                    listSameFamilyMergeStructures,
+                    groupListSPintoICEsIMEsUsingFamilyInfo,
+                    locusTagMerge2Comment,
+                    locusTagIntegrase2Comment,
+                    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
+                    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance)
+
+            # tryMergeSameFamilyStructures merge distant anchors of SPs of the conjugation module that are not of the same family but compatible
+            rulesMergeICEIMEStructures.tryMergeNestedICEsIMEsStructures(
+                    listICEsIMEsStructures,
+                    maxNumberCDSForFilterIMESize,
+                    groupListSPintoICEsIMEsUsingFamilyInfo,
+                    locusTagMerge2Comment,
+                    locusTagIntegrase2Comment,
+                    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
+                    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance)
+
+            for currICEsIMEsStructure in listICEsIMEsStructures:
+                # tryResolveSPsInConflictAfterMergeEvents solves SPs that were attributed to multiple anchors initially and whose at least 1 anchor was involved in a merge with another anchor.
+                currICEsIMEsStructure.tryResolveSPsInConflictAfterMergeEvents()
+
+            # integrase can now be SP.listSiblingFragmentedSP too
+            rulesAddIntegrases.addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure(
+                    currListSPs.list,
+                    listICEsIMEsStructures,
+                    maxNumberCDSForFilterIMESize,
+                    groupListSPintoICEsIMEsUsingFamilyInfo,
+                    set(),
+                    0,
+                    allowAdjacentIntegraseOnlyForSer,
+                    locusTagIntegrase2Comment,
+                    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
+                    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance)
+            
+            tmpBuildUp_listICEsIMEsStructures.extend(listICEsIMEsStructures)
+            tmpBuildUp_currListSPs.list.extend(currListSPs.list)
 
 
-        # tryMergeSameFamilyStructures merge distant anchors of SPs of the conjugation module that are of the same family
-        rulesMergeICEIMEStructures.tryMergeSameFamilyStructures(
-                listICEsIMEsStructures,
-                listSameFamilyMergeStructures,
-                groupListSPintoICEsIMEsUsingFamilyInfo,
-                locusTagMerge2Comment,
-                locusTagIntegrase2Comment,
-                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance)
-
-        # tryMergeSameFamilyStructures merge distant anchors of SPs of the conjugation module that are not of the same family but compatible
-        rulesMergeICEIMEStructures.tryMergeNestedICEsIMEsStructures(
-                listICEsIMEsStructures,
-                maxNumberCDSForFilterIMESize,
-                groupListSPintoICEsIMEsUsingFamilyInfo,
-                locusTagMerge2Comment,
-                locusTagIntegrase2Comment,
-                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance)
-
-        for currICEsIMEsStructure in listICEsIMEsStructures:
-            # tryResolveSPsInConflictAfterMergeEvents solves SPs that were attributed to multiple anchors initially and whose at least 1 anchor was involved in a merge with another anchor.
-            currICEsIMEsStructure.tryResolveSPsInConflictAfterMergeEvents()
-
-        rulesAddIntegrases.addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure(
-                currListSPs.list,
-                listICEsIMEsStructures,
-                maxNumberCDSForFilterIMESize,
-                groupListSPintoICEsIMEsUsingFamilyInfo,
-                set(),
-                0,
-                allowAdjacentIntegraseOnlyForSer,
-                locusTagIntegrase2Comment,
-                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance)
+        # reattach all subsegment into one listICEsIMEsStructures as well as all SP in new all containing currListSPs
+        tmpBuildUp_listICEsIMEsStructures = sorted(tmpBuildUp_listICEsIMEsStructures, key=lambda x: x.listOrderedSPs[0].start, reverse=False)
+        tmpBuildUp_currListSPs.sortListSPsByStart()
+        tmpBuildUp_currListSPs.fillUpIdxOfSPsInListSP()
 
         dictIntegraseLocusTagFoundInStructure = {}  # dictIntegraseLocusTagFoundInStructure is used so to differenciate integrase that are assigned to structures and those who are not.
-        for currICEsIMEsStructure in listICEsIMEsStructures:
+        for currICEsIMEsStructure in tmpBuildUp_listICEsIMEsStructures:
             if currICEsIMEsStructure.delMerging_idxListUpstreamStructure == -1:
                 # finalizeICEIMEStruct assigns the type of the ICE or IME and check for potential errors in the structures
                 currICEsIMEsStructure.finalizeICEIMEStruct(
-                        listICEsIMEsStructures,
+                        tmpBuildUp_listICEsIMEsStructures,
                         maxNumberCDSForFilterIMESize,
                         moveSingleSPToCheck,
                         locusTagFinalize2Comment)
@@ -1117,18 +1140,18 @@ def main():
                 # print("{}".format(currICEsIMEsStructure.GetObjectAsJson(True, "")))
 
         # del if delMerging_idxListUpstreamStructure
-        for i in range(len(listICEsIMEsStructures) - 1, -1, -1):
-            currICEsIMEsStructure = listICEsIMEsStructures[i]
+        for i in range(len(tmpBuildUp_listICEsIMEsStructures) - 1, -1, -1):
+            currICEsIMEsStructure = tmpBuildUp_listICEsIMEsStructures[i]
             if currICEsIMEsStructure.delMerging_idxListUpstreamStructure >= 0:
-                del listICEsIMEsStructures[i]
+                del tmpBuildUp_listICEsIMEsStructures[i]
         # add to listOfListAllICEsIMEsStructure
-        if len(listICEsIMEsStructures) >= 1:
-            segmentIdx2startGenomicRegion[len(listOfListAllICEsIMEsStructure)] = currListSPs.list[0].start
-            segmentIdx2stopGenomicRegion[len(listOfListAllICEsIMEsStructure)] = currListSPs.list[-1].stop
-            listOfListAllICEsIMEsStructure.append(listICEsIMEsStructures)
+        if len(tmpBuildUp_listICEsIMEsStructures) >= 1:
+            segmentIdx2startGenomicRegion[len(listOfListAllICEsIMEsStructure)] = tmpBuildUp_currListSPs.list[0].start
+            segmentIdx2stopGenomicRegion[len(listOfListAllICEsIMEsStructure)] = tmpBuildUp_currListSPs.list[-1].stop
+            listOfListAllICEsIMEsStructure.append(tmpBuildUp_listICEsIMEsStructures)
             # find integrases not found in structure
             listIntegraseNotFoundInStructureSegment = []
-            for currSP in currListSPs.list:
+            for currSP in tmpBuildUp_currListSPs.list:
                 if (currSP.SPType in setIntegraseNames):  # currSP.SPType == "IntTyr" or currSP.SPType == "IntSer" or currSP.SPType == "DDE"
                     if currSP.locusTag in dictIntegraseLocusTagFoundInStructure:
                         pass
@@ -1137,9 +1160,8 @@ def main():
                         # dictIntegraseNotFoundInStructure[currSP] = 1
             listOfListSPsLonelyIntegrases.append(listIntegraseNotFoundInStructureSegment)
         else:
-            listOfListAllICEsIMEsStructure.append(listICEsIMEsStructures)
-            listOfListSPsLonelyIntegrases.append(currListSPs.list)
-
+            listOfListAllICEsIMEsStructure.append(tmpBuildUp_listICEsIMEsStructures)
+            listOfListSPsLonelyIntegrases.append(tmpBuildUp_currListSPs.list)
 
     dictIMEICEID2humanReadableIMEICEIIdentifier = createDictIMEICEID2humanReadableIMEICEIIdentifier(listOfListAllICEsIMEsStructure)
 
@@ -1168,7 +1190,9 @@ def main():
     dictGenomeAccnum2totalNumberCoupling,
     dictGenomeAccnum2totalNumberUnaffectedCoupling,
     dictGenomeAccnum2totalNumberVirb4,
-    dictGenomeAccnum2totalNumberUnaffectedVirb4) = printAllICEsIMEsStructureToInputFile(
+    dictGenomeAccnum2totalNumberUnaffectedVirb4,
+    dictGenomeAccnum2totalsetFragmentedSP
+    ) = printAllICEsIMEsStructureToInputFile(
         listOfListAllICEsIMEsStructure,
         listOfListSPsLonelyIntegrases,
         pathInputFile,
@@ -1206,11 +1230,11 @@ def main():
         dictGenomeAccnum2totalNumberUnaffectedCoupling,
         dictGenomeAccnum2totalNumberVirb4,
         dictGenomeAccnum2totalNumberUnaffectedVirb4,
+        dictGenomeAccnum2totalsetFragmentedSP,
         listOfListAllICEsIMEsStructure,
         maxNumberCDSForSplitSPsByColocalizion,
         maxNumberCDSForFilterIMESize,
         summaryFile)
-
 
     summaryFile.close()
 

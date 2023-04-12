@@ -226,135 +226,134 @@ def isIntegraseCorrectlyOrientedForICEsIMEsStructure(
     return valueToReturn
 
 
-
 def addObviousIntegraseUpstreamAndDownstream_priorMerging(
-            listICEsIMEsStructures,
-            currListSPs,
-            locusTagIntegrase2Comment,
-            useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-            useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
-            allowAdjacentIntegraseOnlyForSer
-        ):
+        listICEsIMEsStructures,
+        currListSPs,
+        locusTagIntegrase2Comment,
+        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
+        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
+        allowAdjacentIntegraseOnlyForSer
+    ):
 
-        global dictIntegraseAttributedByCheckForObviousIntegraseUpstreamAndDownstreamToAdd
-        for idxCurrICEsIMEsStructure, currICEsIMEsStructure in enumerate(listICEsIMEsStructures):
+    global dictIntegraseAttributedByCheckForObviousIntegraseUpstreamAndDownstreamToAdd
+    for idxCurrICEsIMEsStructure, currICEsIMEsStructure in enumerate(listICEsIMEsStructures):
 
-            #print("NEW addObviousIntegraseUpstreamAndDownstream_priorMerging for currICEsIMEsStructure = {} ({})".format(currICEsIMEsStructure.internalIdentifier, hit.ListSPs.GetListProtIdsFromListSP(currICEsIMEsStructure.listOrderedSPs)))
+        #print("NEW addObviousIntegraseUpstreamAndDownstream_priorMerging for currICEsIMEsStructure = {} ({})".format(currICEsIMEsStructure.internalIdentifier, hit.ListSPs.GetListProtIdsFromListSP(currICEsIMEsStructure.listOrderedSPs)))
 
-            upstreamICEsIMEsStructure = None
-            downstreamICEsIMEsStructure = None
-            if idxCurrICEsIMEsStructure > 0:
-                upstreamICEsIMEsStructure = listICEsIMEsStructures[idxCurrICEsIMEsStructure-1]
-            if idxCurrICEsIMEsStructure < (len(listICEsIMEsStructures) - 1):
-                downstreamICEsIMEsStructure  = listICEsIMEsStructures[idxCurrICEsIMEsStructure+1]
+        upstreamICEsIMEsStructure = None
+        downstreamICEsIMEsStructure = None
+        if idxCurrICEsIMEsStructure > 0:
+            upstreamICEsIMEsStructure = listICEsIMEsStructures[idxCurrICEsIMEsStructure-1]
+        if idxCurrICEsIMEsStructure < (len(listICEsIMEsStructures) - 1):
+            downstreamICEsIMEsStructure  = listICEsIMEsStructures[idxCurrICEsIMEsStructure+1]
 
-            idxlastSP_currICEsIMEsStructure = hit.ListSPs.GetIdxSPInList(currICEsIMEsStructure.listOrderedSPs[len(currICEsIMEsStructure.listOrderedSPs)-1], currListSPs)
-            (listUpstreamObviousIntegrase_currICEsIMEsStructure, listDownstreamObviousIntegrase_currICEsIMEsStructure) = checkForObviousIntegraseUpstreamAndDownstreamToAdd(
-                    currICEsIMEsStructure,
-                    currListSPs,
-                    idxlastSP_currICEsIMEsStructure,
-                    allowAdjacentIntegraseOnlyForSer,
-                    locusTagIntegrase2Comment
-                    )
+        idxlastSP_currICEsIMEsStructure = hit.ListSPs.GetIdxSPInList(currICEsIMEsStructure.listOrderedSPs[len(currICEsIMEsStructure.listOrderedSPs)-1], currListSPs)
+        (listUpstreamObviousIntegrase_currICEsIMEsStructure, listDownstreamObviousIntegrase_currICEsIMEsStructure) = checkForObviousIntegraseUpstreamAndDownstreamToAdd(
+                currICEsIMEsStructure,
+                currListSPs,
+                idxlastSP_currICEsIMEsStructure,
+                allowAdjacentIntegraseOnlyForSer,
+                locusTagIntegrase2Comment
+                )
 
-            listUpstreamObviousIntegrase_upstreamICEsIMEsStructure = None
-            listDownstreamObviousIntegrase_upstreamICEsIMEsStructure = None
-            if upstreamICEsIMEsStructure is not None:
-                idxlastSP_upstreamICEsIMEsStructure = hit.ListSPs.GetIdxSPInList(upstreamICEsIMEsStructure.listOrderedSPs[len(upstreamICEsIMEsStructure.listOrderedSPs)-1], currListSPs)
-                (listUpstreamObviousIntegrase_upstreamICEsIMEsStructure, listDownstreamObviousIntegrase_upstreamICEsIMEsStructure) = checkForObviousIntegraseUpstreamAndDownstreamToAdd(
-                    upstreamICEsIMEsStructure,
-                    currListSPs,
-                    idxlastSP_upstreamICEsIMEsStructure,
-                    allowAdjacentIntegraseOnlyForSer,
-                    locusTagIntegrase2Comment
-                    )
+        listUpstreamObviousIntegrase_upstreamICEsIMEsStructure = None
+        listDownstreamObviousIntegrase_upstreamICEsIMEsStructure = None
+        if upstreamICEsIMEsStructure is not None:
+            idxlastSP_upstreamICEsIMEsStructure = hit.ListSPs.GetIdxSPInList(upstreamICEsIMEsStructure.listOrderedSPs[len(upstreamICEsIMEsStructure.listOrderedSPs)-1], currListSPs)
+            (listUpstreamObviousIntegrase_upstreamICEsIMEsStructure, listDownstreamObviousIntegrase_upstreamICEsIMEsStructure) = checkForObviousIntegraseUpstreamAndDownstreamToAdd(
+                upstreamICEsIMEsStructure,
+                currListSPs,
+                idxlastSP_upstreamICEsIMEsStructure,
+                allowAdjacentIntegraseOnlyForSer,
+                locusTagIntegrase2Comment
+                )
 
-            listUpstreamObviousIntegrase_downstreamICEsIMEsStructure = None
-            listDownstreamObviousIntegrase_downstreamICEsIMEsStructure = None
-            if downstreamICEsIMEsStructure is not None:
-                idxlastSP_downstreamICEsIMEsStructure = hit.ListSPs.GetIdxSPInList(downstreamICEsIMEsStructure.listOrderedSPs[len(downstreamICEsIMEsStructure.listOrderedSPs)-1], currListSPs)
-                (listUpstreamObviousIntegrase_downstreamICEsIMEsStructure, listDownstreamObviousIntegrase_downstreamICEsIMEsStructure) = checkForObviousIntegraseUpstreamAndDownstreamToAdd(
-                    downstreamICEsIMEsStructure,
-                    currListSPs,
-                    idxlastSP_downstreamICEsIMEsStructure,
-                    allowAdjacentIntegraseOnlyForSer,
-                    locusTagIntegrase2Comment
-                    )
+        listUpstreamObviousIntegrase_downstreamICEsIMEsStructure = None
+        listDownstreamObviousIntegrase_downstreamICEsIMEsStructure = None
+        if downstreamICEsIMEsStructure is not None:
+            idxlastSP_downstreamICEsIMEsStructure = hit.ListSPs.GetIdxSPInList(downstreamICEsIMEsStructure.listOrderedSPs[len(downstreamICEsIMEsStructure.listOrderedSPs)-1], currListSPs)
+            (listUpstreamObviousIntegrase_downstreamICEsIMEsStructure, listDownstreamObviousIntegrase_downstreamICEsIMEsStructure) = checkForObviousIntegraseUpstreamAndDownstreamToAdd(
+                downstreamICEsIMEsStructure,
+                currListSPs,
+                idxlastSP_downstreamICEsIMEsStructure,
+                allowAdjacentIntegraseOnlyForSer,
+                locusTagIntegrase2Comment
+                )
 
-            if len(listUpstreamObviousIntegrase_currICEsIMEsStructure) > 0 and len(listDownstreamObviousIntegrase_currICEsIMEsStructure) > 0 :
-                # no obvious integrase as both upstream and downstream
-                pass
-            elif len(listUpstreamObviousIntegrase_currICEsIMEsStructure) > 0:
-                setSPToRemove = set()
-                for currSp in listUpstreamObviousIntegrase_currICEsIMEsStructure:
-                    # if upstream structure shares also this obvious integrase, do not take it into account
-                    if listDownstreamObviousIntegrase_upstreamICEsIMEsStructure is not None and len(listDownstreamObviousIntegrase_upstreamICEsIMEsStructure) > 0 :
-                        if currSp in listDownstreamObviousIntegrase_upstreamICEsIMEsStructure :
-                            # upstream structure shares also this obvious integrase, do not take it into account
-                            setSPToRemove.add(currSp)
+        if len(listUpstreamObviousIntegrase_currICEsIMEsStructure) > 0 and len(listDownstreamObviousIntegrase_currICEsIMEsStructure) > 0 :
+            # no obvious integrase as both upstream and downstream
+            pass
+        elif len(listUpstreamObviousIntegrase_currICEsIMEsStructure) > 0:
+            setSPToRemove = set()
+            for currSp in listUpstreamObviousIntegrase_currICEsIMEsStructure:
+                # if upstream structure shares also this obvious integrase, do not take it into account
+                if listDownstreamObviousIntegrase_upstreamICEsIMEsStructure is not None and len(listDownstreamObviousIntegrase_upstreamICEsIMEsStructure) > 0 :
+                    if currSp in listDownstreamObviousIntegrase_upstreamICEsIMEsStructure :
+                        # upstream structure shares also this obvious integrase, do not take it into account
+                        setSPToRemove.add(currSp)
 
-                # check if downstream structure has no integrase at all around it, if so this structure could be a nested structure between the module conj and integrase of the structure downstream, do not take it into account
-                if downstreamICEsIMEsStructure :
-                    if not listUpstreamObviousIntegrase_downstreamICEsIMEsStructure and not listDownstreamObviousIntegrase_downstreamICEsIMEsStructure :
-                        for currSp in listUpstreamObviousIntegrase_currICEsIMEsStructure:
-                            setSPToRemove.add(currSp)
-                            # strCommentIT = "Upstream integrase {} was not associated to the structure {} pre-merging because there is no integrase around the downstream structure {}, therefore there is a possibility that the structure {} is nested between the conj module of structure {} and the integrase {}. ".format(
-                            #         currSp.locusTag, currICEsIMEsStructure.internalIdentifier, downstreamICEsIMEsStructure.internalIdentifier, currICEsIMEsStructure.internalIdentifier, downstreamICEsIMEsStructure.internalIdentifier, currSp.locusTag)
-                            # if strCommentIT not in currICEsIMEsStructure.comment:
-                            #     currICEsIMEsStructure.comment += strCommentIT
-                            # icescreen_OO.addCommentToLocusTag2Comment(currSp.locusTag, strCommentIT, locusTagIntegrase2Comment)
+            # check if downstream structure has no integrase at all around it, if so this structure could be a nested structure between the module conj and integrase of the structure downstream, do not take it into account
+            if downstreamICEsIMEsStructure :
+                if not listUpstreamObviousIntegrase_downstreamICEsIMEsStructure and not listDownstreamObviousIntegrase_downstreamICEsIMEsStructure :
+                    for currSp in listUpstreamObviousIntegrase_currICEsIMEsStructure:
+                        setSPToRemove.add(currSp)
+                        # strCommentIT = "Upstream integrase {} was not associated to the structure {} pre-merging because there is no integrase around the downstream structure {}, therefore there is a possibility that the structure {} is nested between the conj module of structure {} and the integrase {}. ".format(
+                        #         currSp.locusTag, currICEsIMEsStructure.internalIdentifier, downstreamICEsIMEsStructure.internalIdentifier, currICEsIMEsStructure.internalIdentifier, downstreamICEsIMEsStructure.internalIdentifier, currSp.locusTag)
+                        # if strCommentIT not in currICEsIMEsStructure.comment:
+                        #     currICEsIMEsStructure.comment += strCommentIT
+                        # icescreen_OO.addCommentToLocusTag2Comment(currSp.locusTag, strCommentIT, locusTagIntegrase2Comment)
 
-                for SPToRemoveIT in setSPToRemove :
-                    listUpstreamObviousIntegrase_currICEsIMEsStructure.remove(SPToRemoveIT)
+            for SPToRemoveIT in setSPToRemove :
+                listUpstreamObviousIntegrase_currICEsIMEsStructure.remove(SPToRemoveIT)
 
-                # register the integrase as obvious if it survives the tests before
-                if len(listUpstreamObviousIntegrase_currICEsIMEsStructure) > 0:
-                    for currSp in listUpstreamObviousIntegrase_currICEsIMEsStructure :
-                        strCommentIT = "Upstream integrase {} has been associated to the structure {} pre-merging because it is adjacent to the conj module and there is no upstream/downstream ambiguity. ".format(
-                                currSp.locusTag, currICEsIMEsStructure.internalIdentifier)
-                        if strCommentIT not in currICEsIMEsStructure.comment:
-                            currICEsIMEsStructure.comment += strCommentIT
-                        icescreen_OO.addCommentToLocusTag2Comment(currSp.locusTag, strCommentIT, locusTagIntegrase2Comment)
-                        dictIntegraseAttributedByCheckForObviousIntegraseUpstreamAndDownstreamToAdd[currSp] = currICEsIMEsStructure
-                        currICEsIMEsStructure.listIntegraseUpstream.append(currSp)
-                        currICEsIMEsStructure.listOrderedSPs.append(currSp)
-                        currICEsIMEsStructure.refreshListIdxOrderedSPs()
+            # register the integrase as obvious if it survives the tests before
+            if len(listUpstreamObviousIntegrase_currICEsIMEsStructure) > 0:
+                for currSp in listUpstreamObviousIntegrase_currICEsIMEsStructure :
+                    strCommentIT = "Upstream integrase {} has been associated to the structure {} pre-merging because it is adjacent to the conj module and there is no upstream/downstream ambiguity. ".format(
+                            currSp.locusTag, currICEsIMEsStructure.internalIdentifier)
+                    if strCommentIT not in currICEsIMEsStructure.comment:
+                        currICEsIMEsStructure.comment += strCommentIT
+                    icescreen_OO.addCommentToLocusTag2Comment(currSp.locusTag, strCommentIT, locusTagIntegrase2Comment)
+                    dictIntegraseAttributedByCheckForObviousIntegraseUpstreamAndDownstreamToAdd[currSp] = currICEsIMEsStructure
+                    currICEsIMEsStructure.listIntegraseUpstream.append(currSp)
+                    currICEsIMEsStructure.listOrderedSPs.append(currSp)
+                    currICEsIMEsStructure.refreshListIdxOrderedSPs()
 
 
-            elif len(listDownstreamObviousIntegrase_currICEsIMEsStructure) > 0:
-                setSPToRemove = set()
-                for currSp in listDownstreamObviousIntegrase_currICEsIMEsStructure:
-                    # if downstream structure shares also this obvious integrase, do not take it into account
-                    if listUpstreamObviousIntegrase_downstreamICEsIMEsStructure is not None and len(listUpstreamObviousIntegrase_downstreamICEsIMEsStructure) > 0 :
-                        if currSp in listUpstreamObviousIntegrase_downstreamICEsIMEsStructure :
-                            # upstream structure shares also this obvious integrase, do not take it into account
-                            setSPToRemove.add(currSp)
+        elif len(listDownstreamObviousIntegrase_currICEsIMEsStructure) > 0:
+            setSPToRemove = set()
+            for currSp in listDownstreamObviousIntegrase_currICEsIMEsStructure:
+                # if downstream structure shares also this obvious integrase, do not take it into account
+                if listUpstreamObviousIntegrase_downstreamICEsIMEsStructure is not None and len(listUpstreamObviousIntegrase_downstreamICEsIMEsStructure) > 0 :
+                    if currSp in listUpstreamObviousIntegrase_downstreamICEsIMEsStructure :
+                        # upstream structure shares also this obvious integrase, do not take it into account
+                        setSPToRemove.add(currSp)
 
-                #check if upstream structure has no integrase at all around it, if so this structure could be a nested structure between the module conj and integrase of the structure upstream, do not take it into account
-                if upstreamICEsIMEsStructure:
-                    if not listUpstreamObviousIntegrase_upstreamICEsIMEsStructure and not listDownstreamObviousIntegrase_upstreamICEsIMEsStructure :
-                        for currSp in listDownstreamObviousIntegrase_currICEsIMEsStructure:
-                            setSPToRemove.add(currSp)
-                            # strCommentIT = "Downstream integrase {} was not associated to the structure {} pre-merging because there is no integrase around the upstream structure {}, therefore there is a possibility that the structure {} is nested between the conj module of structure {} and the integrase {}. ".format(
-                            #         currSp.locusTag, currICEsIMEsStructure.internalIdentifier, upstreamICEsIMEsStructure.internalIdentifier, currICEsIMEsStructure.internalIdentifier, upstreamICEsIMEsStructure.internalIdentifier, currSp.locusTag)
-                            # if strCommentIT not in currICEsIMEsStructure.comment:
-                            #     currICEsIMEsStructure.comment += strCommentIT
-                            # icescreen_OO.addCommentToLocusTag2Comment(currSp.locusTag, strCommentIT, locusTagIntegrase2Comment)
+            #check if upstream structure has no integrase at all around it, if so this structure could be a nested structure between the module conj and integrase of the structure upstream, do not take it into account
+            if upstreamICEsIMEsStructure:
+                if not listUpstreamObviousIntegrase_upstreamICEsIMEsStructure and not listDownstreamObviousIntegrase_upstreamICEsIMEsStructure :
+                    for currSp in listDownstreamObviousIntegrase_currICEsIMEsStructure:
+                        setSPToRemove.add(currSp)
+                        # strCommentIT = "Downstream integrase {} was not associated to the structure {} pre-merging because there is no integrase around the upstream structure {}, therefore there is a possibility that the structure {} is nested between the conj module of structure {} and the integrase {}. ".format(
+                        #         currSp.locusTag, currICEsIMEsStructure.internalIdentifier, upstreamICEsIMEsStructure.internalIdentifier, currICEsIMEsStructure.internalIdentifier, upstreamICEsIMEsStructure.internalIdentifier, currSp.locusTag)
+                        # if strCommentIT not in currICEsIMEsStructure.comment:
+                        #     currICEsIMEsStructure.comment += strCommentIT
+                        # icescreen_OO.addCommentToLocusTag2Comment(currSp.locusTag, strCommentIT, locusTagIntegrase2Comment)
 
-                for SPToRemoveIT in setSPToRemove :
-                    listDownstreamObviousIntegrase_currICEsIMEsStructure.remove(SPToRemoveIT)
-                #register the integrase if it survives the tests before
-                if len(listDownstreamObviousIntegrase_currICEsIMEsStructure) > 0:
-                    for currSp in listDownstreamObviousIntegrase_currICEsIMEsStructure :
-                        dictIntegraseAttributedByCheckForObviousIntegraseUpstreamAndDownstreamToAdd[currSp] = currICEsIMEsStructure
-                        strCommentIT = "Downstream integrase {} has been associated to the structure {} pre-merging because it is adjacent to the conj module and there is no upstream/downstream ambiguity. ".format(
-                                currSp.locusTag, currICEsIMEsStructure.internalIdentifier)
-                        if strCommentIT not in currICEsIMEsStructure.comment:
-                            currICEsIMEsStructure.comment += strCommentIT
-                        icescreen_OO.addCommentToLocusTag2Comment(currSp.locusTag, strCommentIT, locusTagIntegrase2Comment)
-                        currICEsIMEsStructure.listIntegraseDownstream.append(currSp)
-                        currICEsIMEsStructure.listOrderedSPs.append(currSp)
-                        currICEsIMEsStructure.refreshListIdxOrderedSPs()
+            for SPToRemoveIT in setSPToRemove :
+                listDownstreamObviousIntegrase_currICEsIMEsStructure.remove(SPToRemoveIT)
+            #register the integrase if it survives the tests before
+            if len(listDownstreamObviousIntegrase_currICEsIMEsStructure) > 0:
+                for currSp in listDownstreamObviousIntegrase_currICEsIMEsStructure :
+                    dictIntegraseAttributedByCheckForObviousIntegraseUpstreamAndDownstreamToAdd[currSp] = currICEsIMEsStructure
+                    strCommentIT = "Downstream integrase {} has been associated to the structure {} pre-merging because it is adjacent to the conj module and there is no upstream/downstream ambiguity. ".format(
+                            currSp.locusTag, currICEsIMEsStructure.internalIdentifier)
+                    if strCommentIT not in currICEsIMEsStructure.comment:
+                        currICEsIMEsStructure.comment += strCommentIT
+                    icescreen_OO.addCommentToLocusTag2Comment(currSp.locusTag, strCommentIT, locusTagIntegrase2Comment)
+                    currICEsIMEsStructure.listIntegraseDownstream.append(currSp)
+                    currICEsIMEsStructure.listOrderedSPs.append(currSp)
+                    currICEsIMEsStructure.refreshListIdxOrderedSPs()
 
 
 
@@ -386,7 +385,9 @@ def checkForObviousIntegraseUpstreamAndDownstreamToAdd(
         for currSp in reversed(listSPsUpstream):
             # print("HERE up {}".format(currSp.locusTag))
             if listUpstreamIntToAdd:
-                if (abs(listUpstreamIntToAdd[-1].CDSPositionInGenome - currSp.CDSPositionInGenome) <= 2):  # Integrases are adjacent in genome or separated by a CDS
+                #should be consistent with hit.getListIntegraseGroupJustUpstreamOfThisSP
+                #TODO: TEST also consider fragment as integrase that follow up
+                if (abs(listUpstreamIntToAdd[-1].CDSPositionInGenome - currSp.CDSPositionInGenome) <= 2) or (listUpstreamIntToAdd[-1] in currSp.listSiblingFragmentedSP and currSp in listUpstreamIntToAdd[-1].listSiblingFragmentedSP):  # Integrases are adjacent in genome or separated by a CDS
                     if currSp.SPType in setIntegraseTypeToCheck:
                         if isIntegraseCorrectlyOrientedForICEsIMEsStructure(currSp, EMStructureToAdd, True) != 2:
                             # if EMStructureToAdd.listVirB4 and currSp.strand == "+":
@@ -432,7 +433,8 @@ def checkForObviousIntegraseUpstreamAndDownstreamToAdd(
         for currSp in listSPsDownstream:
             #print("HERE down {}".format(currSp.locusTag))
             if listDownstreamIntToAdd:  # listIntegraseDownstream is not empty
-                if (abs(listDownstreamIntToAdd[-1].CDSPositionInGenome - currSp.CDSPositionInGenome) <= 2):  # Integrases are adjacent in genome or separated by a CDS
+                #TODO: TEST also consider fragment as integrase that follow up
+                if (abs(listDownstreamIntToAdd[-1].CDSPositionInGenome - currSp.CDSPositionInGenome) <= 2) or (listDownstreamIntToAdd[-1] in currSp.listSiblingFragmentedSP and currSp in listDownstreamIntToAdd[-1].listSiblingFragmentedSP):  # Integrases are adjacent in genome or separated by a CDS
                     if currSp.SPType in setIntegraseTypeToCheck:  # currSp.SPType == "IntTyr" or currSp.SPType == "IntSer" or currSp.SPType == "DDE"
                         # if EMStructureToAdd.listVirB4 and currSp.strand == "-":
                         if isIntegraseCorrectlyOrientedForICEsIMEsStructure(currSp, EMStructureToAdd, False) != 2:
@@ -577,7 +579,6 @@ def createListOfListChainsOfStructuresLinkedBySharedIntegrase(integraseAttribute
 
 
     return listOfSetChainsOfStructuresLinkedBySharedIntegraseToReturn
-
 
 
 # add both upstream and downstream valid integrase to a conj module

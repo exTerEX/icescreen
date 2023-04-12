@@ -18,6 +18,14 @@
 """
 # import specific class OO for this script
 import icescreen_OO
+# import hit
+
+# return true if the EM structure already contains sibling of this fragmented SP
+def isSPtoTestForAddSiblingFragmentOfASPAlreadyInEMStructureSent(EMStructureSent, SPtoTestForFragmentSibling):
+    for SPAlreadyInEMStructureSent in EMStructureSent.listOrderedSPs :
+        if SPtoTestForFragmentSibling in SPAlreadyInEMStructureSent.listSiblingFragmentedSP :
+            return True
+    return False
 
 
 # return: boolean whether this method give the green light to add a SP of the conjugaison module to this BasicEMStructure
@@ -33,6 +41,11 @@ def tryAddingSPToConjugaisonModuleEMStructure(
 
     # consider testing SPtoTestForAdd no matter if it is in conflict or not
     # WARNING there can be some SP that are in conflict in EMStructureSent.listXXX (could be attributed to 2 ICE IME struct), treat them as not there
+
+    if isSPtoTestForAddSiblingFragmentOfASPAlreadyInEMStructureSent(EMStructureSent, SPtoTestForAdd):
+        # print("isSPtoTestForAddSiblingFragmentOfASPAlreadyInEMStructureSent {} ({}) for SP {}".format(EMStructureSent.internalIdentifier, hit.ListSPs.GetListProtIdsFromListSP(EMStructureSent.listOrderedSPs), SPtoTestForAdd.locusTag))
+        return True
+    
 
     # exit false if either:
     # (1) the SPtoTestForAdd is an integrase

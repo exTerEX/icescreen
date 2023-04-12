@@ -1,50 +1,17 @@
 name: icescreen_env
 channels:
-  - conda-forge
-  - bioconda
+    - conda-forge
+    - bioconda
 dependencies:
-  - python >=3.9
-  - pandas >=1.5.2
-  - snakemake-minimal >=7.18.2
-  - biopython =1.80
-  - bcbio-gff >=0.6.9
-  - blast =2.12
-  - hmmer =3.3.2
-    
-# OLD dependancies too complicated and unstable because of versions
-#  - python>=3.7,<4
-#  - snakemake>=6.0.5,<7
-#  - numpy>=1.17.4
-#  - pandas>=0.25.3
-#  - biopython>=1.78
-#  - bcbio-gff>=0.6.6
-#  - yaml>=0.2.5
-#  - hmmer=3.3.2
-#  - blast=2.9.0
-##  - numpy=1.17.4 Do not include as these requirements makes the galaxy tool buggy
-##  - pandas=0.25.3 Do not include as these requirements makes the galaxy tool buggy
-# Uncomment to install locally
-# conda env create --prefix [PATH TO DIR ENVIRONMENT] -f icescreen_env.yml
-# If the installation from YAML don't work
-# conda create --name icescreen_env --file "$(dirname $(readlink -f $0))"/icescreen_envs/spec-file.txt
-# Last resort... here is how to install from scratch
-## Create a Python 3.7 environment
-# conda create -n icescreen_env python=3.7 -y
-## Install Snakemake v6.0.5 (at least)
-# conda install -n icescreen_env -c conda-forge -c bioconda snakemake=6.0.5 -y
-## Install Numpy 1.17.4 (at least)
-# conda install -n icescreen_env -c conda-forge -c bioconda numpy=1.17.4 -y
-## Install Pandas 0.25.3
-# conda install -n icescreen_env -c conda-forge -c bioconda pandas=0.25.3 -y
-## Install Snakemake v6.0.5 (at least)
-# conda install -n icescreen_env -c conda-forge -c bioconda snakemake=6.0.5 -y
-## Install Biopython v1.78 (at least) python library
-# conda install -n icescreen_env -c conda-forge -c bioconda biopython=1.78 -y
-## Install HMMER v3.3.2 (at least)
-# conda install -n icescreen_env -c conda-forge -c bioconda hmmer=3.3.2 -y
-## Install NCBI BLAST+ suite v2.9.0 (at least), but best if >= v2.12 because of change in the blast DB format
-# conda install -n icescreen_env -c conda-forge -c bioconda blast=2.9.0 -y
-## Install BCBio-GFF
-# conda install -n icescreen_env -c conda-forge -c bioconda bcbio-gff=0.6.6 -y
-## Install YAML
-# conda install -n icescreen_env -c conda-forge -c bioconda yaml=0.2.5 -y
+    - python >=3.10.9
+    - pandas >=2.0.0
+    - snakemake-minimal >=7.25.0
+    - biopython >=1.81
+    - bcbio-gff >=0.7.0
+    - blast =2.12
+    - hmmer =3.3.2
+
+# Remarks:
+# april 2023, python 3.11 not yet supported by other packages
+
+# for the conda meta.yaml, only python, blast, and hmmer are required in the host section but all the requirements of the run section have been addded to account for homogenous version between host and run.

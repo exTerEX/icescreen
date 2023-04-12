@@ -15,6 +15,31 @@ import yaml
 import commonMethods
 
 
+def translate_sequence(input_seq, translation_tableSend, isCDSTrueSend, locus_tagIT):
+    """Wrapper for Biopython translate function.  Bio.Seq.translate will complain if input sequence is 
+    not a mulitple of 3.  This wrapper function passes an acceptable input to Bio.Seq.translate in order to
+    avoid this warning."""
+    trailing_bases = len(input_seq) % 3
+    # print("BEFORE : translate_sequence on locus_tagIT = {} ; len(input_seq) = {} ; trailing_bases = {} ; translation_tableSend = {} ; isCDSTrueSend = {}".format(locus_tagIT, str(len(input_seq)), str(trailing_bases), str(translation_tableSend), str(isCDSTrueSend)))
+    if trailing_bases == 1:
+        input_seq = input_seq + "NN"
+        # input_seq = ''.join([input_seq, 'NN'])
+    if trailing_bases == 2:
+        input_seq = input_seq + "N"
+        # input_seq = ''.join([input_seq, 'N'])
+    # print("AFTER : translate_sequence on locus_tagIT = {} ; len(input_seq) = {} ; trailing_bases = {}".format(locus_tagIT, str(len(input_seq)), str(len(input_seq) % 3)))
+    # if trailing_bases:
+    #     input_seq = ''.join([input_seq, 'NN']) if trailing_bases == 1 else ''.join([input_seq, 'N'])
+
+    output_seq = Seq.translate(input_seq, table=translation_tableSend, cds=isCDSTrueSend)
+
+    if trailing_bases == 1 or trailing_bases == 2 :
+        #remove last residue if input needed to be extended because of trailing bases
+        output_seq = output_seq[:-1]
+
+    return output_seq
+
+
 def get_codon_table(yamlpath):
     """Get codon table number for translation of coding sequences.
 
@@ -164,21 +189,23 @@ def gb_to_faa(record, sequence_type, feature_type, codon_table_if_unspecified_in
                 #temp_record = SeqRecord(feature.extract(record.seq).translate(table = translation_table),\
                 #id = header)
                 nucSeq = feature.location.extract(record).seq
+                #nucSeq = pad_seq(nucSeq_no_pad)
                 # Check if CDS or pseudogene
                 try:
                     isCDSTrue = False
                     if feature_type == "CDS" :
                         isCDSTrue = True
-                    temp_seq = nucSeq.translate(table=translation_table,
-                                              cds=isCDSTrue)
+                    temp_seq = translate_sequence(nucSeq, translation_table, isCDSTrue, locus_tagIT) # was Seq.translate
+                    # temp_seq = nucSeq.translate(table=translation_table, cds=isCDSTrue)
+                    # temp_seq = Seq.translate(nucSeq, table=translation_table, cds=isCDSTrue)
                 # If it's an Translation Error then it's a pseudogene
                 except Exception as e:
                     if isinstance(e, CodonTable.TranslationError):
                         pseudo = "|Pseudo"
                         # Translate sequence without CDS parameter
-                        temp_seq = nucSeq.translate(table=translation_table,
-                                                  cds=False)
-                        
+                        temp_seq = translate_sequence(nucSeq, translation_table, False, locus_tagIT)
+                        # temp_seq = nucSeq.translate(table=translation_table, cds=False)
+                        # temp_seq = Seq.translate(nucSeq, table=translation_table, cds=False)
 
                 #header=f'{counter}_{protId}|{strandInfo}{pseudo}'
                 header=f'{counter}&locus_tag={locus_tagIT}&protein_id={protein_idIT}&genome_accession={record.id}&genome_accession_rank={genome_accession_rank_sent}|{strandInfo}{pseudo}'
@@ -199,15 +226,17 @@ def gb_to_faa(record, sequence_type, feature_type, codon_table_if_unspecified_in
                         isCDSTrue = False
                         if feature_type == "CDS" :
                             isCDSTrue = True
-                        temp_seq = nucSeq.translate(table=translation_table,
-                                                  cds=isCDSTrue)
+                        temp_seq = translate_sequence(nucSeq, translation_table, isCDSTrue, locus_tagIT)
+                        # temp_seq = nucSeq.translate(table=translation_table, cds=isCDSTrue)
+                        # temp_seq = Seq.translate(nucSeq, table=translation_table, cds=isCDSTrue)
                     # If it's an Translation Error then it's a pseudogene
                     except Exception as e:
                         if isinstance(e, CodonTable.TranslationError):
                             pseudo = "|Pseudo"
                             # Translate sequence without CDS parameter
-                            temp_seq = nucSeq.translate(table=translation_table,
-                                                      cds=False)
+                            temp_seq = translate_sequence(nucSeq, translation_table, False, locus_tagIT)
+                            # temp_seq = nucSeq.translate(table=translation_table, cds=False)
+                            # temp_seq = Seq.translate(nucSeq, table=translation_table, cds=False)
                     
 
                 #header=f'{counter}_{protId}|{strandInfo}{pseudo}'

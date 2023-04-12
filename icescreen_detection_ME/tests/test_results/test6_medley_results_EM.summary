@@ -22,13 +22,14 @@ Host element:	3
 Guest element:	3
 Element that are both host and guest:	0
 
-##### Signature proteins #####
+##### Signature proteins (SPs) #####
 ## Total SPs detected
 Total SPs:	47
 Total Integrase:	21
 Total Relaxase:	16
 Total Coupling protein:	4
 Total VirB4:	6
+Fragmented SPs:	0
 ## Unassigned SPs
 Unassigned SPs:	8
 Unassigned Integrase:	8
@@ -40,5 +41,44 @@ Unassigned VirB4:	0
 Number of segments with one element:	0
 Number of segments with several elements:	7
 Number of segments with nested elements:	3
+Number of segments with exclusively isolated SPs to manually verify:	0
+
+##################### ICEscreen statistics for genome accession NZ_CP011307.1 #####################
+
+##### Mobile elements #####
+## Number of complete elements
+Complete ICE (4 types of SP):	0
+Complete IME (R+I, R+C+I with distance between consecutive SPs <= 14 CDSs):	0
+## Number of complete modules
+Conjugation module (R+C+V):	0
+Mobilizable element (R+C with distance between consecutive SPs <= 14 CDS):	0
+## Number of partial elements
+Partial ICE (at least V):	1
+Other partial element (R+C, R+V, V+C with distance between consecutive SPs > 14 CDS):	2
+## Composite elements
+Total nested elements (partial or complete):	0
+Host element:	0
+Guest element:	0
+Element that are both host and guest:	0
+
+##### Signature proteins (SPs) #####
+## Total SPs detected
+Total SPs:	7
+Total Integrase:	2
+Total Relaxase:	2
+Total Coupling protein:	2
+Total VirB4:	1
+Fragmented SPs:	0
+## Unassigned SPs
+Unassigned SPs:	4
+Unassigned Integrase:	2
+Unassigned Relaxase:	2
+Unassigned Coupling protein:	0
+Unassigned VirB4:	0
+
+##### Segments #####
+Number of segments with one element:	0
+Number of segments with several elements:	1
+Number of segments with nested elements:	0
 Number of segments with exclusively isolated SPs to manually verify:	0
 

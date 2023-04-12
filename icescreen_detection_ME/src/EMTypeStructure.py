@@ -419,6 +419,7 @@ def printOverallStatsToSummaryFile(
         dictGenomeAccnum2totalNumberUnassignedCoupling,
         dictGenomeAccnum2totalNumberVirb4,
         dictGenomeAccnum2totalNumberUnassignedVirb4,
+        dictGenomeAccnum2totalsetFragmentedSP,
         listOfListAllICEsIMEsStructure,
         maxNumberCDSForSplitSPsByColocalizion,
         maxNumberCDSForFilterIMESize,
@@ -777,6 +778,9 @@ def printOverallStatsToSummaryFile(
         countFromdictGenomeAccnum2totalNumberUnassignedVirb4 = 0
         if genomeAccnumIT in dictGenomeAccnum2totalNumberUnassignedVirb4:
             countFromdictGenomeAccnum2totalNumberUnassignedVirb4 = dictGenomeAccnum2totalNumberUnassignedVirb4[genomeAccnumIT]
+        countFromdictGenomeAccnum2totalNumberFragmentedSP = 0
+        if genomeAccnumIT in dictGenomeAccnum2totalsetFragmentedSP:
+            countFromdictGenomeAccnum2totalNumberFragmentedSP = len(dictGenomeAccnum2totalsetFragmentedSP[genomeAccnumIT])
         # countFromdictGenomeAccnum2totalNumberOfSegments = 0
         # if genomeAccnumIT in dictGenomeAccnum2totalNumberOfSegments:
         #     countFromdictGenomeAccnum2totalNumberOfSegments = dictGenomeAccnum2totalNumberOfSegments[genomeAccnumIT]
@@ -812,13 +816,14 @@ def printOverallStatsToSummaryFile(
             "\nHost element:\t" + str(totalNumberOfHostElements) +
             "\nGuest element:\t" + str(totalNumberOfGuestElements) +
             "\nElement that are both host and guest:\t" + str(totalNumberOfHostAndGuestElements) +
-            "\n\n##### Signature proteins #####" +
+            "\n\n##### Signature proteins (SPs) #####" +
             "\n## Total SPs detected" +
             "\nTotal SPs:\t" + str(countFromdictGenomeAccnum2totalNumberSP) +
             "\nTotal Integrase:\t" + str(countFromdictGenomeAccnum2totalNumberIntegrase) +
             "\nTotal Relaxase:\t" + str(countFromdictGenomeAccnum2totalNumberRelaxase) +
             "\nTotal Coupling protein:\t" + str(countFromdictGenomeAccnum2totalNumberCoupling) +
             "\nTotal VirB4:\t" + str(countFromdictGenomeAccnum2totalNumberVirb4) +
+            "\nFragmented SPs:\t" + str(countFromdictGenomeAccnum2totalNumberFragmentedSP) +
             "\n## Unassigned SPs" +
             "\nUnassigned SPs:\t" + str(countFromdictGenomeAccnum2totalNumberUnassignedIntegrase + countFromdictGenomeAccnum2totalNumberUnassignedRelaxase + countFromdictGenomeAccnum2totalNumberUnassignedCoupling + countFromdictGenomeAccnum2totalNumberUnassignedVirb4) +
             "\nUnassigned Integrase:\t" + str(countFromdictGenomeAccnum2totalNumberUnassignedIntegrase) +

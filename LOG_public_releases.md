@@ -2,9 +2,25 @@
 To access the different releases, see https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/releases
 
 
+## v1.2.0, April 2023
+#### Major changes
+* Detect fragmented integrases.
+#### Minor changes
+* The version of the conda dependencies were upgraded: bcbio-gff >=0.7.0, biopython >=1.81, python >=3.10.9, pandas >=2.0.0, snakemake-minimal >=7.25.0. Python 3.11 is not yet supported by some other dependencies.
+* Do not add family or superfamily information to the structure if the signature protein is a fragment or pseudogene.
+* Backtracking adding SP in conflict toward upstream is now done recursively. Previsouly, backtracking adding SP toward upstream was only considering N-1 structure for SP in conflict.	
+#### Bug fixes
+* Fixed Error in rule detect_mobile_elements: RuntimeError: determineIfResultSPFileHasMultipleGenomeAccesion error: len(dictGenomeAccesion) == 0. Genbank files that yield no hit with the ICEscreen database return this error instead of an empty result file. [Link in gitlab](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/7).
+* Fixed Error in IsThereAnIntegraseBetweenThoseTwoConjModule: unrecognized positioning ofICEsIMEsStructureOne. This error arise while checking for the presence of an integrase between two adjacent structure that share the same SP (SP in conflict). [Link in gitlab](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/8).
+* Fixed Error in mergeWith: not greenLightAddSPConjugaisonModule and not currSP.setICEsIMEsStructureInConflict for merging locus tag. This error happen when merging a distant fragmented SP. [Link in gitlab](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/9).
+* Fixed Error in icescreen_detection_ME/src/rulesMergeICEIMEStructures.py : AttributeError: type object 'BasicEMStructure' has no attribute 'getGetListInternIdFromListEMStructure'. This error happens when a fragmented SP could be attributed to multiple adjacent SP from the conj module. [Link in gitlab](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/10).
+* Fixed RuntimeError: Error in IsThereAnIntegraseBetweenThoseTwoConjModule: unrecognized positioning ofICEsIMEsStructureOne. This error occur when ICEsIMEsStructureTwo is upstream of ICEsIMEsStructureOne but they share one or more SP (SP in conflict) [Link in gitlab](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/11).
+* Fixed BiopythonWarning: Partial codon, len(sequence) not a multiple of three.
+* Fixed BiopythonDeprecationWarning: Use int(feature.end) and int(feature.start) rather than feature.nofuzzy_end and feature.nofuzzy_start.
+
 ## v1.1.1, February 2023
 #### Minor changes
-* Set version of dependency biopython =1.80 instead of biopython >=1.80. biopython version 1.81 is incompatible with bcbio-gff version 0.6.9, it throws an ImportError: cannot import name 'UnknownSeq' from 'Bio.Seq'. See https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/6 for more details.
+* Set version of dependency biopython =1.80 instead of biopython >=1.80. The dependency biopython version 1.81 is incompatible with bcbio-gff version 0.6.9, it throws an ImportError: cannot import name 'UnknownSeq' from 'Bio.Seq'. See https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/6 for more details.
 
 
 ## v1.1.0, November 2022

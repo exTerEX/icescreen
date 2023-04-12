@@ -8,7 +8,7 @@ Maximum distance in CDS between consecutive SPs within an IME element:	14
 
 ##### Mobile elements #####
 ## Number of complete elements
-Complete ICE (4 types of SP):	9
+Complete ICE (4 types of SP):	7
 Complete IME (R+I, R+C+I with distance between consecutive SPs <= 14 CDSs):	1
 ## Number of complete modules
 Conjugation module (R+C+V):	1
@@ -17,18 +17,19 @@ Mobilizable element (R+C with distance between consecutive SPs <= 14 CDS):	0
 Partial ICE (at least V):	1
 Other partial element (R+C, R+V, V+C with distance between consecutive SPs > 14 CDS):	4
 ## Composite elements
-Total nested elements (partial or complete):	6
-Host element:	3
-Guest element:	3
+Total nested elements (partial or complete):	4
+Host element:	2
+Guest element:	2
 Element that are both host and guest:	0
 
-##### Signature proteins #####
+##### Signature proteins (SPs) #####
 ## Total SPs detected
-Total SPs:	61
-Total Integrase:	20
-Total Relaxase:	14
-Total Coupling protein:	16
-Total VirB4:	11
+Total SPs:	53
+Total Integrase:	18
+Total Relaxase:	12
+Total Coupling protein:	14
+Total VirB4:	9
+Fragmented SPs:	0
 ## Unassigned SPs
 Unassigned SPs:	13
 Unassigned Integrase:	9
@@ -38,7 +39,7 @@ Unassigned VirB4:	0
 
 ##### Segments #####
 Number of segments with one element:	3
-Number of segments with several elements:	6
-Number of segments with nested elements:	3
+Number of segments with several elements:	5
+Number of segments with nested elements:	2
 Number of segments with exclusively isolated SPs to manually verify:	2
 
