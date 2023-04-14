@@ -4,9 +4,9 @@ To access the different releases, see https://forgemia.inra.fr/ices_imes_analysi
 
 ## v1.2.0, April 2023
 #### Major changes
-* Detect fragmented integrases.
+* Merging of the integrase fragments that are detectable by blast (i.e. insertion of mobile element in the integrase).
 #### Minor changes
-* The version of the conda dependencies were upgraded: bcbio-gff >=0.7.0, biopython >=1.81, python >=3.10.9, pandas >=2.0.0, snakemake-minimal >=7.25.0. Python 3.11 is not yet supported by some other dependencies.
+* The version of the conda dependencies were upgraded: bcbio-gff >=0.7.0, biopython >=1.81. Python 3.11 is not yet supported by some other dependencies.
 * Do not add family or superfamily information to the structure if the signature protein is a fragment or pseudogene.
 * Backtracking adding SP in conflict toward upstream is now done recursively. Previsouly, backtracking adding SP toward upstream was only considering N-1 structure for SP in conflict.	
 #### Bug fixes
