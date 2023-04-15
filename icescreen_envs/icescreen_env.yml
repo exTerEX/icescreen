@@ -3,15 +3,11 @@ channels:
     - conda-forge
     - bioconda
 dependencies:
-    - python >=3.9
-    - pandas >=1.5.2
-    - snakemake-minimal >=7.18.2
+    - python
+    - pandas >=2.0.0
+    - snakemake-minimal >=7.25.0
     - biopython >=1.81
     - bcbio-gff >=0.7.0
     - blast =2.12
     - hmmer =3.3.2
 
-# Remarks:
-# april 2023, python 3.11 not yet supported by other packages
-
-# for the conda meta.yaml, only python, blast, and hmmer are required in the host section but all the requirements of the run section have been addded to account for homogenous version between host and run.
