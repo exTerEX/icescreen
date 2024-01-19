@@ -18,7 +18,6 @@ before_script:
 test_install_icescreen:
   script:
   - conda activate icescreen_env && icescreen --version
-  - conda activate icescreen_env && icescreen --print_version_dependencies
   - conda activate icescreen_env && icescreen --test_installation
   - conda activate icescreen_env && icescreen --test_installation 2>&1 | grep "The installation of ICEscreen is successful" > /dev/null
   - mkdir -p ~/tmp/test_icescreen
