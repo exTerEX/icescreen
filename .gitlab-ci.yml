@@ -27,7 +27,7 @@ test_install_icescreen:
   - curl -s  "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&id=${i}&rettype=gbwithparts&retmode=txt" > genbank_files/$i.gbk
   - i=NZ_CP026548
   - curl -s  "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&id=${i}&rettype=gbwithparts&retmode=txt" > genbank_files/$i.gbk
-  - conda activate icescreen_env && icescreen -g ~/tmp/test_icescreen/genbank_files -o ~/tmp/test_icescreen/ --mode bacillota
+  - conda activate icescreen_env && icescreen -g ~/tmp/test_icescreen/genbank_files -o ~/tmp/test_icescreen/ --mode firmicutes
   - head ~/tmp/test_icescreen/ICEscreen_results/results/NC_004668/icescreen_detection_ME/NC_004668_detected_ME.summary 2>&1 | grep "ICEscreen statistics for genome accession" > /dev/null
   - head ~/tmp/test_icescreen/ICEscreen_results/results/NZ_CP026548/icescreen_detection_ME/NZ_CP026548_detected_ME.summary 2>&1 | grep "ICEscreen statistics for genome accession" > /dev/null
   - rm -rf ~/tmp/test_icescreen
