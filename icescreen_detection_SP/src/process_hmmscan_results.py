@@ -119,15 +119,15 @@ def get_hmmscan_df(tsvpath):
                     "query_name": str,
                     "seq_accession": str,
                     "qlen": np.uint32,
-                    "seq_E-value": np.float32,
-                    "seq_score": np.float32,
-                    "seq_bias": np.float32,
+                    "seq_E-value": np.float64, # np.float32
+                    "seq_score": np.float64, # np.float32
+                    "seq_bias": np.float64, # np.float32
                     "#_domain": np.uint32,
                     "of_domain": np.uint32,
-                    "domain_c-Evalue": np.float32,
-                    "domain_i-Evalue": np.float32,
-                    "domain_score": np.float32,
-                    "domain_bias": np.float32,
+                    "domain_c-Evalue": np.float64, # np.float32
+                    "domain_i-Evalue": np.float64, # np.float32
+                    "domain_score": np.float64, # np.float32
+                    "domain_bias": np.float64, # np.float32
                     "hmm_coord_from": np.uint32,
                     "hmm_coord_to": np.uint32,
                     "ali_coord_from": np.uint32,
@@ -169,6 +169,15 @@ def get_hmmscan_df(tsvpath):
     cds_identifiers = np.vectorize(split_identifier)(data["query_name"])
     cds_identifiers = np.transpose(cds_identifiers)
     data[columns] = pd.DataFrame(cds_identifiers, columns=columns)
+    # Set the correct type for the new columns
+    data["CDS_num"] = data["CDS_num"].astype(int)
+    data["CDS_locus_tag"] = data["CDS_locus_tag"].astype(str)
+    data["CDS_protein_id"] = data["CDS_protein_id"].astype(str)
+    data["Genome_accession"] = data["Genome_accession"].astype(str)
+    data["Genome_accession_rank"] = data["Genome_accession_rank"].astype(str)
+    data["CDS_strand"] = data["CDS_strand"].astype(str)
+    data["CDS_start"] = data["CDS_start"].astype(int)
+    data["CDS_end"] = data["CDS_end"].astype(int)
 
     # Compute alignment length for each hit of hmmscan (hits are DOMAINS)
     data["Ali_len_HMM"] = data["hmm_coord_to"] - data["hmm_coord_from"] + 1
@@ -331,11 +340,12 @@ def pretty_df(df):
 
     # Order SP by position on the genome and
     # sort each result from best to worst
-    df = df.sort_values(by=["CDS_num", "i-Evalue"],
-                        ascending=[True, True])
+    # sorting by i-Evalue is not working properly. sort_values with CDS_num and then HMM_ali_Score.
+    # df = df.sort_values(by=["CDS_num", "i-Evalue"], ascending=[True, True])
+    df = df.sort_values(by=["CDS_num", "domain_score"], ascending=[True, False])
 
     # Sanitize annotations (remove leading and trailing whitespace)
-    df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+    df = df.map(lambda x: x.strip() if isinstance(x, str) else x) # applymap was deprecated in 2.1.0
 
     # Format numeric columns
     df['E-value'] = df['E-value'].map(lambda x: '{0:.3g}'.format(x))
@@ -481,7 +491,11 @@ if __name__ == "__main__":
 
     # All results without filtering
     data = reorder_columns(data)
-    data = data.sort_values(by="CDS_num", ascending=False)
+    # sort_values with CDS_num and then HMM_ali_Score (like the other one earlier in code). Sorting by HMM_ali_i-Evalue is buggy.
+    # data = data.sort_values(by="CDS_num", ascending=False)
+    # data = data.sort_values(by=["CDS_num", "HMM_ali_i-Evalue"], ascending=[False, True])
+    data = data.sort_values(by=["CDS_num", "HMM_ali_Score"], ascending=[False, False])
+
     data.to_csv(outall, index=False, sep="\t", decimal=".", na_rep="NA")
 
     # All validated results

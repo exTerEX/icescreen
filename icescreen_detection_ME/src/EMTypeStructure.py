@@ -19,18 +19,22 @@
 # import specific class OO for this script
 import EMStructure
 import hit
+import icescreen_OO
+import commonMethods
+
 #import datetime
 
 # Once an ICE or IME structure have been established, assign its type
-def assignPutativeTypeStructure(ICEsIMEsStructureSent, maxNumberCDSForFilterIMESize):
+def assignPutativeTypeStructure(
+        ICEsIMEsStructureSent
+        ):
 
     if ICEsIMEsStructureSent.delMerging_idxListUpstreamStructure >= 0:
         strTypeToSet = "deleted after merging event"
         ICEsIMEsStructureSent.catStructConjModule = strTypeToSet
     else:
 
-        greenLightDistanceIME = ICEsIMEsStructureSent.isFilterIMESizeOk(maxNumberCDSForFilterIMESize)
-        # totalNumberSPSureAndNotSure = len(ICEsIMEsStructureSent.listOrderedSPs) + len(ICEsIMEsStructureSent.setIntegraseToManuallyCheck) + len(ICEsIMEsStructureSent.setSPConjModuleToManuallyCheck)
+        greenLightDistanceIME = ICEsIMEsStructureSent.isFilterIMESizeOk()
 
         putativePartialICEVirB4 = False
         if len(ICEsIMEsStructureSent.setSPInConflict) >= 1:
@@ -43,18 +47,23 @@ def assignPutativeTypeStructure(ICEsIMEsStructureSent, maxNumberCDSForFilterIMES
 
         # deal with main type
         strTypeToSet = ""
-        if len(ICEsIMEsStructureSent.listRelaxase) == 1 and len(ICEsIMEsStructureSent.listCouplingProtein) == 1 and len(ICEsIMEsStructureSent.listVirB4) == 1:
-            strTypeToSet = "ICE"  # canonical conjugaison module
-        elif len(ICEsIMEsStructureSent.listRelaxase) >= 1 and len(ICEsIMEsStructureSent.listCouplingProtein) >= 1 and len(ICEsIMEsStructureSent.listVirB4) >= 1:
-            strTypeToSet = "ICE"  # multiple adjacent SPs conjugaison module
-        elif len(ICEsIMEsStructureSent.listVirB4) >= 1 or putativePartialICEVirB4:
+
+        ICEsIMEsStructureContainsAllTypesOfSPConjModule = True
+        for typeSPConjModuleIT in icescreen_OO.listTypeSPConjModule:
+            if len(ICEsIMEsStructureSent.TypeSPConjModule2listSP[typeSPConjModuleIT]) == 0:
+                ICEsIMEsStructureContainsAllTypesOfSPConjModule = False
+                break
+        if ICEsIMEsStructureContainsAllTypesOfSPConjModule:
+            strTypeToSet = "ICE"
+        elif len(ICEsIMEsStructureSent.TypeSPConjModule2listSP["VirB4"]) >= 1 or putativePartialICEVirB4:
             strTypeToSet = "partial ICE VirB4"
-        elif len(ICEsIMEsStructureSent.listVirB4) == 0 and len(ICEsIMEsStructureSent.listOrderedSPs) >= 2 and greenLightDistanceIME:
+        elif len(ICEsIMEsStructureSent.TypeSPConjModule2listSP["VirB4"]) == 0 and len(ICEsIMEsStructureSent.listOrderedSPs) >= 2 and greenLightDistanceIME:
             strTypeToSet = "IME"
-        elif len(ICEsIMEsStructureSent.listRelaxase) >= 1 or len(ICEsIMEsStructureSent.listCouplingProtein) >= 1:
+        elif len(ICEsIMEsStructureSent.TypeSPConjModule2listSP["Relaxase"]) >= 1 or len(ICEsIMEsStructureSent.TypeSPConjModule2listSP["Coupling protein"]) >= 1:
             strTypeToSet = "partial conj module"
         else:
             strTypeToSet = "unsure"
+
 
         if strTypeToSet:
             ICEsIMEsStructureSent.catStructConjModule = strTypeToSet
@@ -186,11 +195,15 @@ def assignPutativeTypeStructure(ICEsIMEsStructureSent, maxNumberCDSForFilterIMES
          is01_PartialConjModuleSer,
          is01_PartialConjModuleDDE,
          is01_PartialConjModuleNoIntegrase,
-         is01_Unsure) = getcatStructWholeElem(ICEsIMEsStructureSent, maxNumberCDSForFilterIMESize)
+         is01_Unsure) = getcatStructWholeElem(
+             ICEsIMEsStructureSent
+             )
         ICEsIMEsStructureSent.catStructWholeElem = strTypeToSet
 
 
-def getcatStructWholeElem(ICEIMEStructureSent, maxNumberCDSForFilterIMESize):
+def getcatStructWholeElem(
+        ICEIMEStructureSent
+        ):
     strTypeToSet = ""
     is01_ICETyr = 0
     is01_ICESer = 0
@@ -291,27 +304,27 @@ def getcatStructWholeElem(ICEIMEStructureSent, maxNumberCDSForFilterIMESize):
     elif ICEIMEStructureSent.catStructConjModule == "IME":
         if ICEIMEStructureSent.categoryRegardingIntegrase.startswith("one integrase Tyr"):
             is01_IMETyr = 1
-            strToAppendIfMoreThanOneSP = " with # CDS between SP <= "+str(maxNumberCDSForFilterIMESize)
+            strToAppendIfMoreThanOneSP = " with # CDS between SP <= "+str(commonMethods.ConfigParams.maxNumberCDSForFilterIMESize)
             strTypeToSet = "Complete IME"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #R+I, R+C+I)"
         elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("one integrase Ser"):
             is01_IMESer = 1
-            strToAppendIfMoreThanOneSP = " with # CDS between SP <= "+str(maxNumberCDSForFilterIMESize)
+            strToAppendIfMoreThanOneSP = " with # CDS between SP <= "+str(commonMethods.ConfigParams.maxNumberCDSForFilterIMESize)
             strTypeToSet = "Complete IME"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #R+I, R+C+I)"
         elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("one integrase DDE"):
             is01_IMEDDE = 1
-            strToAppendIfMoreThanOneSP = " with # CDS between SP <= "+str(maxNumberCDSForFilterIMESize)
+            strToAppendIfMoreThanOneSP = " with # CDS between SP <= "+str(commonMethods.ConfigParams.maxNumberCDSForFilterIMESize)
             strTypeToSet = "Complete IME"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #R+I, R+C+I)"
         elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("multiple adjacent integrases Tyr"):
             is01_IMETyr = 1
-            strToAppendIfMoreThanOneSP = " with # CDS between SP <= "+str(maxNumberCDSForFilterIMESize)
+            strToAppendIfMoreThanOneSP = " with # CDS between SP <= "+str(commonMethods.ConfigParams.maxNumberCDSForFilterIMESize)
             strTypeToSet = "Complete IME"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #R+I, R+C+I)"
         elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("multiple adjacent integrases Ser"):
             is01_IMESer = 1
-            strToAppendIfMoreThanOneSP = " with # CDS between SP <= "+str(maxNumberCDSForFilterIMESize)
+            strToAppendIfMoreThanOneSP = " with # CDS between SP <= "+str(commonMethods.ConfigParams.maxNumberCDSForFilterIMESize)
             strTypeToSet = "Complete IME"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #R+I, R+C+I)"
         elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("multiple adjacent integrases DDE"):
             is01_IMEDDE = 1
-            strToAppendIfMoreThanOneSP = " with # CDS between SP <= "+str(maxNumberCDSForFilterIMESize)
+            strToAppendIfMoreThanOneSP = " with # CDS between SP <= "+str(commonMethods.ConfigParams.maxNumberCDSForFilterIMESize)
             strTypeToSet = "Complete IME"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #R+I, R+C+I)"
         elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("both upstream or downstream integrases Tyr"):
             raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile IME: both upstream or downstream integrases Tyr found for ICE IME {}".format(
@@ -328,7 +341,7 @@ def getcatStructWholeElem(ICEIMEStructureSent, maxNumberCDSForFilterIMESize):
 
         elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("no integrase assigned"):
             is01_MobilizableElementsNoIntegrase = 1
-            strToAppendIfMoreThanOneSP = " with # CDS between SP <= "+str(maxNumberCDSForFilterIMESize)
+            strToAppendIfMoreThanOneSP = " with # CDS between SP <= "+str(commonMethods.ConfigParams.maxNumberCDSForFilterIMESize)
             strTypeToSet = "Mobilizable element"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #R+I, R+C+I)"(maxNumberCDSForFilterIMESize) + " CDS)"
         else:
             raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile: unrecognized ICEIMEStructureSent.categoryRegardingIntegrase = {} for ICE IME {}".format(
@@ -338,27 +351,27 @@ def getcatStructWholeElem(ICEIMEStructureSent, maxNumberCDSForFilterIMESize):
     elif ICEIMEStructureSent.catStructConjModule == "partial conj module":
         if ICEIMEStructureSent.categoryRegardingIntegrase.startswith("one integrase Tyr"):
             is01_PartialConjModuleTyr = 1
-            strToAppendIfMoreThanOneSP = " with # CDS between SP > "+str(maxNumberCDSForFilterIMESize)
+            strToAppendIfMoreThanOneSP = " with # CDS between SP > "+str(commonMethods.ConfigParams.maxNumberCDSForFilterIMESize)
             strTypeToSet = "Other partial element"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #(R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS)"
         elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("one integrase Ser"):
             is01_PartialConjModuleSer = 1
-            strToAppendIfMoreThanOneSP = " with # CDS between SP > "+str(maxNumberCDSForFilterIMESize)
+            strToAppendIfMoreThanOneSP = " with # CDS between SP > "+str(commonMethods.ConfigParams.maxNumberCDSForFilterIMESize)
             strTypeToSet = "Other partial element"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #(R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS)"
         elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("one integrase DDE"):
             is01_PartialConjModuleDDE = 1
-            strToAppendIfMoreThanOneSP = " with # CDS between SP > "+str(maxNumberCDSForFilterIMESize)
+            strToAppendIfMoreThanOneSP = " with # CDS between SP > "+str(commonMethods.ConfigParams.maxNumberCDSForFilterIMESize)
             strTypeToSet = "Other partial element"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #(R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS)"
         elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("multiple adjacent integrases Tyr"):
             is01_PartialConjModuleTyr = 1
-            strToAppendIfMoreThanOneSP = " with # CDS between SP > "+str(maxNumberCDSForFilterIMESize)
+            strToAppendIfMoreThanOneSP = " with # CDS between SP > "+str(commonMethods.ConfigParams.maxNumberCDSForFilterIMESize)
             strTypeToSet = "Other partial element"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #(R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS)"
         elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("multiple adjacent integrases Ser"):
             is01_PartialConjModuleSer = 1
-            strToAppendIfMoreThanOneSP = " with # CDS between SP > "+str(maxNumberCDSForFilterIMESize)
+            strToAppendIfMoreThanOneSP = " with # CDS between SP > "+str(commonMethods.ConfigParams.maxNumberCDSForFilterIMESize)
             strTypeToSet = "Other partial element"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #(R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS)"
         elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("multiple adjacent integrases DDE"):
             is01_PartialConjModuleDDE = 1
-            strToAppendIfMoreThanOneSP = " with # CDS between SP > "+str(maxNumberCDSForFilterIMESize)
+            strToAppendIfMoreThanOneSP = " with # CDS between SP > "+str(commonMethods.ConfigParams.maxNumberCDSForFilterIMESize)
             strTypeToSet = "Other partial element"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #(R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS)"
         elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("both upstream or downstream integrases Tyr"):
             raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile partial conj module: both upstream or downstream integrases Tyr found for ICE IME {}".format(
@@ -374,7 +387,7 @@ def getcatStructWholeElem(ICEIMEStructureSent, maxNumberCDSForFilterIMESize):
                     ICEIMEStructureSent.internalIdentifier))
         elif ICEIMEStructureSent.categoryRegardingIntegrase.startswith("no integrase assigned"):
             is01_PartialConjModuleNoIntegrase = 1
-            strToAppendIfMoreThanOneSP = " with # CDS between SP > "+str(maxNumberCDSForFilterIMESize)
+            strToAppendIfMoreThanOneSP = " with # CDS between SP > "+str(commonMethods.ConfigParams.maxNumberCDSForFilterIMESize)
             strTypeToSet = "Other partial element"+hit.ListSPs.stringListSPHasPseudo(ICEIMEStructureSent.listOrderedSPs)+" ("+hit.ListSPs.PrintICElineFormat(ICEIMEStructureSent.listOrderedSPs, True, strToAppendIfMoreThanOneSP)+")" #(R+C, R+V, V+C with size > " + str(maxNumberCDSForFilterIMESize) + " CDS)"
         else:
             raise RuntimeError("Error in printCountCategoriesICEsIMEsStructuresToOutputFile: unrecognized ICEIMEStructureSent.categoryRegardingIntegrase = {} for ICE IME {}".format(
@@ -408,24 +421,18 @@ def getcatStructWholeElem(ICEIMEStructureSent, maxNumberCDSForFilterIMESize):
             is01_Unsure)
 
 
-
 def printOverallStatsToSummaryFile(
-        dictGenomeAccnum2totalNumberSP,
-        dictGenomeAccnum2totalNumberIntegrase,
-        dictGenomeAccnum2totalNumberUnassignedIntegrase,
-        dictGenomeAccnum2totalNumberRelaxase,
-        dictGenomeAccnum2totalNumberUnassignedRelaxase,
-        dictGenomeAccnum2totalNumberCoupling,
-        dictGenomeAccnum2totalNumberUnassignedCoupling,
-        dictGenomeAccnum2totalNumberVirb4,
-        dictGenomeAccnum2totalNumberUnassignedVirb4,
-        dictGenomeAccnum2totalsetFragmentedSP,
-        listOfListAllICEsIMEsStructure,
-        maxNumberCDSForSplitSPsByColocalizion,
-        maxNumberCDSForFilterIMESize,
-        summaryFile):
-
-    #dictGenomeAccnum2totalNumberOfSegments = {}
+        dictGenomeAccnum2totalNumberSP
+        , dictGenomeAccnum2totalNumberIntegrase
+        , dictGenomeAccnum2totalNumberUnassignedIntegrase
+        , dictGenomeAccnum_2TypeSPConjModule_2totalNumberSP
+        , dictGenomeAccnum_2TypeSPConjModule_2totalNumberSP_unaffected
+        , dictGenomeAccnum2totalsetFragmentedSP
+        , listOfListAllICEsIMEsStructure
+        , summaryFile
+        , listGenomeAccessionFromGenbankFile
+        ):
+    
     dictGenomeAccnum2totalNumberOfSegmentsWithOneElement = {}
     dictGenomeAccnum2totalNumberOfSegmentsWithSeveralElements = {}
     dictGenomeAccnum2totalNumberOfSegmentsWithNestedElements = {}
@@ -536,7 +543,9 @@ def printOverallStatsToSummaryFile(
              is01_PartialConjModuleSer,
              is01_PartialConjModuleDDE,
              is01_PartialConjModuleNoIntegrase,
-             is01_Unsure) = getcatStructWholeElem(currICEIMEStructure, maxNumberCDSForFilterIMESize)
+             is01_Unsure) = getcatStructWholeElem(
+                 currICEIMEStructure
+                 )
             countICETyrSegment += is01_ICETyr
             countICESerSegment += is01_ICESer
             countICEDDESegment += is01_ICEDDE
@@ -555,13 +564,6 @@ def printOverallStatsToSummaryFile(
             countPartialConjModuleNoIntegraseSegment += is01_PartialConjModuleNoIntegrase
             countUnsureSegment += is01_Unsure
 
-        #totalNumberOfSegments is incorrect number now as it is missing segment with empty currListAllICEsIMEsStructure
-        #totalNumberOfSegments += 1
-        # if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2totalNumberOfSegments :
-        #     dictGenomeAccnum2totalNumberOfSegments[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += 1
-        # else :
-        #     dictGenomeAccnum2totalNumberOfSegments[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = 1
-
         totalElementStructsInSegment = countICETyrSegment + countICESerSegment\
             + countICEDDESegment + countConjugationModulesNoIntegraseSegment\
             + countPartialICETyrSegment + countPartialICESerSegment\
@@ -574,54 +576,27 @@ def printOverallStatsToSummaryFile(
 
 
         if (totalElementStructsInSegment) == 0:
-            #totalNumberOfSegmentsWithNoElement += 1
             if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2totalNumberOfSegmentsWithNoElement:
                 dictGenomeAccnum2totalNumberOfSegmentsWithNoElement[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += 1
             else:
                 dictGenomeAccnum2totalNumberOfSegmentsWithNoElement[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = 1
         elif (totalElementStructsInSegment) == 1:
-            # totalNumberOfSegmentsWithOneElement += 1
             if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2totalNumberOfSegmentsWithOneElement:
                 dictGenomeAccnum2totalNumberOfSegmentsWithOneElement[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += 1
             else:
                 dictGenomeAccnum2totalNumberOfSegmentsWithOneElement[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = 1
         else:
-            #totalNumberOfSegmentsWithSeveralElements += 1
             if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2totalNumberOfSegmentsWithSeveralElements:
                 dictGenomeAccnum2totalNumberOfSegmentsWithSeveralElements[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += 1
             else:
                 dictGenomeAccnum2totalNumberOfSegmentsWithSeveralElements[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = 1
 
         if countEMHostOnlySegment > 0:
-            #totalNumberOfSegmentsWithNestedElements += 1
             if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2totalNumberOfSegmentsWithNestedElements:
                 dictGenomeAccnum2totalNumberOfSegmentsWithNestedElements[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += 1
             else:
                 dictGenomeAccnum2totalNumberOfSegmentsWithNestedElements[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = 1
 
-        # countICETyrTotal += countICETyrSegment
-        # countICESerTotal += countICESerSegment
-        # countICEDDETotal += countICEDDESegment
-        # countConjugationModulesNoIntegraseTotal += countConjugationModulesNoIntegraseSegment
-        # countPartialICETyrTotal += countPartialICETyrSegment
-        # countPartialICESerTotal += countPartialICESerSegment
-        # countPartialICEDDETotal += countPartialICEDDESegment
-        # countPartialICENoIntegraseTotal += countPartialICENoIntegraseSegment
-        # countIMETyrTotal += countIMETyrSegment
-        # countIMESerTotal += countIMESerSegment
-        # countIMEDDETotal += countIMEDDESegment
-        # countMobilizableElementsNoIntegraseTotal += countMobilizableElementsNoIntegraseSegment
-        # countPartialConjModuleTyrTotal += countPartialConjModuleTyrSegment
-        # countPartialConjModuleSerTotal += countPartialConjModuleSerSegment
-        # countPartialConjModuleDDETotal += countPartialConjModuleDDESegment
-        # countPartialConjModuleNoIntegraseTotal += countPartialConjModuleNoIntegraseSegment
-        # countUnsureTotal += countUnsureSegment
-        # countIntegrasesNotAttributedTyrTotal += countIntegrasesNotAttributedTyrSegment
-        # countIntegrasesNotAttributedSerTotal += countIntegrasesNotAttributedSerSegment
-        # countIntegrasesNotAttributedDDETotal += countIntegrasesNotAttributedDDESegment
-        # countEMHostOnlyTotal += countEMHostOnlySegment
-        # countEMGuestOnlyTotal += countEMGuestOnlySegment
-        # countEMHostAndGuestTotal += countEMHostAndGuestSegment
         if genomeAccnumOfCurrListAllICEsIMEsStructureIT in dictGenomeAccnum2countICETyrTotal:
             dictGenomeAccnum2countICETyrTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] += countICETyrSegment
         else:
@@ -715,41 +690,47 @@ def printOverallStatsToSummaryFile(
         else:
             dictGenomeAccnum2countEMHostAndGuestTotal[genomeAccnumOfCurrListAllICEsIMEsStructureIT] = countEMHostAndGuestSegment
     
-    # print("\n** Overall statistics:", file=summaryFile)
-
-    #now = datetime.datetime.now()
     strHeaderToPrint = (
         "\n##################### Main parameters of the ICEscreen analysis #####################" +
-        #"\nDate and time of the analysis:\t" + now.strftime("%Y-%m-%d %H:%M:%S") +
-        "\nMaximum distance in CDS between consecutive SPs within a segments:\t" + str(maxNumberCDSForSplitSPsByColocalizion) +
-        "\nMaximum distance in CDS between consecutive SPs within an IME element:\t" + str(maxNumberCDSForFilterIMESize) +
+        "\nMaximum distance in CDS between consecutive SPs within a segments:\t" + str(commonMethods.ConfigParams.maxNumberCDSForSplitSPsByColocalizion) +
+        "\nMaximum distance in CDS between consecutive SPs within an IME element:\t" + str(commonMethods.ConfigParams.maxNumberCDSForFilterIMESize) +
         "\n\n"
         )
     print(strHeaderToPrint, file=summaryFile)
 
-    for genomeAccnumIT in dictGenomeAccnum2HasStatToPrint:
+    # for genomeAccnumIT in dictGenomeAccnum2HasStatToPrint:
+    for genomeAccnumIT in listGenomeAccessionFromGenbankFile:
 
-        # Elements
-        # totalNumberOfCompleteICE = countICETyrTotal + countICESerTotal + countICEDDETotal
-        # totalNumberOfConjugationModules = countConjugationModulesNoIntegraseTotal
-        # totalNumberOfPartialICE = countPartialICETyrTotal + countPartialICESerTotal + countPartialICEDDETotal + countPartialICENoIntegraseTotal
-        # totalNumberOfCompleteIME = countIMETyrTotal + countIMESerTotal + countIMEDDETotal
-        # totalNumberOfMobilizableElements = countMobilizableElementsNoIntegraseTotal
-        # totalNumberOfOtherPartialElements = countPartialConjModuleTyrTotal + countPartialConjModuleSerTotal + countPartialConjModuleDDETotal + countPartialConjModuleNoIntegraseTotal
-        # totalNumberOfNestedElementsInSegments = countEMHostOnlyTotal + countEMGuestOnlyTotal + countEMHostAndGuestTotal
-        # totalNumberOfHostElements = countEMHostOnlyTotal
-        # totalNumberOfGuestElements = countEMGuestOnlyTotal
-        # totalNumberOfHostAndGuestElements = countEMHostAndGuestTotal
-        totalNumberOfCompleteICE = dictGenomeAccnum2countICETyrTotal[genomeAccnumIT] + dictGenomeAccnum2countICESerTotal[genomeAccnumIT] + dictGenomeAccnum2countICEDDETotal[genomeAccnumIT]
-        totalNumberOfConjugationModules = dictGenomeAccnum2countConjugationModulesNoIntegraseTotal[genomeAccnumIT]
-        totalNumberOfPartialICE = dictGenomeAccnum2countPartialICETyrTotal[genomeAccnumIT] + dictGenomeAccnum2countPartialICESerTotal[genomeAccnumIT] + dictGenomeAccnum2countPartialICEDDETotal[genomeAccnumIT] + dictGenomeAccnum2countPartialICENoIntegraseTotal[genomeAccnumIT]
-        totalNumberOfCompleteIME = dictGenomeAccnum2countIMETyrTotal[genomeAccnumIT] + dictGenomeAccnum2countIMESerTotal[genomeAccnumIT] + dictGenomeAccnum2countIMEDDETotal[genomeAccnumIT]
-        totalNumberOfMobilizableElements = dictGenomeAccnum2countMobilizableElementsNoIntegraseTotal[genomeAccnumIT]
-        totalNumberOfOtherPartialElements = dictGenomeAccnum2countPartialConjModuleTyrTotal[genomeAccnumIT] + dictGenomeAccnum2countPartialConjModuleSerTotal[genomeAccnumIT] + dictGenomeAccnum2countPartialConjModuleDDETotal[genomeAccnumIT] + dictGenomeAccnum2countPartialConjModuleNoIntegraseTotal[genomeAccnumIT]
-        totalNumberOfNestedElementsInSegments = dictGenomeAccnum2countEMHostOnlyTotal[genomeAccnumIT] + dictGenomeAccnum2countEMGuestOnlyTotal[genomeAccnumIT] + dictGenomeAccnum2countEMHostAndGuestTotal[genomeAccnumIT]
-        totalNumberOfHostElements = dictGenomeAccnum2countEMHostOnlyTotal[genomeAccnumIT]
-        totalNumberOfGuestElements = dictGenomeAccnum2countEMGuestOnlyTotal[genomeAccnumIT]
-        totalNumberOfHostAndGuestElements = dictGenomeAccnum2countEMHostAndGuestTotal[genomeAccnumIT]
+        totalNumberOfCompleteICE = 0
+        if genomeAccnumIT in dictGenomeAccnum2countICETyrTotal and genomeAccnumIT in dictGenomeAccnum2countICESerTotal and genomeAccnumIT in dictGenomeAccnum2countICEDDETotal:
+            totalNumberOfCompleteICE = dictGenomeAccnum2countICETyrTotal[genomeAccnumIT] + dictGenomeAccnum2countICESerTotal[genomeAccnumIT] + dictGenomeAccnum2countICEDDETotal[genomeAccnumIT]
+        totalNumberOfConjugationModules = 0
+        if genomeAccnumIT in dictGenomeAccnum2countConjugationModulesNoIntegraseTotal:
+            totalNumberOfConjugationModules = dictGenomeAccnum2countConjugationModulesNoIntegraseTotal[genomeAccnumIT]
+        totalNumberOfPartialICE = 0
+        if genomeAccnumIT in dictGenomeAccnum2countPartialICETyrTotal and genomeAccnumIT in dictGenomeAccnum2countPartialICESerTotal and genomeAccnumIT in dictGenomeAccnum2countPartialICEDDETotal and genomeAccnumIT in dictGenomeAccnum2countPartialICENoIntegraseTotal:
+            totalNumberOfPartialICE = dictGenomeAccnum2countPartialICETyrTotal[genomeAccnumIT] + dictGenomeAccnum2countPartialICESerTotal[genomeAccnumIT] + dictGenomeAccnum2countPartialICEDDETotal[genomeAccnumIT] + dictGenomeAccnum2countPartialICENoIntegraseTotal[genomeAccnumIT]
+        totalNumberOfCompleteIME = 0
+        if genomeAccnumIT in dictGenomeAccnum2countIMETyrTotal and genomeAccnumIT in dictGenomeAccnum2countIMESerTotal and genomeAccnumIT in dictGenomeAccnum2countIMEDDETotal:
+            totalNumberOfCompleteIME = dictGenomeAccnum2countIMETyrTotal[genomeAccnumIT] + dictGenomeAccnum2countIMESerTotal[genomeAccnumIT] + dictGenomeAccnum2countIMEDDETotal[genomeAccnumIT]
+        totalNumberOfMobilizableElements = 0
+        if genomeAccnumIT in dictGenomeAccnum2countMobilizableElementsNoIntegraseTotal:
+            totalNumberOfMobilizableElements = dictGenomeAccnum2countMobilizableElementsNoIntegraseTotal[genomeAccnumIT]
+        totalNumberOfOtherPartialElements = 0
+        if genomeAccnumIT in dictGenomeAccnum2countPartialConjModuleTyrTotal and genomeAccnumIT in dictGenomeAccnum2countPartialConjModuleSerTotal and genomeAccnumIT in dictGenomeAccnum2countPartialConjModuleDDETotal and genomeAccnumIT in dictGenomeAccnum2countPartialConjModuleNoIntegraseTotal:
+            totalNumberOfOtherPartialElements = dictGenomeAccnum2countPartialConjModuleTyrTotal[genomeAccnumIT] + dictGenomeAccnum2countPartialConjModuleSerTotal[genomeAccnumIT] + dictGenomeAccnum2countPartialConjModuleDDETotal[genomeAccnumIT] + dictGenomeAccnum2countPartialConjModuleNoIntegraseTotal[genomeAccnumIT]
+        totalNumberOfNestedElementsInSegments = 0
+        if genomeAccnumIT in dictGenomeAccnum2countEMHostOnlyTotal and genomeAccnumIT in dictGenomeAccnum2countEMGuestOnlyTotal and genomeAccnumIT in dictGenomeAccnum2countEMHostAndGuestTotal:
+            totalNumberOfNestedElementsInSegments = dictGenomeAccnum2countEMHostOnlyTotal[genomeAccnumIT] + dictGenomeAccnum2countEMGuestOnlyTotal[genomeAccnumIT] + dictGenomeAccnum2countEMHostAndGuestTotal[genomeAccnumIT]
+        totalNumberOfHostElements = 0
+        if genomeAccnumIT in dictGenomeAccnum2countEMHostOnlyTotal:
+            totalNumberOfHostElements = dictGenomeAccnum2countEMHostOnlyTotal[genomeAccnumIT]
+        totalNumberOfGuestElements = 0
+        if genomeAccnumIT in dictGenomeAccnum2countEMGuestOnlyTotal:
+            totalNumberOfGuestElements = dictGenomeAccnum2countEMGuestOnlyTotal[genomeAccnumIT]
+        totalNumberOfHostAndGuestElements = 0
+        if genomeAccnumIT in dictGenomeAccnum2countEMHostAndGuestTotal:
+            totalNumberOfHostAndGuestElements = dictGenomeAccnum2countEMHostAndGuestTotal[genomeAccnumIT]
 
         countFromdictGenomeAccnum2totalNumberSP = 0
         if genomeAccnumIT in dictGenomeAccnum2totalNumberSP:
@@ -760,30 +741,33 @@ def printOverallStatsToSummaryFile(
         countFromdictGenomeAccnum2totalNumberUnassignedIntegrase = 0
         if genomeAccnumIT in dictGenomeAccnum2totalNumberUnassignedIntegrase:
             countFromdictGenomeAccnum2totalNumberUnassignedIntegrase = dictGenomeAccnum2totalNumberUnassignedIntegrase[genomeAccnumIT]
-        countFromdictGenomeAccnum2totalNumberRelaxase = 0
-        if genomeAccnumIT in dictGenomeAccnum2totalNumberRelaxase:
-            countFromdictGenomeAccnum2totalNumberRelaxase = dictGenomeAccnum2totalNumberRelaxase[genomeAccnumIT]
-        countFromdictGenomeAccnum2totalNumberUnassignedRelaxase = 0
-        if genomeAccnumIT in dictGenomeAccnum2totalNumberUnassignedRelaxase:
-            countFromdictGenomeAccnum2totalNumberUnassignedRelaxase = dictGenomeAccnum2totalNumberUnassignedRelaxase[genomeAccnumIT]
-        countFromdictGenomeAccnum2totalNumberCoupling = 0
-        if genomeAccnumIT in dictGenomeAccnum2totalNumberCoupling:
-            countFromdictGenomeAccnum2totalNumberCoupling = dictGenomeAccnum2totalNumberCoupling[genomeAccnumIT]
-        countFromdictGenomeAccnum2totalNumberUnassignedCoupling = 0
-        if genomeAccnumIT in dictGenomeAccnum2totalNumberUnassignedCoupling:
-            countFromdictGenomeAccnum2totalNumberUnassignedCoupling = dictGenomeAccnum2totalNumberUnassignedCoupling[genomeAccnumIT]
-        countFromdictGenomeAccnum2totalNumberVirb4 = 0
-        if genomeAccnumIT in dictGenomeAccnum2totalNumberVirb4:
-            countFromdictGenomeAccnum2totalNumberVirb4 = dictGenomeAccnum2totalNumberVirb4[genomeAccnumIT]
-        countFromdictGenomeAccnum2totalNumberUnassignedVirb4 = 0
-        if genomeAccnumIT in dictGenomeAccnum2totalNumberUnassignedVirb4:
-            countFromdictGenomeAccnum2totalNumberUnassignedVirb4 = dictGenomeAccnum2totalNumberUnassignedVirb4[genomeAccnumIT]
+
+        countFromdictGenomeAccnum_2TypeSPConjModule_2totalNumber = {}
+        countFromdictGenomeAccnum_2TypeSPConjModule_2totalNumberUnassigned = {}
+        for TypeSPConjModuleIT in icescreen_OO.listTypeSPConjModule:
+            if TypeSPConjModuleIT in countFromdictGenomeAccnum_2TypeSPConjModule_2totalNumber:
+                raise RuntimeError('error : TypeSPConjModuleIT {} in countFromdictGenomeAccnum_2TypeSPConjModule_2totalNumber {} '.format(TypeSPConjModuleIT))
+            if genomeAccnumIT in dictGenomeAccnum_2TypeSPConjModule_2totalNumberSP:
+                TypeSPConjModule_2totalNumberSP = dictGenomeAccnum_2TypeSPConjModule_2totalNumberSP[genomeAccnumIT]
+                if TypeSPConjModuleIT in TypeSPConjModule_2totalNumberSP:
+                    countFromdictGenomeAccnum_2TypeSPConjModule_2totalNumber[TypeSPConjModuleIT] = TypeSPConjModule_2totalNumberSP[TypeSPConjModuleIT]
+                else:
+                    countFromdictGenomeAccnum_2TypeSPConjModule_2totalNumber[TypeSPConjModuleIT] = 0
+            else:
+                countFromdictGenomeAccnum_2TypeSPConjModule_2totalNumber[TypeSPConjModuleIT] = 0
+            if TypeSPConjModuleIT in countFromdictGenomeAccnum_2TypeSPConjModule_2totalNumberUnassigned:
+                raise RuntimeError('error : TypeSPConjModuleIT {} in countFromdictGenomeAccnum_2TypeSPConjModule_2totalNumberUnassigned {} '.format(TypeSPConjModuleIT))
+            if genomeAccnumIT in dictGenomeAccnum_2TypeSPConjModule_2totalNumberSP_unaffected:
+                TypeSPConjModule_2totalNumberSP = dictGenomeAccnum_2TypeSPConjModule_2totalNumberSP_unaffected[genomeAccnumIT]
+                if TypeSPConjModuleIT in TypeSPConjModule_2totalNumberSP:
+                    countFromdictGenomeAccnum_2TypeSPConjModule_2totalNumberUnassigned[TypeSPConjModuleIT] = TypeSPConjModule_2totalNumberSP[TypeSPConjModuleIT]
+                else:
+                    countFromdictGenomeAccnum_2TypeSPConjModule_2totalNumberUnassigned[TypeSPConjModuleIT] = 0
+            else:
+                countFromdictGenomeAccnum_2TypeSPConjModule_2totalNumberUnassigned[TypeSPConjModuleIT] = 0
         countFromdictGenomeAccnum2totalNumberFragmentedSP = 0
         if genomeAccnumIT in dictGenomeAccnum2totalsetFragmentedSP:
             countFromdictGenomeAccnum2totalNumberFragmentedSP = len(dictGenomeAccnum2totalsetFragmentedSP[genomeAccnumIT])
-        # countFromdictGenomeAccnum2totalNumberOfSegments = 0
-        # if genomeAccnumIT in dictGenomeAccnum2totalNumberOfSegments:
-        #     countFromdictGenomeAccnum2totalNumberOfSegments = dictGenomeAccnum2totalNumberOfSegments[genomeAccnumIT]
         countFromdictGenomeAccnum2totalNumberOfSegmentsWithOneElement = 0
         if genomeAccnumIT in dictGenomeAccnum2totalNumberOfSegmentsWithOneElement:
             countFromdictGenomeAccnum2totalNumberOfSegmentsWithOneElement = dictGenomeAccnum2totalNumberOfSegmentsWithOneElement[genomeAccnumIT]
@@ -798,40 +782,53 @@ def printOverallStatsToSummaryFile(
             countFromdictGenomeAccnum2totalNumberOfSegmentsWithNoElement = dictGenomeAccnum2totalNumberOfSegmentsWithNoElement[genomeAccnumIT]
 
 
-
         strTotalToPrint = (
             "##################### ICEscreen statistics for genome accession "+genomeAccnumIT+" #####################" +
             "\n\n##### Mobile elements #####" +
             "\n## Number of complete elements" +
             "\nComplete ICE (4 types of SP):\t" + str(totalNumberOfCompleteICE) +
-            "\nComplete IME (R+I, R+C+I with distance between consecutive SPs <= "+str(maxNumberCDSForFilterIMESize)+" CDSs):\t" + str(totalNumberOfCompleteIME) +
+            "\nComplete IME (R+I, R+C+I with distance between consecutive SPs <= "+str(commonMethods.ConfigParams.maxNumberCDSForFilterIMESize)+" CDSs):\t" + str(totalNumberOfCompleteIME) +
             "\n## Number of complete modules" +
             "\nConjugation module (R+C+V):\t" + str(totalNumberOfConjugationModules) +
-            "\nMobilizable element (R+C with distance between consecutive SPs <= " + str(maxNumberCDSForFilterIMESize) + " CDS):\t" + str(totalNumberOfMobilizableElements) +
+            "\nMobilizable element (R+C with distance between consecutive SPs <= " + str(commonMethods.ConfigParams.maxNumberCDSForFilterIMESize) + " CDS):\t" + str(totalNumberOfMobilizableElements) +
             "\n## Number of partial elements" +
             "\nPartial ICE (at least V):\t" + str(totalNumberOfPartialICE) +
-            "\nOther partial element (R+C, R+V, V+C with distance between consecutive SPs > " + str(maxNumberCDSForFilterIMESize) + " CDS):\t" + str(totalNumberOfOtherPartialElements) +
+            "\nOther partial element (R+C, R+V, V+C with distance between consecutive SPs > " + str(commonMethods.ConfigParams.maxNumberCDSForFilterIMESize) + " CDS):\t" + str(totalNumberOfOtherPartialElements) +
             "\n## Composite elements" +
             "\nTotal nested elements (partial or complete):\t" + str(totalNumberOfNestedElementsInSegments) +
             "\nHost element:\t" + str(totalNumberOfHostElements) +
             "\nGuest element:\t" + str(totalNumberOfGuestElements) +
-            "\nElement that are both host and guest:\t" + str(totalNumberOfHostAndGuestElements) +
+            "\nElement that are both host and guest:\t" + str(totalNumberOfHostAndGuestElements)
+        )
+        strTotalToPrint += (
             "\n\n##### Signature proteins (SPs) #####" +
             "\n## Total SPs detected" +
             "\nTotal SPs:\t" + str(countFromdictGenomeAccnum2totalNumberSP) +
-            "\nTotal Integrase:\t" + str(countFromdictGenomeAccnum2totalNumberIntegrase) +
-            "\nTotal Relaxase:\t" + str(countFromdictGenomeAccnum2totalNumberRelaxase) +
-            "\nTotal Coupling protein:\t" + str(countFromdictGenomeAccnum2totalNumberCoupling) +
-            "\nTotal VirB4:\t" + str(countFromdictGenomeAccnum2totalNumberVirb4) +
+            "\nTotal Integrase:\t" + str(countFromdictGenomeAccnum2totalNumberIntegrase)
+        )
+        for TypeSPConjModuleIT in icescreen_OO.listTypeSPConjModule:
+            strTotalToPrint += (
+                "\nTotal {}:\t".format(TypeSPConjModuleIT) + str(countFromdictGenomeAccnum_2TypeSPConjModule_2totalNumber[TypeSPConjModuleIT])
+            )
+        strTotalToPrint += (
             "\nFragmented SPs:\t" + str(countFromdictGenomeAccnum2totalNumberFragmentedSP) +
-            "\n## Unassigned SPs" +
-            "\nUnassigned SPs:\t" + str(countFromdictGenomeAccnum2totalNumberUnassignedIntegrase + countFromdictGenomeAccnum2totalNumberUnassignedRelaxase + countFromdictGenomeAccnum2totalNumberUnassignedCoupling + countFromdictGenomeAccnum2totalNumberUnassignedVirb4) +
-            "\nUnassigned Integrase:\t" + str(countFromdictGenomeAccnum2totalNumberUnassignedIntegrase) +
-            "\nUnassigned Relaxase:\t" + str(countFromdictGenomeAccnum2totalNumberUnassignedRelaxase) +
-            "\nUnassigned Coupling protein:\t" + str(countFromdictGenomeAccnum2totalNumberUnassignedCoupling) +
-            "\nUnassigned VirB4:\t" + str(countFromdictGenomeAccnum2totalNumberUnassignedVirb4) +
+            "\n## Unassigned SPs"
+        )
+        countFromdictGenomeAccnum2totalNumberUnassignedSPModuleConj = 0
+        for TypeSPConjModuleIT in icescreen_OO.listTypeSPConjModule:
+            countFromdictGenomeAccnum2totalNumberUnassignedSPModuleConj += countFromdictGenomeAccnum_2TypeSPConjModule_2totalNumberUnassigned[TypeSPConjModuleIT]
+        strTotalToPrint += (
+            "\nUnassigned SPs:\t" + str(countFromdictGenomeAccnum2totalNumberUnassignedIntegrase + countFromdictGenomeAccnum2totalNumberUnassignedSPModuleConj)
+        )
+        strTotalToPrint += (
+            "\nUnassigned Integrase:\t" + str(countFromdictGenomeAccnum2totalNumberUnassignedIntegrase)
+        )
+        for TypeSPConjModuleIT in icescreen_OO.listTypeSPConjModule:
+            strTotalToPrint += (
+                "\nUnassigned {}:\t".format(TypeSPConjModuleIT) + str(countFromdictGenomeAccnum_2TypeSPConjModule_2totalNumberUnassigned[TypeSPConjModuleIT])
+            )
+        strTotalToPrint += (
             "\n\n##### Segments #####" +
-            #"\nNumber of segments:\t" + str(countFromdictGenomeAccnum2totalNumberOfSegments) +
             "\nNumber of segments with one element:\t" + str(countFromdictGenomeAccnum2totalNumberOfSegmentsWithOneElement) +
             "\nNumber of segments with several elements:\t" + str(countFromdictGenomeAccnum2totalNumberOfSegmentsWithSeveralElements) +
             "\nNumber of segments with nested elements:\t" + str(countFromdictGenomeAccnum2totalNumberOfSegmentsWithNestedElements) +

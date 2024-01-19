@@ -21,6 +21,36 @@
 import csv
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
+import os
+
+
+
+class ConfigParams():
+    maxNumberCDSForSplitSPsByColocalizion = ""
+    maxNumberCDSForFilterIMESize = ""
+    groupListSPintoICEsIMEsUsingFamilyInfo = ""
+    useFamilyInfoToTryToResolveSPModuleConjConflict = ""
+    useDistanceCDSInfoToTryToResolveSPModuleConjConflict = ""
+    moveSingleSPToCheck = ""
+    allowAdjacentIntegraseOnlyForSer = ""
+    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance = ""
+    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance = ""
+    maxOverlappingAliLenghtFragmentedSPs = ""
+    maxCDSDistanceToMergeFragmentedSPs = ""
+    threshold_blast_ali_identity_perc_transfert_ICEFamily_to_structure_module_conj = ""
+    listTaxonomicModesToCheckIfIntegraseIsCorrectlyOrientedForICEsIMEsStructure = []
+
+class CommandLineArguments():
+    pathInputFile = ""
+    pathOutputFile = ""
+    pathModifiedInputFile = ""
+    pathGbInputFile = ""
+    pathLogFile = ""
+    pathTaxoModeFile = ""
+    taxoMode = "" # Path(pathTaxoModeFile).stem
+    pathConfigFile = ""
+    verbose = ""
+
 
 # https://stackoverflow.com/questions/6821156/how-to-find-range-overlap-in-python
 def overlap_bounded_intervals(start1, end1, start2, end2, genomeAccessionRank1, genomeAccessionRank2):
@@ -51,7 +81,54 @@ def makeCompositeUniqLocusTag(isMultiGenbankFile, locusTagSent, proteinIdSent, g
     #print("makeCompositeUniqLocusTag {} from isMultiGenbankFile {}, locusTagSent {}, proteinIdSent {}, genomeAccessionSent {}, startSent {}".format(strLocusTagToReturn, str(isMultiGenbankFile), locusTagSent, proteinIdSent, genomeAccessionSent, str(startSent)))
 
     return strLocusTagToReturn
-    
+
+
+def parseListGenomeAccessionFromGenbankFile(pathGbInputFile):
+    hasMultipleGenomeAccesion = True
+    listGenomeAccessionFromFastaFile = []
+    dictGenomeIds = {}
+    if os.path.isfile(pathGbInputFile):
+        pathGbInputFile_handle = open (pathGbInputFile, 'r', encoding='utf-8')        
+        record_iterator = SeqIO.parse(pathGbInputFile_handle, "genbank")
+        for record in record_iterator:
+            genome_accession = record.id
+            if len(genome_accession) == 0:
+                raise RuntimeError("Error in parseListGenomeAccessionFromGenbankFile: empty genome_accession in file {}".format(
+                    str(pathGbInputFile)))
+            if genome_accession in dictGenomeIds :
+                raise RuntimeError("Error in parseListGenomeAccessionFromGenbankFile: duplicate genome_accession {} in file {}".format(
+                    str(genome_accession),
+                    str(pathGbInputFile)))
+            else :
+                dictGenomeIds[genome_accession] = 1
+        pathGbInputFile_handle.close()
+    listGenomeAccessionFromFastaFile = list(dictGenomeIds.keys())
+
+    # For fasta file
+    # with open(pathGbInputFile, 'r', encoding='utf8') as fastafileIT:
+    #     for line in fastafileIT:
+    #         line = line.strip()
+    #         if line.startswith(">"):
+    #             # >1&locus_tag=YYYYY1&protein_id=XXXXX1&genome_accession=NZ_TEST1&genome_accession_rank=1|+|1..2
+    #             matchLineGenomeAccessionIT = re.match(r"^.+&genome_accession=(.+)&genome_accession_rank=.+$", line)
+    #             if matchLineGenomeAccessionIT:
+    #                 genomeAccessionIT = matchLineGenomeAccessionIT.group(1)
+    #                 if genomeAccessionIT in setGenomeAccessionProcessed :
+    #                     pass
+    #                 else :
+    #                     listGenomeAccessionFromFastaFile.append(genomeAccessionIT)
+    #                     setGenomeAccessionProcessed.add(genomeAccessionIT)
+    #             else :
+    #                 raise RuntimeError('error parse_genbank: line does not match the regex: {} '.format(str(line)))
+                
+    if len(listGenomeAccessionFromFastaFile) == 0:
+        raise RuntimeError('error parseListGenomeAccessionFromGenbankFile: len(listGenomeAccessionFromFastaFile) == 0 for file: {} '.format(str(pathGbInputFile)))
+    elif len(listGenomeAccessionFromFastaFile) == 1:
+        hasMultipleGenomeAccesion = False
+    else:
+        hasMultipleGenomeAccesion = True
+    return (hasMultipleGenomeAccesion, listGenomeAccessionFromFastaFile)
+
 
 #return boolean hasMultipleGenomeAccesion
 def determineIfResultSPFileHasMultipleGenomeAccesion(pathInputFile):
@@ -81,8 +158,7 @@ def determineIfResultSPFileHasMultipleGenomeAccesion(pathInputFile):
             countIterRow += 1
 
     if len(dictGenomeAccesion) == 0:
-        # raise RuntimeError('determineIfResultSPFileHasMultipleGenomeAccesion error: len(dictGenomeAccesion) == 0 for file {}'.format(str(pathInputFile)))
-        return False # no Genome Accesion means no hits found
+        raise RuntimeError('determineIfResultSPFileHasMultipleGenomeAccesion error: len(dictGenomeAccesion) == 0 for file {}'.format(str(pathInputFile)))
     elif len(dictGenomeAccesion) == 1:
         return False
     else:

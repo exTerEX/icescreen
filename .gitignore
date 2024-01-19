@@ -157,6 +157,7 @@ dmypy.json
 .pyre/
 
 
-# libreoffice cache
+# tmp cache
 *.~lock.*#
+.~*
 

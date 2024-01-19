@@ -23,11 +23,12 @@ import hit
 import icescreen_OO
 
 # SP of similar family are preferrably grouped in an anchor of conj module
-def buildSameFamilyMergeStructures(currListSPs, locusTagMerge2Comment,
-                                   groupListSPintoICEsIMEsUsingFamilyInfo):
+def buildSameFamilyMergeStructures(
+        currListSPs
+        , locusTagMerge2Comment
+        ):
     listSameFamilyMergeStructures = []  # EMStructures
     SPsInSameFamilyMergeStructures2SameFamilyMergeStructure = {}
-    # key = SP, value = EMStructureMerged
 
     family2ListSPs = {}
     for currSP in currListSPs:
@@ -100,8 +101,6 @@ def buildSameFamilyMergeStructures(currListSPs, locusTagMerge2Comment,
                 if doAddAMergeComment:
                     commentITToAdd = "The SPs {} and {} of same family already have both been merged with other SPs of the same family so are not merged together. ".format(
                             currOneInDuoSPToMerge.locusTag, currTwoInDuoSPToMerge.locusTag)
-                    # if commentITToAdd not in keyICEIMEPrimary.comment:
-                    #    keyICEIMEPrimary.comment += commentITToAdd
                     icescreen_OO.addCommentToLocusTag2Comment(currOneInDuoSPToMerge.locusTag, commentITToAdd, locusTagMerge2Comment)
                     icescreen_OO.addCommentToLocusTag2Comment(currTwoInDuoSPToMerge.locusTag, commentITToAdd, locusTagMerge2Comment)
 
@@ -109,13 +108,12 @@ def buildSameFamilyMergeStructures(currListSPs, locusTagMerge2Comment,
                 # currOneInDuoSPToMerge already merged, not currTwoInDuoSPToMerge
                 # try to add currTwoInDuoSPToMerge in structure of currOneInDuoSPToMerge
                 currSameFamilyMergeStructure = SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[currOneInDuoSPToMerge]
+                setAllowCheckingForMultipleDistantSameSPType = set()
                 greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
                         currSameFamilyMergeStructure,
                         currTwoInDuoSPToMerge,
-                        groupListSPintoICEsIMEsUsingFamilyInfo,
-                        False,
-                        False,
-                        False)
+                        setAllowCheckingForMultipleDistantSameSPType
+                        )
                 if greenLightAddSPConjugaisonModule:
                     if doAddAMergeComment:
                         commentITToAdd = "Conjugaison module SP {} is being associated with same family {}. ".format(
@@ -125,7 +123,6 @@ def buildSameFamilyMergeStructures(currListSPs, locusTagMerge2Comment,
                         if commentITToAdd not in currSameFamilyMergeStructure.comment:
                             currSameFamilyMergeStructure.comment += commentITToAdd
                         icescreen_OO.addCommentToLocusTag2Comment(currTwoInDuoSPToMerge.locusTag, commentITToAdd, locusTagMerge2Comment)
-                    # print("HERE1: "+currTwoInDuoSPToMerge.locusTag+"="+str(currSameFamilyMergeStructure.internalIdentifier))
                     currSameFamilyMergeStructure.addSPToConjugaisonModule(currTwoInDuoSPToMerge)
                     SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[currTwoInDuoSPToMerge] = currSameFamilyMergeStructure
 
@@ -133,13 +130,12 @@ def buildSameFamilyMergeStructures(currListSPs, locusTagMerge2Comment,
                 # currTwoInDuoSPToMerge already merged, not currOneInDuoSPToMerge
                 # try to add currOneInDuoSPToMerge in structure of currTwoInDuoSPToMerge
                 currSameFamilyMergeStructure = SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[currTwoInDuoSPToMerge]
+                setAllowCheckingForMultipleDistantSameSPType = set()
                 greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
                         currSameFamilyMergeStructure,
                         currOneInDuoSPToMerge,
-                        groupListSPintoICEsIMEsUsingFamilyInfo,
-                        False,
-                        False,
-                        False)
+                        setAllowCheckingForMultipleDistantSameSPType
+                        )
                 if greenLightAddSPConjugaisonModule:
                     if doAddAMergeComment:
                         commentITToAdd = "Conjugaison module SP {} is being associated with same family {}. ".format(
@@ -149,7 +145,6 @@ def buildSameFamilyMergeStructures(currListSPs, locusTagMerge2Comment,
                         if commentITToAdd not in currSameFamilyMergeStructure.comment:
                             currSameFamilyMergeStructure.comment += commentITToAdd
                         icescreen_OO.addCommentToLocusTag2Comment(currOneInDuoSPToMerge.locusTag, commentITToAdd, locusTagMerge2Comment)
-                    # print("HERE2.2: "+currTwoInDuoSPToMerge.locusTag+"="+str(currSameFamilyMergeStructure.internalIdentifier))
                     currSameFamilyMergeStructure.addSPToConjugaisonModule(currOneInDuoSPToMerge)
                     SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[currOneInDuoSPToMerge] = currSameFamilyMergeStructure
 
@@ -157,15 +152,13 @@ def buildSameFamilyMergeStructures(currListSPs, locusTagMerge2Comment,
                 # currTwoInDuoSPToMerge and currOneInDuoSPToMerge not already merged
                 currSameFamilyMergeStructure = EMStructure.ICEsIMEsStructure(True)
                 currSameFamilyMergeStructure.addSPToConjugaisonModule(currOneInDuoSPToMerge)
-                # print("HERE3.1: "+currOneInDuoSPToMerge.locusTag+"="+str(currSameFamilyMergeStructure.internalIdentifier))
                 SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[currOneInDuoSPToMerge] = currSameFamilyMergeStructure
+                setAllowCheckingForMultipleDistantSameSPType = set()
                 greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
                         currSameFamilyMergeStructure,
                         currTwoInDuoSPToMerge,
-                        groupListSPintoICEsIMEsUsingFamilyInfo,
-                        False,
-                        False,
-                        False)
+                        setAllowCheckingForMultipleDistantSameSPType
+                        )
                 if greenLightAddSPConjugaisonModule:
                     if doAddAMergeComment:
                         commentITToAdd = "Conjugaison module SP {} is being associated with same family {}. ".format(
@@ -175,7 +168,6 @@ def buildSameFamilyMergeStructures(currListSPs, locusTagMerge2Comment,
                         if commentITToAdd not in currSameFamilyMergeStructure.comment:
                             currSameFamilyMergeStructure.comment += commentITToAdd
                         icescreen_OO.addCommentToLocusTag2Comment(currTwoInDuoSPToMerge.locusTag, commentITToAdd, locusTagMerge2Comment)
-                    # print("HERE3.2: "+currTwoInDuoSPToMerge.locusTag+"="+str(currSameFamilyMergeStructure.internalIdentifier))
                     currSameFamilyMergeStructure.addSPToConjugaisonModule(currTwoInDuoSPToMerge)
                     SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[currTwoInDuoSPToMerge] = currSameFamilyMergeStructure
                 listSameFamilyMergeStructures.append(currSameFamilyMergeStructure)
@@ -187,10 +179,6 @@ def buildSameFamilyMergeStructures(currListSPs, locusTagMerge2Comment,
                 del SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[currSPRemovedFromMergeStruct]
             del listSameFamilyMergeStructures[i]
 
-    # for SPIT, EMStructureMergedIT  in SPsInSameFamilyMergeStructures2SameFamilyMergeStructure.items():  # key = SP, value = EMStructureMerged
-    #    print(SPIT.locusTag+" | "+str(EMStructureMergedIT.internalIdentifier))
-    # print("----------------------")
-
     # look around SPs registred for merge for SP greenLightAddSPConjugaisonModule without family
     for currSameFamilyMergeStructure in listSameFamilyMergeStructures:
         # print("Look around greenLightAddSPConjugaisonModule "+str(currSameFamilyMergeStructure.internalIdentifier))
@@ -200,71 +188,50 @@ def buildSameFamilyMergeStructures(currListSPs, locusTagMerge2Comment,
             idxUpstreamSPIT = currSPameFamilyMergeStructure.idxInListSP - 1
             if idxUpstreamSPIT >= 0:
                 currUpstreamSPIT = currListSPs[idxUpstreamSPIT]
-                # preconditionsCompatibleNeigbhorFamilyStatus = False
-                # if len(currUpstreamSPIT.setSPICESuperFamilyFromBlast) == 0 and len(currUpstreamSPIT.setSPICEFamilyFromBlast) == 0 and len(currUpstreamSPIT.setSPIMESuperFamilyFromBlast) == 0:
-                #    preconditionsCompatibleNeigbhorFamilyStatus = True
                 preconditionsCompatibleNeigbhorFamilyStatus = True
-                if len(currSameFamilyMergeStructure.listVirB4) > 0 and len(currUpstreamSPIT.setSPIMESuperFamilyFromBlast) > 0:
+                if len(currSameFamilyMergeStructure.TypeSPConjModule2listSP["VirB4"]) > 0 and len(currUpstreamSPIT.setSPIMESuperFamilyFromBlast) > 0:
                     preconditionsCompatibleNeigbhorFamilyStatus = False
                 if currUpstreamSPIT in SPsInSameFamilyMergeStructures2SameFamilyMergeStructure and currSPameFamilyMergeStructure in SPsInSameFamilyMergeStructures2SameFamilyMergeStructure:
                     if SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[currUpstreamSPIT] == SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[currSPameFamilyMergeStructure]:
                         preconditionsCompatibleNeigbhorFamilyStatus = False
                 if preconditionsCompatibleNeigbhorFamilyStatus is True and currUpstreamSPIT in SPsInSameFamilyMergeStructures2SameFamilyMergeStructure:
                     preconditionsCompatibleNeigbhorFamilyStatus = False
-                    # commentITToAdd = "Conjugaison module SP {} could be associated with downstream neighbor SPs {} but was not because it is already associated with another same family structure. "\
-                    # .format(currUpstreamSPIT.locusTag, hit.ListSPs.GetListProtIdsFromListSP(currSameFamilyMergeStructure.listOrderedSPs))
-                    # if commentITToAdd not in currSameFamilyMergeStructure.comment:
-                    #    currSameFamilyMergeStructure.comment += commentITToAdd
-                    # icescreen_OO.addCommentToLocusTag2Comment(currUpstreamSPIT.locusTag, commentITToAdd, locusTagMerge2Comment)
 
                 if preconditionsCompatibleNeigbhorFamilyStatus is True:
                     if currUpstreamSPIT not in currSameFamilyMergeStructure.listOrderedSPs:
+                        setAllowCheckingForMultipleDistantSameSPType = set()
                         greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
                                 currSameFamilyMergeStructure,
                                 currUpstreamSPIT,
-                                groupListSPintoICEsIMEsUsingFamilyInfo,
-                                False,
-                                False,
-                                False)
+                                setAllowCheckingForMultipleDistantSameSPType
+                                )
                         if greenLightAddSPConjugaisonModule:
                             setGreenLightedSPConjugaisonModuleWithoutFamily.add(currUpstreamSPIT)
-                            # print("added currUpstreamSPIT "+currUpstreamSPIT.locusTag+"to setGreenLightedSPConjugaisonModuleWithoutFamily")
 
             # deal with downstream SP
             idxDownstreamSPIT = currSPameFamilyMergeStructure.idxInListSP + 1
             if idxDownstreamSPIT < len(currListSPs):
                 currDownstreamSPIT = currListSPs[idxDownstreamSPIT]
 
-                # preconditionsCompatibleNeigbhorFamilyStatus = False
-                # if len(currDownstreamSPIT.setSPICESuperFamilyFromBlast) == 0 and len(currDownstreamSPIT.setSPICEFamilyFromBlast) == 0 and len(currDownstreamSPIT.setSPIMESuperFamilyFromBlast) == 0:
-                #    preconditionsCompatibleNeigbhorFamilyStatus = True
                 preconditionsCompatibleNeigbhorFamilyStatus = True
-                if len(currSameFamilyMergeStructure.listVirB4) > 0 and len(currDownstreamSPIT.setSPIMESuperFamilyFromBlast) > 0:
+                if len(currSameFamilyMergeStructure.TypeSPConjModule2listSP["VirB4"]) > 0 and len(currDownstreamSPIT.setSPIMESuperFamilyFromBlast) > 0:
                     preconditionsCompatibleNeigbhorFamilyStatus = False
                 if currDownstreamSPIT in SPsInSameFamilyMergeStructures2SameFamilyMergeStructure and currSPameFamilyMergeStructure in SPsInSameFamilyMergeStructures2SameFamilyMergeStructure:
                     if SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[currDownstreamSPIT] == SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[currSPameFamilyMergeStructure]:
                         preconditionsCompatibleNeigbhorFamilyStatus = False
                 if preconditionsCompatibleNeigbhorFamilyStatus is True and currDownstreamSPIT in SPsInSameFamilyMergeStructures2SameFamilyMergeStructure:
                     preconditionsCompatibleNeigbhorFamilyStatus = False
-                    # commentITToAdd = "Conjugaison module SP {} could be associated with upstream neighbor SPs {} but was not because it is already associated with another same family structure. "\
-                    # .format(currDownstreamSPIT.locusTag, hit.ListSPs.GetListProtIdsFromListSP(currSameFamilyMergeStructure.listOrderedSPs))
-                    # if commentITToAdd not in currSameFamilyMergeStructure.comment:
-                    #    currSameFamilyMergeStructure.comment += commentITToAdd
-                    # icescreen_OO.addCommentToLocusTag2Comment(currDownstreamSPIT.locusTag, commentITToAdd, locusTagMerge2Comment)
 
                 if preconditionsCompatibleNeigbhorFamilyStatus is True:
-                    # if len(currDownstreamSPIT.setSPICESuperFamilyFromBlast) == 0 and len(currDownstreamSPIT.setSPICEFamilyFromBlast) == 0 and len(currDownstreamSPIT.setSPIMESuperFamilyFromBlast) == 0:
                     if currDownstreamSPIT not in currSameFamilyMergeStructure.listOrderedSPs:
+                        setAllowCheckingForMultipleDistantSameSPType = set()
                         greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
                                 currSameFamilyMergeStructure,
                                 currDownstreamSPIT,
-                                groupListSPintoICEsIMEsUsingFamilyInfo,
-                                False,
-                                False,
-                                False)
+                                setAllowCheckingForMultipleDistantSameSPType
+                                )
                         if greenLightAddSPConjugaisonModule:
                             setGreenLightedSPConjugaisonModuleWithoutFamily.add(currDownstreamSPIT)
-                            # print("added currDownstreamSPIT "+currDownstreamSPIT.locusTag+"to setGreenLightedSPConjugaisonModuleWithoutFamily")
 
         if len(setGreenLightedSPConjugaisonModuleWithoutFamily) == 0:
             pass
@@ -272,10 +239,6 @@ def buildSameFamilyMergeStructures(currListSPs, locusTagMerge2Comment,
             # just one choice possible, add it
 
             currSPCompatibleNeigbhor = next(iter(setGreenLightedSPConjugaisonModuleWithoutFamily))
-            # for currSPCompatibleNeigbhor in setGreenLightedSPConjugaisonModuleWithoutFamily:
-
-            # for SPIT, EMStructureMergedIT  in SPsInSameFamilyMergeStructures2SameFamilyMergeStructure.items():  # key = SP, value = EMStructureMerged
-            #    print(SPIT.locusTag+" | "+str(EMStructureMergedIT.internalIdentifier))
 
             # if add a SP that way, check if present in SPsInSameFamilyMergeStructures2SameFamilyMergeStructure and give priority to proximity ?
             if currSPCompatibleNeigbhor in SPsInSameFamilyMergeStructures2SameFamilyMergeStructure:
@@ -284,7 +247,6 @@ def buildSameFamilyMergeStructures(currListSPs, locusTagMerge2Comment,
                 commentITToAdd = "Conjugaison module SP {} could be associated with same family SPs {} but was not because it is a compatible neigbhor with another same family structure. ".format(
                         currSPCompatibleNeigbhor.locusTag,
                         hit.ListSPs.GetListProtIdsFromListSP(currSameFamilyMergeStructureToAlter.listOrderedSPs))
-                # print(commentITToAdd)
                 if commentITToAdd not in currSameFamilyMergeStructure.comment:
                     currSameFamilyMergeStructure.comment += commentITToAdd
                 if commentITToAdd not in currSameFamilyMergeStructureToAlter.comment:
@@ -299,7 +261,6 @@ def buildSameFamilyMergeStructures(currListSPs, locusTagMerge2Comment,
 
             commentITToAdd = "Conjugaison module SP {} is a compatible neigbhor and is being associated with same family SPs {}. ".format(
                     currSPCompatibleNeigbhor.locusTag, hit.ListSPs.GetListProtIdsFromListSP(currSameFamilyMergeStructure.listOrderedSPs))
-            # print(commentITToAdd)
 
             if commentITToAdd not in currSameFamilyMergeStructure.comment:
                 currSameFamilyMergeStructure.comment += commentITToAdd
@@ -309,9 +270,6 @@ def buildSameFamilyMergeStructures(currListSPs, locusTagMerge2Comment,
         elif len(setGreenLightedSPConjugaisonModuleWithoutFamily) == 2:
             ObjectListGreenLightedSPConjugaisonModuleWithoutFamily = hit.ListSPs()
             ObjectListGreenLightedSPConjugaisonModuleWithoutFamily.list.extend(setGreenLightedSPConjugaisonModuleWithoutFamily)
-            # listGreenLightedSPConjugaisonModuleWithoutFamily = list(setGreenLightedSPConjugaisonModuleWithoutFamily)
-            # ObjectListGreenLightedSPConjugaisonModuleWithoutFamily.list.sort(key=lambda x: x.locusTag, reverse=True)
-            # sort by closer to more distant to a EM structure
             ObjectListGreenLightedSPConjugaisonModuleWithoutFamily.sortListSPsByProximityToMEStructure(currSameFamilyMergeStructure)
             listGreenLightedSPConjugaisonModuleWithoutFamily = ObjectListGreenLightedSPConjugaisonModuleWithoutFamily.list
             firstSPConjugaisonModuleWithoutFamilyInSet = listGreenLightedSPConjugaisonModuleWithoutFamily[0]
@@ -400,9 +358,6 @@ def buildSameFamilyMergeStructures(currListSPs, locusTagMerge2Comment,
                             currSameFamilyMergeStructure.internalIdentifier,
                             hit.ListSPs.GetListProtIdsFromListSP(currSameFamilyMergeStructure.listOrderedSPs)))
 
-    # for familyMergeStructuresIT in listSameFamilyMergeStructures:
-    #    print("familyMergeStructuresIT {}".format(familyMergeStructuresIT.GetObjectAsJson(True, "")))
-
     return (listSameFamilyMergeStructures,
             SPsInSameFamilyMergeStructures2SameFamilyMergeStructure)
 
@@ -412,78 +367,51 @@ def buildSameFamilyMergeStructures(currListSPs, locusTagMerge2Comment,
 
 # this method do not perform the actual merging but test all the merging possibilities between anchor of conj module of similar family within a segment
 def tryMergeSameFamilyStructures(
-        listICEsIMEsStructures,
-        listSameFamilyMergeStructures,
-        groupListSPintoICEsIMEsUsingFamilyInfo,
-        locusTagMerge2Comment,
-        locusTagIntegrase2Comment,
-        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance):
+        listICEsIMEsStructures
+        , listSameFamilyMergeStructures
+        , locusTagMerge2Comment
+        , locusTagIntegrase2Comment
+        ):
     for currSameFamilyMergeStructure in listSameFamilyMergeStructures:
-
-        # print(" ********* tryMergeSameFamilyStructures 0: {}".format(currSameFamilyMergeStructure.GetObjectAsJson(True, "")))
 
         setSPsInCurrSameFamilyMergeStructure = set(currSameFamilyMergeStructure.listOrderedSPs)
         mostUpstreamICEIMEThatWillHoldTheMerge = None
         for currICEsIMEsStructure in listICEsIMEsStructures:
 
             # setSPsInCurrICEsIMEsStructure = set(currICEsIMEsStructure.listOrderedSPs)  # not listOrderedSPs as we can get obvious integrase that have been added early on
-            setSPsInCurrICEsIMEsStructure = set(currICEsIMEsStructure.listRelaxase)
-            setSPsInCurrICEsIMEsStructure.update(currICEsIMEsStructure.listCouplingProtein)
-            setSPsInCurrICEsIMEsStructure.update(currICEsIMEsStructure.listVirB4)
+            setSPsInCurrICEsIMEsStructure = set()
+            for typeSPConjModuleIT in icescreen_OO.listTypeSPConjModule:
+                setSPsInCurrICEsIMEsStructure.update(currICEsIMEsStructure.TypeSPConjModule2listSP[typeSPConjModuleIT])
 
-            # lenInterectIT = len(setSPsInCurrICEsIMEsStructure.intersection(setSPsInCurrSameFamilyMergeStructure))
-            # print("\n* EVALUATING: {}".format(currICEsIMEsStructure.GetObjectAsJson(True, "")))
-            # print("\n* lenInterectIT: {}".format(str(lenInterectIT)))
-            # if lenInterectIT > 0 and lenInterectIT == len(currICEsIMEsStructure.listOrderedSPs):
             if setSPsInCurrICEsIMEsStructure.issubset(setSPsInCurrSameFamilyMergeStructure):
 
                 # found one of the structure to merge
-                # print("\n* tryMergeSameFamilyStructures 1 FOUND EQUIVALENT: {}".format(currICEsIMEsStructure.GetObjectAsJson(True, "")))
-
                 if mostUpstreamICEIMEThatWillHoldTheMerge is None:
                     mostUpstreamICEIMEThatWillHoldTheMerge = currICEsIMEsStructure
                 else:
-                    # print("---> tryMergeSameFamilyStructures 2: {} and {}".format(mostUpstreamICEIMEThatWillHoldTheMerge.internalIdentifier, currICEsIMEsStructure.internalIdentifier))
+                    setAllowCheckingForMultipleDistantSameSPType = set()
                     mostUpstreamICEIMEThatWillHoldTheMerge.mergeWith(
-                            currICEsIMEsStructure,
-                            groupListSPintoICEsIMEsUsingFamilyInfo,
-                            locusTagMerge2Comment,
-                            locusTagIntegrase2Comment,
-                            useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                            useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
-                            False,
-                            False,
-                            False)
-
+                            currICEsIMEsStructure
+                            , locusTagMerge2Comment
+                            , locusTagIntegrase2Comment
+                            , setAllowCheckingForMultipleDistantSameSPType
+                            )
 
 # this method do not perform the actual merging but test all the merging possibilities between anchor of conj module of different but compatible family within a segment
 def tryMergeNestedICEsIMEsStructures(
-        listICEsIMEsStructures,
-        maxNumberCDSForFilterIMESize,
-        groupListSPintoICEsIMEsUsingFamilyInfo,
-        locusTagMerge2Comment,
-        locusTagIntegrase2Comment,
-        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance):
-    # for currICEsIMEsStructure in listICEsIMEsStructures:
-    # assignPutativeTypeStructure(currICEsIMEsStructure, maxNumberCDSForFilterIMESize)
-    # score all combination of pair of ICEsIMEsStructures to see if they could be merged
-    # dictScoreMerge_2_listPairsICEsIMEsStructure1ToMergeWithICEsIMEsStructure2 = {}
-
-    allowCheckingForMultipleDistantRelaxaseIT = False
-    allowCheckingForMultipleDistantCouplingIT = False
-    allowCheckingForMultipleDistantVirB4IT = False
+        listICEsIMEsStructures
+        , locusTagMerge2Comment
+        , locusTagIntegrase2Comment
+        ):
+    
+    setAllowCheckingForMultipleDistantSameSPType = set()
 
     dictICEIME2otherICEIMETomerge2CDSInBetween = {}
-    # for currIndexOUTER, currOuterLoopICEsIMEsStructure in enumerate(listICEsIMEsStructures):  # enumerate not working for nested indexes
     for currIndexOUTER in range(len(listICEsIMEsStructures)):  # LOOP_OUTER_COMBI_MERGE
         currOuterLoopICEsIMEsStructure = listICEsIMEsStructures[currIndexOUTER]
 
-        # idxInSeedListMostUpstreamICEsIMEsStructureNested = currOuterLoopICEsIMEsStructure.findIdxInSeedListMostUpstreamICEsIMEsStructureMerged()
         idxInSeedListMostDownstreamICEsIMEsStructureMerged = currOuterLoopICEsIMEsStructure.findIdxInSeedListMostDownstreamICEsIMEsStructureMerged()
 
-        # for currIndexINNER, currInnerLoopICEsIMEsStructure in enumerate(listICEsIMEsStructures):  # LOOP_INNER_COMBI_MERGE
         for currIndexINNER in range(idxInSeedListMostDownstreamICEsIMEsStructureMerged + 1, len(listICEsIMEsStructures)):  # LOOP_INNER_COMBI_MERGE
             currInnerLoopICEsIMEsStructure = listICEsIMEsStructures[currIndexINNER]
 
@@ -492,13 +420,11 @@ def tryMergeNestedICEsIMEsStructures(
                 raise RuntimeError("Error in tryMergeNestedICEsIMEsStructures: numberOfICEsIMEsStructuresInBetween <= 0 ({}) for ICEsIMEsStructures {} and {}".format(
                         str(numberOfICEsIMEsStructuresInBetween), currOuterLoopICEsIMEsStructure.internalIdentifier, currInnerLoopICEsIMEsStructure.internalIdentifier))
             scoreMerge = scoreMergeTwoICEsIMEsStructures(
-                    currOuterLoopICEsIMEsStructure,
-                    currInnerLoopICEsIMEsStructure,
-                    numberOfICEsIMEsStructuresInBetween,
-                    groupListSPintoICEsIMEsUsingFamilyInfo,
-                    allowCheckingForMultipleDistantRelaxaseIT,
-                    allowCheckingForMultipleDistantCouplingIT,
-                    allowCheckingForMultipleDistantVirB4IT)
+                    currOuterLoopICEsIMEsStructure
+                    , currInnerLoopICEsIMEsStructure
+                    , numberOfICEsIMEsStructuresInBetween
+                    , setAllowCheckingForMultipleDistantSameSPType
+                    )
             # print("HERE scoreMerge = {} for {} and {}".format(str(scoreMerge), str(currOuterLoopICEsIMEsStructure.internalIdentifier), str(currInnerLoopICEsIMEsStructure.internalIdentifier)))
 
             if scoreMerge > 0:
@@ -524,8 +450,6 @@ def tryMergeNestedICEsIMEsStructures(
         if keyICEIMEPrimary.delMerging_idxListUpstreamStructure >= 0:
             continue
 
-        # print("keyICEIMEPrimary {} ".format(str(keyICEIMEPrimary.internalIdentifier)))
-
         dictOtherICEIMETomerge2CDSInBetween = dictICEIME2otherICEIMETomerge2CDSInBetween[keyICEIMEPrimary]
         if len(dictOtherICEIMETomerge2CDSInBetween) == 1:
             for keyICEIMESecondary in dictOtherICEIMETomerge2CDSInBetween:
@@ -539,28 +463,18 @@ def tryMergeNestedICEsIMEsStructures(
                     # print("merge of 1 - 1 with keyICEIMESecondary {}".format(keyICEIMESecondary.internalIdentifier))
                     if keyICEIMEPrimary.listOrderedSPs[0].CDSPositionInGenome < keyICEIMESecondary.listOrderedSPs[0].CDSPositionInGenome:
                         performedAMergeEvent = keyICEIMEPrimary.mergeWith(
-                                keyICEIMESecondary,
-                                groupListSPintoICEsIMEsUsingFamilyInfo,
-                                locusTagMerge2Comment,
-                                locusTagIntegrase2Comment,
-                                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
-                                allowCheckingForMultipleDistantRelaxaseIT,
-                                allowCheckingForMultipleDistantCouplingIT,
-                                allowCheckingForMultipleDistantVirB4IT)
-                        # performedAMergeEvent = True
+                                keyICEIMESecondary
+                                , locusTagMerge2Comment
+                                , locusTagIntegrase2Comment
+                                , setAllowCheckingForMultipleDistantSameSPType
+                                )
                     else:
                         performedAMergeEvent = keyICEIMESecondary.mergeWith(
-                                keyICEIMEPrimary,
-                                groupListSPintoICEsIMEsUsingFamilyInfo,
-                                locusTagMerge2Comment,
-                                locusTagIntegrase2Comment,
-                                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
-                                allowCheckingForMultipleDistantRelaxaseIT,
-                                allowCheckingForMultipleDistantCouplingIT,
-                                allowCheckingForMultipleDistantVirB4IT)
-                        # performedAMergeEvent = True
+                                keyICEIMEPrimary
+                                , locusTagMerge2Comment
+                                , locusTagIntegrase2Comment
+                                , setAllowCheckingForMultipleDistantSameSPType
+                                )
                 else:
                     # print("merge of n - 1 with keyICEIMESecondary {}".format(dictICEIME2otherICEIMETomerge2CDSInBetween[keyICEIMESecondary]))
                     pass
@@ -575,7 +489,6 @@ def tryMergeNestedICEsIMEsStructures(
                 if keyICEIMESecondary.delMerging_idxListUpstreamStructure >= 0:
                     continue
                 # print("assessing {}".format(keyICEIMESecondary.internalIdentifier))
-
                 # print("\tkeyICEIMEPrimary {} merge with multiple keyICEIMESecondary {}".format(str(keyICEIMEPrimary.internalIdentifier), str(keyICEIMESecondary.internalIdentifier)))
                 setInteresctFamilies = set()
                 setInteresctFamilies.update(keyICEIMEPrimary.setICEFamilyFromBlastOfSPConjModule.intersection(keyICEIMESecondary.setICEFamilyFromBlastOfSPConjModule))
@@ -611,29 +524,18 @@ def tryMergeNestedICEsIMEsStructures(
                                 # print("\tmerge of 1 - 1 with currICEIMEStructToMerge {}".format(currICEIMEStructToMerge.internalIdentifier))
                                 if keyICEIMEPrimary.listOrderedSPs[0].CDSPositionInGenome < currICEIMEStructToMerge.listOrderedSPs[0].CDSPositionInGenome:
                                     performedAMergeEvent = keyICEIMEPrimary.mergeWith(
-                                            currICEIMEStructToMerge,
-                                            groupListSPintoICEsIMEsUsingFamilyInfo,
-                                            locusTagMerge2Comment,
-                                            locusTagIntegrase2Comment,
-                                            useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                                            useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
-                                            allowCheckingForMultipleDistantRelaxaseIT,
-                                            allowCheckingForMultipleDistantCouplingIT,
-                                            allowCheckingForMultipleDistantVirB4IT)
-                                    # performedAMergeEvent = True
+                                            currICEIMEStructToMerge
+                                            , locusTagMerge2Comment
+                                            , locusTagIntegrase2Comment
+                                            , setAllowCheckingForMultipleDistantSameSPType
+                                            )
                                 else:
                                     performedAMergeEvent = currICEIMEStructToMerge.mergeWith(
-                                            keyICEIMEPrimary,
-                                            groupListSPintoICEsIMEsUsingFamilyInfo,
-                                            locusTagMerge2Comment, locusTagIntegrase2Comment,
-                                            useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                                            useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
-                                            allowCheckingForMultipleDistantRelaxaseIT,
-                                            allowCheckingForMultipleDistantCouplingIT,
-                                            allowCheckingForMultipleDistantVirB4IT)
-                                    # performedAMergeEvent = True
+                                            keyICEIMEPrimary
+                                            , locusTagMerge2Comment, locusTagIntegrase2Comment
+                                            , setAllowCheckingForMultipleDistantSameSPType
+                                            )
                             else:
-
                                 # print("merge of n - 1 with keyICEIMEPrimary {}, currICEIMEStructToMerge {}, len {}:"\
                                 #      .format(keyICEIMEPrimary.internalIdentifier, currICEIMEStructToMerge.internalIdentifier, str(len(dictICEIME2otherICEIMETomerge2CDSInBetween[keyICEIMESecondary]))))
                                 # for currOtherICEIMETomerge in dictICEIME2otherICEIMETomerge2CDSInBetween[currICEIMEStructToMerge]:
@@ -641,27 +543,20 @@ def tryMergeNestedICEsIMEsStructures(
 
                                 (mostUpstreamICEIMEThatWillHoldTheMerge,
                                  listICEIMECompatibleToMerge) = getmostUpstreamICEIMEThatWillHoldTheMergeAndlistSecondaryICEIMECompatibleToMerge(
-                                        currICEIMEStructToMerge,
-                                        dictICEIME2otherICEIMETomerge2CDSInBetween[currICEIMEStructToMerge],
-                                        groupListSPintoICEsIMEsUsingFamilyInfo,
-                                        allowCheckingForMultipleDistantRelaxaseIT,
-                                        allowCheckingForMultipleDistantCouplingIT,
-                                        allowCheckingForMultipleDistantVirB4IT)
+                                        currICEIMEStructToMerge
+                                        , dictICEIME2otherICEIMETomerge2CDSInBetween[currICEIMEStructToMerge]
+                                        , setAllowCheckingForMultipleDistantSameSPType
+                                        )
                                 if mostUpstreamICEIMEThatWillHoldTheMerge and len(listICEIMECompatibleToMerge) > 0:
                                     for currICEIMEStructToMerge in listICEIMECompatibleToMerge:
                                         performedAMergeEvent_partOfMultipleMergeEvents = mostUpstreamICEIMEThatWillHoldTheMerge.mergeWith(
-                                                currICEIMEStructToMerge,
-                                                groupListSPintoICEsIMEsUsingFamilyInfo,
-                                                locusTagMerge2Comment,
-                                                locusTagIntegrase2Comment,
-                                                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                                                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
-                                                allowCheckingForMultipleDistantRelaxaseIT,
-                                                allowCheckingForMultipleDistantCouplingIT,
-                                                allowCheckingForMultipleDistantVirB4IT)
+                                                currICEIMEStructToMerge
+                                                , locusTagMerge2Comment
+                                                , locusTagIntegrase2Comment
+                                                , setAllowCheckingForMultipleDistantSameSPType
+                                                )
                                         if performedAMergeEvent_partOfMultipleMergeEvents:
                                             performedAMergeEvent = True
-                                    # performedAMergeEvent = True
                                 else:
                                     strAddToComment = ""
                                     for currOtherICEIMETomerge in dictICEIME2otherICEIMETomerge2CDSInBetween[currICEIMEStructToMerge]:
@@ -669,8 +564,6 @@ def tryMergeNestedICEsIMEsStructures(
                                             strAddToComment += ", "
                                         strAddToComment += str(currOtherICEIMETomerge.internalIdentifier)
 
-                                    # print("The merge of this ICE / IME structure {} ({}) with {} was discarded because the latter could be match to multiple incompatible ICE / IME structures: {}. Please manually check which one to merge. "\
-                                    #    .format(keyICEIMEPrimary.internalIdentifier, hit.ListSPs.GetListProtIdsFromListSP(keyICEIMEPrimary.listOrderedSPs), currICEIMEStructToMerge.internalIdentifier, strAddToComment))
                                     commentITToAdd = "The merge of the ICE / IME structure {} ({}) with ICE / IME structure {} was discarded because the latter could be match to multiple incompatible ICE / IME structures: {}. Please manually check which one to merge. ".format(
                                             keyICEIMEPrimary.internalIdentifier, hit.ListSPs.GetListProtIdsFromListSP(keyICEIMEPrimary.listOrderedSPs), currICEIMEStructToMerge.internalIdentifier, strAddToComment)
                                     if commentITToAdd not in keyICEIMEPrimary.comment:
@@ -682,26 +575,20 @@ def tryMergeNestedICEsIMEsStructures(
                     else:
                         # there are multiple ICE IME struct that could be merged
                         (mostUpstreamICEIMEThatWillHoldTheMerge, listICEIMECompatibleToMerge) = getmostUpstreamICEIMEThatWillHoldTheMergeAndlistSecondaryICEIMECompatibleToMerge(
-                                keyICEIMEPrimary,
-                                setICEIMEStruct,
-                                groupListSPintoICEsIMEsUsingFamilyInfo,
-                                allowCheckingForMultipleDistantRelaxaseIT,
-                                allowCheckingForMultipleDistantCouplingIT,
-                                allowCheckingForMultipleDistantVirB4IT)
+                                keyICEIMEPrimary
+                                , setICEIMEStruct
+                                , setAllowCheckingForMultipleDistantSameSPType
+                                )
                         if mostUpstreamICEIMEThatWillHoldTheMerge and len(listICEIMECompatibleToMerge) > 0:
                             for currICEIMEStructToMerge in listICEIMECompatibleToMerge:
                                 performedAMergeEvent_partOfMultipleMergeEvents = mostUpstreamICEIMEThatWillHoldTheMerge.mergeWith(
-                                        currICEIMEStructToMerge,
-                                        groupListSPintoICEsIMEsUsingFamilyInfo, locusTagMerge2Comment,
-                                        locusTagIntegrase2Comment,
-                                        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                                        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
-                                        allowCheckingForMultipleDistantRelaxaseIT,
-                                        allowCheckingForMultipleDistantCouplingIT,
-                                        allowCheckingForMultipleDistantVirB4IT)
+                                        currICEIMEStructToMerge
+                                        , locusTagMerge2Comment
+                                        , locusTagIntegrase2Comment
+                                        , setAllowCheckingForMultipleDistantSameSPType
+                                        )
                                 if performedAMergeEvent_partOfMultipleMergeEvents:
                                     performedAMergeEvent = True
-                            # performedAMergeEvent = True
                         else:
                             commentITToAdd = "The ICE / IME structure {} ({}) could be merged with multiple incompatible ICE / IME structures: {}. Please manually check which one to merge. ".format(
                                     keyICEIMEPrimary.internalIdentifier, hit.ListSPs.GetListProtIdsFromListSP(keyICEIMEPrimary.listOrderedSPs), EMStructure.BasicEMStructure.GetListInternIdFromSetEMStructure(setICEIMEStruct))
@@ -715,25 +602,20 @@ def tryMergeNestedICEsIMEsStructures(
 
     if performedAMergeEvent:  # recursive to merge more than 2 ICE /IME
         tryMergeNestedICEsIMEsStructures(
-                listICEsIMEsStructures,
-                maxNumberCDSForFilterIMESize,
-                groupListSPintoICEsIMEsUsingFamilyInfo,
-                locusTagMerge2Comment,
-                locusTagIntegrase2Comment,
-                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance)
+                listICEsIMEsStructures
+                , locusTagMerge2Comment
+                , locusTagIntegrase2Comment
+                )
 
 
 
 # return scoreMerge Int. A score > 0 reflecting that a merge is possible. The score indicate the number of other ICEsIMEsStructures in between the 2 that are assessed. Priority will be given to merge with the lowest score.
 def scoreMergeTwoICEsIMEsStructures(
-        currOuterLoopICEsIMEsStructure,
-        currInnerLoopICEsIMEsStructure,
-        numberOfICEsIMEsStructuresInBetween,
-        groupListSPintoICEsIMEsUsingFamilyInfo,
-        allowCheckingForMultipleDistantRelaxase,
-        allowCheckingForMultipleDistantCoupling,
-        allowCheckingForMultipleDistantVirB4):
+        currOuterLoopICEsIMEsStructure
+        , currInnerLoopICEsIMEsStructure
+        , numberOfICEsIMEsStructuresInBetween
+        , setAllowCheckingForMultipleDistantSameSPType
+        ):
 
     DEBug_scoreMergeTwoICEsIMEsStructures = False
     if DEBug_scoreMergeTwoICEsIMEsStructures :
@@ -778,33 +660,17 @@ def scoreMergeTwoICEsIMEsStructures(
             print("return -1 : can not merge a distant anchors when 1 is related to IME and the other to ICE 2")
         return -1  # can not merge a distant anchors when 1 is related to IME and the other to ICE
 
-    # not necessary anymore, as more complex merging now
-    # # check that numberOfICEsIMEsStructuresInBetween is different than 0.
-    # if numberOfICEsIMEsStructuresInBetween == 0:
-    #     if DEBug_scoreMergeTwoICEsIMEsStructures :
-    #         print("return -1 : numberOfICEsIMEsStructuresInBetween == 0")
-    #     return -1  # fusion with 0 other ICE/IME in between technically possible but do not take into account (it is an artefact if it is fused)
-
-    #can not merge with a structure that is already full, not necessary
-    # if len(currOuterLoopICEsIMEsStructure.listRelaxase) >= 1 and len(currOuterLoopICEsIMEsStructure.listCouplingProtein) >= 1 and len(currOuterLoopICEsIMEsStructure.listVirB4) >= 1:
-    #     return -1
-    # if len(currInnerLoopICEsIMEsStructure.listRelaxase) >= 1 and len(currInnerLoopICEsIMEsStructure.listCouplingProtein) >= 1 and len(currInnerLoopICEsIMEsStructure.listVirB4) >= 1:
-    #     return -1
-
-
     # can not merge if can not rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure
     for currentSPInner in currInnerLoopICEsIMEsStructure.listOrderedSPs:
-        if (currentSPInner.SPType == "Relaxase" or currentSPInner.SPType == "Coupling protein" or currentSPInner.SPType == "VirB4"):
+        if currentSPInner.SPType in icescreen_OO.listTypeSPConjModule:
             if len(currentSPInner.setICEsIMEsStructureInConflict) != 0:
                 pass  # SP in conflict are regarded as being not there for the merging event
             else:
                 greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
                         currOuterLoopICEsIMEsStructure,
                         currentSPInner,
-                        groupListSPintoICEsIMEsUsingFamilyInfo,
-                        allowCheckingForMultipleDistantRelaxase,
-                        allowCheckingForMultipleDistantCoupling,
-                        allowCheckingForMultipleDistantVirB4)
+                        setAllowCheckingForMultipleDistantSameSPType
+                        )
                 if not greenLightAddSPConjugaisonModule:
                     if DEBug_scoreMergeTwoICEsIMEsStructures :
                         print("return -1 : not greenLightAddSPConjugaisonModule for currOuterLoopICEsIMEsStructure {} ({}) and currentSPInner {}".format(currOuterLoopICEsIMEsStructure.internalIdentifier, hit.ListSPs.GetListProtIdsFromListSP(currOuterLoopICEsIMEsStructure.listOrderedSPs), currentSPInner.locusTag))
@@ -817,19 +683,15 @@ def scoreMergeTwoICEsIMEsStructures(
 
 # the more downsteam anchor will be merged into the more upstream anchor.
 def getmostUpstreamICEIMEThatWillHoldTheMergeAndlistSecondaryICEIMECompatibleToMerge(
-        keyICEIMEPrimarySent,
-        setICEIMEStructSent,
-        groupListSPintoICEsIMEsUsingFamilyInfo,
-        allowCheckingForMultipleDistantRelaxase,
-        allowCheckingForMultipleDistantCoupling,
-        allowCheckingForMultipleDistantVirB4):
+        keyICEIMEPrimarySent
+        , setICEIMEStructSent
+        , setAllowCheckingForMultipleDistantSameSPType
+        ):
 
     listICEIMEStruct = []
     listICEIMEStruct.extend(setICEIMEStructSent)
     listICEIMEStruct.append(keyICEIMEPrimarySent)
     CDSPositionInGenome2ICEIMEStruct = {}
-
-    #print("getmostUpstreamICEIMEThatWillHoldTheMergeAndlistSecondaryICEIMECompatibleToMerge")
 
     for currICEIMEStructToMerge in listICEIMEStruct:
 
@@ -858,13 +720,11 @@ def getmostUpstreamICEIMEThatWillHoldTheMergeAndlistSecondaryICEIMECompatibleToM
                 raise RuntimeError("Error in getmostUpstreamICEIMEThatWillHoldTheMergeAndlistSecondaryICEIMECompatibleToMerge: numberOfICEsIMEsStructuresInBetween <= 0 ({}) for ICEsIMEsStructures {} and {}".format(
                         str(numberOfICEsIMEsStructuresInBetween), currOuterLoopICEsIMEsStructure.internalIdentifier, currInnerLoopICEsIMEsStructure.internalIdentifier))
             scoreMerge = scoreMergeTwoICEsIMEsStructures(
-                    currOuterLoopICEsIMEsStructure,
-                    currInnerLoopICEsIMEsStructure,
-                    numberOfICEsIMEsStructuresInBetween,
-                    groupListSPintoICEsIMEsUsingFamilyInfo,
-                    allowCheckingForMultipleDistantRelaxase,
-                    allowCheckingForMultipleDistantCoupling,
-                    allowCheckingForMultipleDistantVirB4)
+                    currOuterLoopICEsIMEsStructure
+                    , currInnerLoopICEsIMEsStructure
+                    , numberOfICEsIMEsStructuresInBetween
+                    , setAllowCheckingForMultipleDistantSameSPType
+                    )
             if scoreMerge <= 0:
                 #print("scoreMerge <= 0")
                 allICEIMEStructAreCompatibleToMerge = False

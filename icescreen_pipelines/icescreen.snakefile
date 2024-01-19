@@ -113,7 +113,8 @@ rule create_annotation_files:
 rule detect_mobile_elements:
     input:
         spfile = os.path.join(outdir, "results/{gbname}/icescreen_detection_SP/{gbname}_detected_SP.tsv"),
-        meconffile = os.path.join(rootdir, "icescreen_detection_ME/icescreen.conf")
+        meconffile = os.path.join(rootdir, "icescreen_detection_ME/icescreen.conf"),
+        gb = os.path.join(gbdir, "{gbname}.gb")
     params:
         conffile = os.path.join(outdir, "results/{gbname}/icescreen.conf")
     log:
@@ -124,7 +125,7 @@ rule detect_mobile_elements:
     shell:
         """
         # Search ICE and IME
-        python3 {rootdir}/icescreen_detection_ME/src/icescreen_OO.py -i {input.spfile} -c {input.meconffile} -o {output.mefile} -m {output.spidsfile} -l {log}
+        python3 {rootdir}/icescreen_detection_ME/src/icescreen_OO.py -i {input.spfile} -c {input.meconffile} -o {output.mefile} -m {output.spidsfile} -l {log} --gb_input {input.gb} --taxo_mode_file {mode}
         # Add output paths to ICEscreen config file
         bash {rootdir}/icescreen_pipelines/edit_configfile.sh --conffile {params.conffile} \
                                                     --mefile {output.mefile} \
@@ -214,6 +215,7 @@ rule gather_blastP_SP_results:
         expand(os.path.join(outdir, "results", "{gbname}", "icescreen_detection_SP/Blast_mode/filtered_results", "{gbname}_{blast_dbname}_filtered_best.tsv"), blast_dbname=blast_dbnames, allow_missing=True)
     output:
         temp(os.path.join(outdir, "results", "{gbname}", "icescreen_detection_SP/Blast_mode", "{gbname}_SP.tmp.tsv")),
+        temp(os.path.join(outdir, "results", "{gbname}", "icescreen_detection_SP/Blast_mode", "{gbname}_SP.tmp2.tsv")),
         os.path.join(outdir, "results", "{gbname}", "icescreen_detection_SP/Blast_mode", "{gbname}_blast_SP.tsv")
     shell:
         """
@@ -221,6 +223,7 @@ rule gather_blastP_SP_results:
         awk 'FNR==1 && NR!=1 {{next;}}{{print}}' {input} > {output[0]};
         # Reorder rows
         tail -n+2 {output[0]} | sort -t$'\t' -k2n | cat <(head -1 {output[0]}) - > {output[1]}
+        python3 {rootdir}/icescreen_detection_SP/src/retain_only_best_blast_hit_for_each_locus_tag.py -i {output[1]} -o {output[2]}
         """
 
 

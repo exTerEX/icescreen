@@ -17,7 +17,7 @@ The directory ./tests/ contains ICEs / IMEs structures adapted from manually cur
    -verbose' : Turn on verbose mode ; default=False
 
 Example running the script on a test file :
-python3 src/icescreen_OO.py -c ./icescreen.conf -i tests/test_files/test1_NC_004668.1_detected_SP.csv -o results/test1_NC_004668.1_results_EM.tsv -m results/test1_NC_004668.1_detected_SP_withICEIMEIds.tsv -l results/test1_NC_004668.1_results_EM.log
+python3 src/icescreen_OO.py -c ./icescreen.conf -i tests/test_files/test1_NC_004668.1_detected_SP.csv -o results/test1_NC_004668.1_results_EM.tsv -m results/test1_NC_004668.1_detected_SP_withICEIMEIds.tsv -l results/test1_NC_004668.1_results_EM.log --gb_input tests/test_files/test1_NC_004668.1.gb --taxo_mode_file tests/test_files/mode/bacillota.yml
 See more examples in the file ./runTests.sh.
 
 

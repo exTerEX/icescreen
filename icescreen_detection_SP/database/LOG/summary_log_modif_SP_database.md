@@ -1,7 +1,9 @@
 
+## v1.3.0, January 2024
+#### Minor changes
+* [Issue #12](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/12): the integrase ADV69694 was wrongfully annotated as having IME_superfamily PF01076, relaxase_family_domain PF01076, and relaxase_family_MOB MOBV. Those metadata were causing an error : "Input file error: adding Relaxase_family_domain_of_most_similar_ref_SP for Type Serine integrase". Those metadata have been deleted.
 
 ## v1.1.0, November 2022
-
 * The IME_superfamily "PF01719-like" has been renamed "PF01719" to conform to the naming convention.
 * Replacement of family PF01076+PF02486 by PF02486 and of family MobV+MobT by mobT for AAM99131, ABA45702, AFS45036, AGU82204, AGU83894, BAN61292, CAD45862, CBZ47880, CCW37084.
 * Replacement of family PF01076+PF02486 by PF01076 and of family MobV+MobT by mobV for ABA44955, AFS45038, AGU82202, AGU83896, BAH80804, CAD45864, CBZ47878, CCW37086.

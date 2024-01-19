@@ -62,11 +62,9 @@ class CDS():
 class SP(CDS):
     def __init__(self):
         super(SP, self).__init__()
-        self.SPType = ""  # col CDS_Protein_Type ; Values: Coupling, Relaxase, Virb4, icescreen_OO.setIntegrase ; modify in tryAddingSPToConjugaisonModuleEMStructure() if make changes
+        self.SPType = ""  # col CDS_Protein_Type ; Values: icescreen_OO.listTypeSPConjModule, icescreen_OO.setIntegrase # WAS Values: Coupling, Relaxase, Virb4
         self.SPDetectedByBlast = ""  # col Is_hit_blast ; Values: 1, 0
         self.SPDetectedByHMM = ""  # col Is_hit_HMM_JL or Is_hit_HMM_CC depending ; Values: 1, 0
-        # self.SPFamilyFromBlast = ""
-        # self.setSPFamilyFromBlast = set()
         self.setSPICESuperFamilyFromBlast = set()  # col ICE_superfamily_of_most_similar_ref_SP
         self.setSPICEFamilyFromBlast = set()  # col ICE_family_of_most_similar_ref_SP
         self.setSPIMESuperFamilyFromBlast = set()  # col IME_superfamily_of_most_similar_ref_SP
@@ -124,7 +122,6 @@ class SP(CDS):
         stToReturn += "\t\"SPType\": \"" + self.SPType + "\"\n"
         stToReturn += "\t\"SPDetectedByBlast\": \"" + str(self.SPDetectedByBlast) + "\"\n"
         stToReturn += "\t\"SPDetectedByHMM\": \"" + str(self.SPDetectedByHMM) + "\"\n"
-        # stToReturn += "\t\"setSPFamilyFromBlast\": \"" + ", ".join(str(i) for i in sorted(self.setSPFamilyFromBlast)) + "\"\n"
         stToReturn += "\t\"setSPICESuperFamilyFromBlast\": \"" + ", ".join(str(i) for i in sorted(self.setSPICESuperFamilyFromBlast)) + "\"\n"
         stToReturn += "\t\"setSPICEFamilyFromBlast\": \"" + ", ".join(str(i) for i in sorted(self.setSPICEFamilyFromBlast)) + "\"\n"
         stToReturn += "\t\"setSPIMESuperFamilyFromBlast\": \"" + ", ".join(str(i) for i in sorted(self.setSPIMESuperFamilyFromBlast)) + "\"\n"
@@ -147,7 +144,7 @@ class SP(CDS):
         stToReturn += "\t\"CDS_coverage_blast\": \"" + str(self.CDS_coverage_blast) + "\"\n"
         stToReturn += "\t\"Blast_ali_coverage_most_similar_ref_SP\": \"" + str(self.Blast_ali_coverage_most_similar_ref_SP) + "\"\n"
 
-        stToReturn += "\t\"setICEsIMEsStructureInConflict\": \"" + EMStructure.BasicEMStructure.GetListInternIdFromSetEMStructure(self.setICEsIMEsStructureInConflict) + "\"\n"  # ", ".join(str(i) for i in sorted(self.setICEsIMEsStructureInConflict))
+        stToReturn += "\t\"setICEsIMEsStructureInConflict\": \"" + EMStructure.BasicEMStructure.GetListInternIdFromSetEMStructure(self.setICEsIMEsStructureInConflict) + "\"\n"
         stToReturn += "\t\"listSiblingFragmentedSP\": \"" + ListSPs.GetListProtIdsFromListSP(self.listSiblingFragmentedSP) + "\"\n"
 
         stToReturn += "}\n"
@@ -176,7 +173,6 @@ class ListSPs():
         self.list = newListSPsIT
 
     def sortListSPsByStart(self):
-        #self.list.sort(key=lambda x: x.start, reverse=False)
         self.list.sort(key=lambda x: (x.genomeAccessionRank, x.start), reverse=False)
 
 
@@ -244,7 +240,8 @@ class ListSPs():
 
 
     
-    def splitListOrderedSPs_colocalizeByMaxNumberCDS(self, maxNumberCDSForSplitSPsByColocalizion):
+    def splitListOrderedSPs_colocalizeByMaxNumberCDS(self):
+        #commonMethods.ConfigParams.maxNumberCDSForSplitSPsByColocalizion
         listOfListOfColocalizedSPsToReturn = []
         currListSPs = ListSPs()
         for currIndex, currSP in enumerate(self.list, start=0):
@@ -264,7 +261,7 @@ class ListSPs():
                                         str(distanceWithNextSp),
                                         currSP.locusTag,
                                         otherSP.locusTag))
-                    if (distanceWithNextSp > maxNumberCDSForSplitSPsByColocalizion):
+                    if (distanceWithNextSp > commonMethods.ConfigParams.maxNumberCDSForSplitSPsByColocalizion):
                         # start a new currListSPs
                         listOfListOfColocalizedSPsToReturn.append(currListSPs)
                         currListSPs = ListSPs()
@@ -284,11 +281,6 @@ class ListSPs():
         self,
         locusTagMerge2Comment,
         locusTagIntegrase2Comment,
-        groupListSPintoICEsIMEsUsingFamilyInfo,
-        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
-        maxOverlappingAliLenghtFragmentedSPs,
-        maxCDSDistanceToMergeFragmentedSPs
         ):
 
         printInDebugIT = False
@@ -322,20 +314,16 @@ class ListSPs():
                 SPTypeIT1IT.genomeAccessionRank,
                 SPTypeIT2IT.genomeAccessionRank
                 )
-            if overlapIT >= maxOverlappingAliLenghtFragmentedSPs :
+            if overlapIT >= commonMethods.ConfigParams.maxOverlappingAliLenghtFragmentedSPs :
                 #Those 2 SPs do not overlap
                 if printInDebugIT:
-                    print("overlapIT ({}) >= maxOverlappingAliLenghtFragmentedSPs ({})".format(str(overlapIT), str(maxOverlappingAliLenghtFragmentedSPs)))
+                    print("overlapIT ({}) >= maxOverlappingAliLenghtFragmentedSPs ({})".format(str(overlapIT), str(commonMethods.ConfigParams.maxOverlappingAliLenghtFragmentedSPs)))
                 continue
 
             # do not merge integrase of different types : tyr, ser, DDE
             if SPTypeIT1IT.SPType in icescreen_OO.setIntegraseNames and SPTypeIT2IT.SPType in icescreen_OO.setIntegraseNames:
                 if SPTypeIT1IT.SPType in icescreen_OO.setIntegraseTyrNames and SPTypeIT2IT.SPType not in icescreen_OO.setIntegraseTyrNames :
                     commentITToAdd = "{} could complement the fragment {} to form a single integrase but they are not of the same type ({} and {}). ".format(SPTypeIT1IT.locusTag, SPTypeIT2IT.locusTag, SPTypeIT1IT.SPType, SPTypeIT2IT.SPType)
-                    # if commentITToAdd not in SPTypeIT1IT_structureIT.comment:
-                    #     SPTypeIT1IT_structureIT.comment += commentITToAdd
-                    # if commentITToAdd not in SPTypeIT2IT_structureIT.comment:
-                    #     SPTypeIT2IT_structureIT.comment += commentITToAdd
                     icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                     icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                     if printInDebugIT:
@@ -343,10 +331,6 @@ class ListSPs():
                     continue
                 elif SPTypeIT1IT.SPType in icescreen_OO.setIntegraseSerNames and SPTypeIT2IT.SPType not in icescreen_OO.setIntegraseSerNames :
                     commentITToAdd = "{} could complement the fragment {} to form a single integrase but they are not of the same type ({} and {}). ".format(SPTypeIT1IT.locusTag, SPTypeIT2IT.locusTag, SPTypeIT1IT.SPType, SPTypeIT2IT.SPType)
-                    # if commentITToAdd not in SPTypeIT1IT_structureIT.comment:
-                    #     SPTypeIT1IT_structureIT.comment += commentITToAdd
-                    # if commentITToAdd not in SPTypeIT2IT_structureIT.comment:
-                    #     SPTypeIT2IT_structureIT.comment += commentITToAdd
                     icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                     icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                     if printInDebugIT:
@@ -354,10 +338,6 @@ class ListSPs():
                     continue
                 elif SPTypeIT1IT.SPType in icescreen_OO.setIntegraseDDENames and SPTypeIT2IT.SPType not in icescreen_OO.setIntegraseDDENames :
                     commentITToAdd = "{} could complement the fragment {} to form a single integrase but they are not of the same type ({} and {}). ".format(SPTypeIT1IT.locusTag, SPTypeIT2IT.locusTag, SPTypeIT1IT.SPType, SPTypeIT2IT.SPType)
-                    # if commentITToAdd not in SPTypeIT1IT_structureIT.comment:
-                    #     SPTypeIT1IT_structureIT.comment += commentITToAdd
-                    # if commentITToAdd not in SPTypeIT2IT_structureIT.comment:
-                    #     SPTypeIT2IT_structureIT.comment += commentITToAdd
                     icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                     icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                     if printInDebugIT:
@@ -373,10 +353,6 @@ class ListSPs():
                     if self.list[SPTypeIT1IT.idxInListSP+1].SPType in icescreen_OO.setIntegraseSerNames :
                         if (abs(self.list[SPTypeIT1IT.idxInListSP+1].CDSPositionInGenome - SPTypeIT1IT.CDSPositionInGenome) <= 2):  # Integrases are adjacent in genome or separated by a CDS
                             commentITToAdd = "{} could complement the fragment {} to form a single {} but there is a downstream Integrases {} adjacent in the genome in-between, please manually review. ".format(SPTypeIT1IT.locusTag, SPTypeIT2IT.locusTag, SPTypeIT1IT.SPType, self.list[SPTypeIT1IT.idxInListSP+1].locusTag)
-                            # if commentITToAdd not in SPTypeIT1IT_structureIT.comment:
-                            #     SPTypeIT1IT_structureIT.comment += commentITToAdd
-                            # if commentITToAdd not in SPTypeIT2IT_structureIT.comment:
-                            #     SPTypeIT2IT_structureIT.comment += commentITToAdd
                             icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                             icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                             if printInDebugIT:
@@ -386,10 +362,6 @@ class ListSPs():
                     if self.list[SPTypeIT2IT.idxInListSP-1].SPType in icescreen_OO.setIntegraseSerNames :
                         if (abs(self.list[SPTypeIT2IT.idxInListSP-1].CDSPositionInGenome - SPTypeIT2IT.CDSPositionInGenome) <= 2):  # Integrases are adjacent in genome or separated by a CDS
                             commentITToAdd = "{} could complement the fragment {} to form a single {} but there is a upstream Integrases {} adjacent in the genome in-between, please manually review. ".format(SPTypeIT1IT.locusTag, SPTypeIT2IT.locusTag, SPTypeIT1IT.SPType, self.list[SPTypeIT2IT.idxInListSP-1].locusTag)
-                            # if commentITToAdd not in SPTypeIT1IT_structureIT.comment:
-                            #     SPTypeIT1IT_structureIT.comment += commentITToAdd
-                            # if commentITToAdd not in SPTypeIT2IT_structureIT.comment:
-                            #     SPTypeIT2IT_structureIT.comment += commentITToAdd
                             icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                             icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                             if printInDebugIT:
@@ -400,10 +372,6 @@ class ListSPs():
                     if self.list[SPTypeIT2IT.idxInListSP+1].SPType in icescreen_OO.setIntegraseSerNames :
                         if (abs(self.list[SPTypeIT2IT.idxInListSP+1].CDSPositionInGenome - SPTypeIT2IT.CDSPositionInGenome) <= 2):  # Integrases are adjacent in genome or separated by a CDS
                             commentITToAdd = "{} could complement the fragment {} to form a single {} but there is a downstream Integrases {} adjacent in the genome in-between, please manually review. ".format(SPTypeIT1IT.locusTag, SPTypeIT2IT.locusTag, SPTypeIT1IT.SPType, self.list[SPTypeIT2IT.idxInListSP+1].locusTag)
-                            # if commentITToAdd not in SPTypeIT1IT_structureIT.comment:
-                            #     SPTypeIT1IT_structureIT.comment += commentITToAdd
-                            # if commentITToAdd not in SPTypeIT2IT_structureIT.comment:
-                            #     SPTypeIT2IT_structureIT.comment += commentITToAdd
                             icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                             icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                             if printInDebugIT:
@@ -413,10 +381,6 @@ class ListSPs():
                     if self.list[SPTypeIT1IT.idxInListSP-1].SPType in icescreen_OO.setIntegraseSerNames :
                         if (abs(self.list[SPTypeIT1IT.idxInListSP-1].CDSPositionInGenome - SPTypeIT1IT.CDSPositionInGenome) <= 2):  # Integrases are adjacent in genome or separated by a CDS
                             commentITToAdd = "{} could complement the fragment {} to form a single {} but there is a upstream Integrases {} adjacent in the genome in-between, please manually review. ".format(SPTypeIT1IT.locusTag, SPTypeIT2IT.locusTag, SPTypeIT1IT.SPType, self.list[SPTypeIT1IT.idxInListSP-1].locusTag)
-                            # if commentITToAdd not in SPTypeIT1IT_structureIT.comment:
-                            #     SPTypeIT1IT_structureIT.comment += commentITToAdd
-                            # if commentITToAdd not in SPTypeIT2IT_structureIT.comment:
-                            #     SPTypeIT2IT_structureIT.comment += commentITToAdd
                             icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                             icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                             if printInDebugIT:
@@ -425,18 +389,9 @@ class ListSPs():
 
             # check setSPICEFamilyFromBlast compatible
             if SPTypeIT1IT.SPType not in icescreen_OO.setIntegraseNames:
-                # if len(SPTypeIT1IT.setSPICEFamilyFromBlast) > 0 or len(SPTypeIT2IT.setSPICEFamilyFromBlast) > 0:
-                #     if len(SPTypeIT1IT.setSPICEFamilyFromBlast.intersection(SPTypeIT2IT.setSPICEFamilyFromBlast)) == 0:
-                #         if printInDebugIT:
-                #             print("len(SPTypeIT1IT.setSPICEFamilyFromBlast.intersection(SPTypeIT2IT.setSPICEFamilyFromBlast)) == 0 : SPTypeIT1IT.setSPICEFamilyFromBlast = {} ; SPTypeIT2IT.setSPICEFamilyFromBlast".format(str(SPTypeIT1IT.setSPICEFamilyFromBlast), str(SPTypeIT2IT.setSPICEFamilyFromBlast)))
-                #         continue
                 if len(SPTypeIT1IT.setSPICESuperFamilyFromBlast) > 0 and len(SPTypeIT2IT.setSPICESuperFamilyFromBlast) > 0:
                     if len(SPTypeIT1IT.setSPICESuperFamilyFromBlast.intersection(SPTypeIT2IT.setSPICESuperFamilyFromBlast)) == 0:
                         commentITToAdd = "{} could complement the fragment {} to form a single {} but they have different ICE superfamily, please manually review. ".format(SPTypeIT1IT.locusTag, SPTypeIT2IT.locusTag, SPTypeIT1IT.SPType)
-                        # if commentITToAdd not in SPTypeIT1IT_structureIT.comment:
-                        #     SPTypeIT1IT_structureIT.comment += commentITToAdd
-                        # if commentITToAdd not in SPTypeIT2IT_structureIT.comment:
-                        #     SPTypeIT2IT_structureIT.comment += commentITToAdd
                         icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                         icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                         if printInDebugIT:
@@ -445,10 +400,6 @@ class ListSPs():
                 if SPTypeIT1IT.SPType == "Relaxase" :
                     if SPTypeIT1IT.Relaxase_family_domain_of_most_similar_ref_SPFromBlast != SPTypeIT2IT.Relaxase_family_domain_of_most_similar_ref_SPFromBlast :
                         commentITToAdd = "{} could complement the fragment {} to form a single {} but their most similar reference SP have different relaxase family domain, please manually review. ".format(SPTypeIT1IT.locusTag, SPTypeIT2IT.locusTag, SPTypeIT1IT.SPType)
-                        # if commentITToAdd not in SPTypeIT1IT_structureIT.comment:
-                        #     SPTypeIT1IT_structureIT.comment += commentITToAdd
-                        # if commentITToAdd not in SPTypeIT2IT_structureIT.comment:
-                        #     SPTypeIT2IT_structureIT.comment += commentITToAdd
                         icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                         icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                         if printInDebugIT:
@@ -465,10 +416,6 @@ class ListSPs():
                 if SPTypeIT1IT.CDSPositionInGenome < SPTypeIT2IT.CDSPositionInGenome:
                     if SPTypeIT1IT.Blast_ali_start_Query_blast > SPTypeIT2IT.Blast_ali_start_Query_blast or SPTypeIT1IT.Blast_ali_start_Query_blast > SPTypeIT1IT.Blast_ali_end_Query_blast or SPTypeIT2IT.Blast_ali_start_Query_blast > SPTypeIT2IT.Blast_ali_end_Query_blast :
                         commentITToAdd = "{} could complement the fragment {} to form a single {} but the orientation of {} and {} is not coherent, please manually review. ".format(SPTypeIT1IT.locusTag, SPTypeIT2IT.locusTag, SPTypeIT1IT.SPType, SPTypeIT1IT.locusTag, SPTypeIT2IT.locusTag)
-                        # if commentITToAdd not in SPTypeIT1IT_structureIT.comment:
-                        #     SPTypeIT1IT_structureIT.comment += commentITToAdd
-                        # if commentITToAdd not in SPTypeIT2IT_structureIT.comment:
-                        #     SPTypeIT2IT_structureIT.comment += commentITToAdd
                         icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                         icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                         if printInDebugIT:
@@ -477,10 +424,6 @@ class ListSPs():
                 else :
                     if SPTypeIT2IT.Blast_ali_start_Query_blast > SPTypeIT1IT.Blast_ali_start_Query_blast or SPTypeIT1IT.Blast_ali_start_Query_blast > SPTypeIT1IT.Blast_ali_end_Query_blast or SPTypeIT2IT.Blast_ali_start_Query_blast > SPTypeIT2IT.Blast_ali_end_Query_blast :
                         commentITToAdd = "{} could complement the fragment {} to form a single {} but the orientation of {} and {} is not coherent, please manually review. ".format(SPTypeIT1IT.locusTag, SPTypeIT2IT.locusTag, SPTypeIT1IT.SPType, SPTypeIT1IT.locusTag, SPTypeIT2IT.locusTag)
-                        # if commentITToAdd not in SPTypeIT1IT_structureIT.comment:
-                        #     SPTypeIT1IT_structureIT.comment += commentITToAdd
-                        # if commentITToAdd not in SPTypeIT2IT_structureIT.comment:
-                        #     SPTypeIT2IT_structureIT.comment += commentITToAdd
                         icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                         icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                         if printInDebugIT:
@@ -492,10 +435,6 @@ class ListSPs():
                 if SPTypeIT1IT.CDSPositionInGenome < SPTypeIT2IT.CDSPositionInGenome:
                     if SPTypeIT1IT.Blast_ali_start_Query_blast < SPTypeIT2IT.Blast_ali_start_Query_blast or SPTypeIT1IT.Blast_ali_start_Query_blast > SPTypeIT1IT.Blast_ali_end_Query_blast or SPTypeIT2IT.Blast_ali_start_Query_blast > SPTypeIT2IT.Blast_ali_end_Query_blast :
                         commentITToAdd = "{} could complement the fragment {} to form a single {} but the orientation of {} and {} is not coherent, please manually review. ".format(SPTypeIT1IT.locusTag, SPTypeIT2IT.locusTag, SPTypeIT1IT.SPType, SPTypeIT1IT.locusTag, SPTypeIT2IT.locusTag)
-                        # if commentITToAdd not in SPTypeIT1IT_structureIT.comment:
-                        #     SPTypeIT1IT_structureIT.comment += commentITToAdd
-                        # if commentITToAdd not in SPTypeIT2IT_structureIT.comment:
-                        #     SPTypeIT2IT_structureIT.comment += commentITToAdd
                         icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                         icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                         if printInDebugIT:
@@ -504,10 +443,6 @@ class ListSPs():
                 else :
                     if SPTypeIT2IT.Blast_ali_start_Query_blast < SPTypeIT1IT.Blast_ali_start_Query_blast or SPTypeIT1IT.Blast_ali_start_Query_blast > SPTypeIT1IT.Blast_ali_end_Query_blast or SPTypeIT2IT.Blast_ali_start_Query_blast > SPTypeIT2IT.Blast_ali_end_Query_blast :
                         commentITToAdd = "{} could complement the fragment {} to form a single {} but the orientation of {} and {} is not coherent, please manually review. ".format(SPTypeIT1IT.locusTag, SPTypeIT2IT.locusTag, SPTypeIT1IT.SPType, SPTypeIT1IT.locusTag, SPTypeIT2IT.locusTag)
-                        # if commentITToAdd not in SPTypeIT1IT_structureIT.comment:
-                        #     SPTypeIT1IT_structureIT.comment += commentITToAdd
-                        # if commentITToAdd not in SPTypeIT2IT_structureIT.comment:
-                        #     SPTypeIT2IT_structureIT.comment += commentITToAdd
                         icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                         icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                         if printInDebugIT:
@@ -542,10 +477,6 @@ class ListSPs():
                             booleanAllComplementarySPTypeITAreCoherent = False
                             # SPTypeIT1IT could complement the fragments setComplementarySPTypeIT1IT to form a single SPTypeIT SP but SPTypeIT2IT was found to complement the fragment SPTypeITToAssertForCoherence as well, please manually review.
                             commentITToAdd = "{} could complement the fragments {} to form a single {} but {} was found to complement the fragment {} as well, please manually review. ".format(SPTypeIT1IT.locusTag, ListSPs.GetListProtIdsFromSetSP(setComplementarySPTypeIT1IT), SPTypeIT1IT.SPType, SPTypeIT2IT.locusTag, SPTypeITToAssertForCoherence.locusTag)
-                            # if commentITToAdd not in SPTypeIT1IT_structureIT.comment:
-                            #     SPTypeIT1IT_structureIT.comment += commentITToAdd
-                            # if commentITToAdd not in SPTypeIT2IT_structureIT.comment:
-                            #     SPTypeIT2IT_structureIT.comment += commentITToAdd
                             icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1IT.locusTag, commentITToAdd, locusTagMerge2Comment)
                             icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2IT.locusTag, commentITToAdd, locusTagMerge2Comment)
 
@@ -568,16 +499,10 @@ class ListSPs():
                         SPTypeIT1ToCheckFurtherIT.genomeAccessionRank,
                         SPTypeIT2ToCheckFurtherIT.genomeAccessionRank
                         )
-                    if overlapIT >= maxOverlappingAliLenghtFragmentedSPs :
+                    if overlapIT >= commonMethods.ConfigParams.maxOverlappingAliLenghtFragmentedSPs :
                         atLeastOneOverlapITGreaterEqualThanMaxAllowed = True
                         # listComplementarySPsToCheckFurther were checked to complement each other as fragments to form a single SPTypeIT SP, but SPTypeIT1ToCheckFurtherIT was found to overlap with SPTypeIT2ToCheckFurtherIT, please manually review.
                         commentITToAdd = "{} were checked to complement each other as fragments to form a single {}, but {} was found to overlap with {}, please manually review. ".format(ListSPs.GetListProtIdsFromListSP(listComplementarySPsToCheckFurther), SPTypeIT1IT.SPType, SPTypeIT1ToCheckFurtherIT.locusTag, SPTypeIT2ToCheckFurtherIT.locusTag)
-                        # for ICEsIMEsStructure_IT in spTypeIT2ListICEsIMEsStructure[SPTypeIT1ToCheckFurtherIT]:
-                        #     if commentITToAdd not in ICEsIMEsStructure_IT.comment:
-                        #         ICEsIMEsStructure_IT.comment += commentITToAdd
-                        # for ICEsIMEsStructure_IT in spTypeIT2ListICEsIMEsStructure[SPTypeIT2ToCheckFurtherIT]:
-                        #     if commentITToAdd not in ICEsIMEsStructure_IT.comment:
-                        #         ICEsIMEsStructure_IT.comment += commentITToAdd
                         icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1ToCheckFurtherIT.locusTag, commentITToAdd, locusTagMerge2Comment)
                         icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2ToCheckFurtherIT.locusTag, commentITToAdd, locusTagMerge2Comment)
 
@@ -586,16 +511,10 @@ class ListSPs():
                     # checking for maxCDSDistanceToMergeFragmentedSPs = 150
                     atLeastOneCombinationGreaterThenMaxCDSDistanceToMergeFragmentedSPs = False
                     for (SPTypeIT1ToCheckFurtherIT, SPTypeIT2ToCheckFurtherIT) in list(itertools.combinations(listComplementarySPsToCheckFurther, 2)) :
-                        if abs(SPTypeIT2ToCheckFurtherIT.CDSPositionInGenome - SPTypeIT1ToCheckFurtherIT.CDSPositionInGenome) > maxCDSDistanceToMergeFragmentedSPs :
+                        if abs(SPTypeIT2ToCheckFurtherIT.CDSPositionInGenome - SPTypeIT1ToCheckFurtherIT.CDSPositionInGenome) > commonMethods.ConfigParams.maxCDSDistanceToMergeFragmentedSPs :
                             atLeastOneCombinationGreaterThenMaxCDSDistanceToMergeFragmentedSPs = True
                             # listComplementarySPsToCheckFurther were checked to complement each other as fragments to form a single SPTypeIT SP, but SPTypeIT1ToCheckFurtherIT was found to be further away to SPTypeIT2ToCheckFurtherIT than cutoff, please manually review.
-                            commentITToAdd = "{} were checked to complement each other as fragments to form a single {}, but {} was found to be further away to {} than cutoff {}, please manually review. ".format(ListSPs.GetListProtIdsFromListSP(listComplementarySPsToCheckFurther), SPTypeIT1IT.SPType, SPTypeIT1ToCheckFurtherIT.locusTag, SPTypeIT2ToCheckFurtherIT.locusTag, str(maxCDSDistanceToMergeFragmentedSPs))
-                            # for ICEsIMEsStructure_IT in spTypeIT2ListICEsIMEsStructure[SPTypeIT1ToCheckFurtherIT]:
-                            #     if commentITToAdd not in ICEsIMEsStructure_IT.comment:
-                            #         ICEsIMEsStructure_IT.comment += commentITToAdd
-                            # for ICEsIMEsStructure_IT in spTypeIT2ListICEsIMEsStructure[SPTypeIT2ToCheckFurtherIT]:
-                            #     if commentITToAdd not in ICEsIMEsStructure_IT.comment:
-                            #         ICEsIMEsStructure_IT.comment += commentITToAdd
+                            commentITToAdd = "{} were checked to complement each other as fragments to form a single {}, but {} was found to be further away to {} than cutoff {}, please manually review. ".format(ListSPs.GetListProtIdsFromListSP(listComplementarySPsToCheckFurther), SPTypeIT1IT.SPType, SPTypeIT1ToCheckFurtherIT.locusTag, SPTypeIT2ToCheckFurtherIT.locusTag, str(commonMethods.ConfigParams.maxCDSDistanceToMergeFragmentedSPs))
                             icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT1ToCheckFurtherIT.locusTag, commentITToAdd, locusTagMerge2Comment)
                             icescreen_OO.addCommentToLocusTag2Comment(SPTypeIT2ToCheckFurtherIT.locusTag, commentITToAdd, locusTagMerge2Comment)
 
@@ -607,46 +526,25 @@ class ListSPs():
                         for SPsFragmentsIT in listComplementarySPsToCheckFurther:
                             icescreen_OO.addCommentToLocusTag2Comment(SPsFragmentsIT.locusTag, commentITToAdd, locusTagMerge2Comment)
                             SPsFragmentsIT.listSiblingFragmentedSP = sorted(listComplementarySPsToCheckFurther, key=lambda x: x.CDSPositionInGenome, reverse=False)
-                            # for sibblingSPsFragmentsIT in setSPsFragmentsIT:
-                            #     if SPsFragmentsIT != sibblingSPsFragmentsIT:
-                            #         SPsFragmentsIT.setSiblingFragmentedSP.add(sibblingSPsFragmentsIT)
 
 
 
     def seedICEsIMEsStructure(
-            self,
-            groupListSPintoICEsIMEsUsingFamilyInfo,
-            useFamilyInfoToTryToResolveSPModuleConjConflict,
-            useDistanceCDSInfoToTryToResolveSPModuleConjConflict,
-            allowAdjacentIntegraseOnlyForSer,
-            locusTagIntegrase2Comment,
-            SPsInSameFamilyMergeStructures2SameFamilyMergeStructure,
-            listSameFamilyMergeStructures,
-            useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-            useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance):
+            self
+            , locusTagIntegrase2Comment
+            , SPsInSameFamilyMergeStructures2SameFamilyMergeStructure
+            , listSameFamilyMergeStructures
+            ):
 
         def registerCurrentICEsIMEsStructureIfNeeded(
-                currentICEsIMEsStructure,
-                listICEsIMEsStructures,
-                idxCurrentSP,
-                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance):
+                currentICEsIMEsStructure
+                , listICEsIMEsStructures
+                , idxCurrentSP
+                ):
             if currentICEsIMEsStructure.listOrderedSPs:
                 currentICEsIMEsStructure.idxInSeedList = len(listICEsIMEsStructures)
 
                 listICEsIMEsStructures.append(currentICEsIMEsStructure) # was after addPotentialUpstreamSPInConflict initially
-
-                # moved checking for UpstreamSPInConflict only after completing all seeding toward downstream
-                # currentICEsIMEsStructure.addPotentialUpstreamSPInConflict(
-                #         self.list
-                #         # , idxCurrentSP
-                #         , listICEsIMEsStructures
-                #         , groupListSPintoICEsIMEsUsingFamilyInfo
-                #         , useFamilyInfoToTryToResolveSPModuleConjConflict
-                #         , useDistanceCDSInfoToTryToResolveSPModuleConjConflict
-                #         , SPsInSameFamilyMergeStructures2SameFamilyMergeStructure
-                #         # , listSameFamilyMergeStructures
-                #         )
 
                 # EMStructure.BasicEMStructure.countInternalIdentifier += 1
                 currentICEsIMEsStructure = EMStructure.ICEsIMEsStructure(True)
@@ -658,7 +556,6 @@ class ListSPs():
         currentICEsIMEsStructure = EMStructure.ICEsIMEsStructure(False)
         sameFamilyMergeStructureToCheck = None
         for idxCurrentSP, currentSP in enumerate(self.list):
-            # print("dealing with currentSP {}".format(currentSP.locusTag))
 
             greenLightAddSPConjugaisonModule = False
             transfertCommentFromSameFamilyMergeStructure = False
@@ -669,36 +566,33 @@ class ListSPs():
                     currentSP,
                     sameFamilyMergeStructureToCheck)
                 if greenLightAddSPConjugaisonModule:
+                    setAllowCheckingForMultipleDistantSameSPType = set()
                     greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
                         currentICEsIMEsStructure,
                         currentSP,
-                        groupListSPintoICEsIMEsUsingFamilyInfo,
-                        False,
-                        False,
-                        False)
+                        setAllowCheckingForMultipleDistantSameSPType
+                        )
                 transfertCommentFromSameFamilyMergeStructure = True
             else:
                 if sameFamilyMergeStructureToCheck is None:
+                    setAllowCheckingForMultipleDistantSameSPType = set()
                     greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
                         currentICEsIMEsStructure,
                         currentSP,
-                        groupListSPintoICEsIMEsUsingFamilyInfo,
-                        False,
-                        False,
-                        False)
+                        setAllowCheckingForMultipleDistantSameSPType
+                        )
                 else:
                     # print("\ncurrentSP: {}".format(currentSP.locusTag))
                     greenLightAddSPConjugaisonModule = currentICEsIMEsStructure.listSPsIsContainedWithinOtherStructure(
                             currentSP,
                             sameFamilyMergeStructureToCheck)
                     if greenLightAddSPConjugaisonModule:
+                        setAllowCheckingForMultipleDistantSameSPType = set()
                         greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
                             currentICEsIMEsStructure,
                             currentSP,
-                            groupListSPintoICEsIMEsUsingFamilyInfo,
-                            False,
-                            False,
-                            False)
+                            setAllowCheckingForMultipleDistantSameSPType
+                            )
 
             if greenLightAddSPConjugaisonModule:
                 currentICEsIMEsStructure.addSPToConjugaisonModule(currentSP)
@@ -710,19 +604,18 @@ class ListSPs():
                 # start new ICEsIMEsStructure and continue main loop
                 # print("start new ICEsIMEsStructure and continue main loop")
                 currentICEsIMEsStructure = registerCurrentICEsIMEsStructureIfNeeded(
-                        currentICEsIMEsStructure,
-                        listICEsIMEsStructures,
-                        idxCurrentSP - 1,
-                        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance)
+                        currentICEsIMEsStructure
+                        , listICEsIMEsStructures
+                        , idxCurrentSP - 1
+                        )
                 # try adding again with new EM struct
+                
+                setAllowCheckingForMultipleDistantSameSPType = set()
                 greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
                     currentICEsIMEsStructure,
                     currentSP,
-                    groupListSPintoICEsIMEsUsingFamilyInfo,
-                    False,
-                    False,
-                    False)
+                    setAllowCheckingForMultipleDistantSameSPType
+                    )
                 if greenLightAddSPConjugaisonModule:
                     currentICEsIMEsStructure.addSPToConjugaisonModule(currentSP)
                     if currentSP in SPsInSameFamilyMergeStructures2SameFamilyMergeStructure:
@@ -736,23 +629,17 @@ class ListSPs():
 
         # last iteration
         registerCurrentICEsIMEsStructureIfNeeded(
-                currentICEsIMEsStructure,
-                listICEsIMEsStructures,
-                len(self.list) - 1,
-                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance)
+                currentICEsIMEsStructure
+                , listICEsIMEsStructures
+                , len(self.list) - 1
+                )
         
         # do backtracking adding SP toward upstream only after completion of the first pass toward downstream, not every time after a structure has just been stopped toward downstream
         for ICEsIMEsStructuresToCheckForConflictSPUpstream in reversed(listICEsIMEsStructures):
                 ICEsIMEsStructuresToCheckForConflictSPUpstream.addPotentialUpstreamSPInConflict(
                         self.list
-                        # , idxCurrentSP
                         , listICEsIMEsStructures
-                        , groupListSPintoICEsIMEsUsingFamilyInfo
-                        , useFamilyInfoToTryToResolveSPModuleConjConflict
-                        , useDistanceCDSInfoToTryToResolveSPModuleConjConflict
                         , SPsInSameFamilyMergeStructures2SameFamilyMergeStructure
-                        # , listSameFamilyMergeStructures
                         )
 
         return listICEsIMEsStructures
@@ -785,6 +672,7 @@ class ListSPs():
         if idxSPsUpstreamToCheck >= 0:
             listSPsUpstream = listSPsSent[:(idxSPsUpstreamToCheck + 1)]
             for currSp in reversed(listSPsUpstream):
+
                 if dictIntegraseAttributedByCheckForObviousIntegraseUpstreamAndDownstreamToAdd is not None :
                     if currSp in dictIntegraseAttributedByCheckForObviousIntegraseUpstreamAndDownstreamToAdd:
                         continue
@@ -796,11 +684,8 @@ class ListSPs():
                         if currSp.SPType in setIntegraseTypeToCheck:  # currSp.SPType == "IntTyr" or currSp.SPType == "IntSer" or currSp.SPType == "DDE"
                             valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure = rulesAddIntegrases.isIntegraseCorrectlyOrientedForICEsIMEsStructure(currSp, downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented, True)
                             if valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure == 0:
-                                #setIntegraseDiscarded.add(currSp.locusTag)
-                                strCommentIT = "Integrase {} can not be associated with the downstream structure {}, it needs to be on the - strand. ".format(currSp.locusTag, downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.internalIdentifier)
-                                if strCommentIT not in downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment:
-                                    downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment += strCommentIT
-                                icescreen_OO.addCommentToLocusTag2Comment(currSp.locusTag, strCommentIT, locusTagIntegrase2Comment)
+                                # only add comment for adjacent intergase
+                                # rulesAddIntegrases.addCommentOnIntegraseNotCorrectlyOrientedForICEsIMEsStructure(currSp, downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented, locusTagIntegrase2Comment, "upstream", "-", valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure)
                                 break
                             elif type(valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure) is set and len(valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure) > 0:
                                 strCommentIT = "If {} is part of the structure {}, the upstream integrase {} would not be associated with this structure as it needs to be on the - strand. ".format(
@@ -830,11 +715,7 @@ class ListSPs():
                     if (currSp.SPType in icescreen_OO.setIntegraseNames):  # currSp.SPType == "IntTyr" or currSp.SPType == "IntSer" or currSp.SPType == "DDE"
                         valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure = rulesAddIntegrases.isIntegraseCorrectlyOrientedForICEsIMEsStructure(currSp, downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented, True)
                         if valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure == 0:
-                            #setIntegraseDiscarded.add(currSp.locusTag)
-                            strCommentIT = "Integrase {} can not be associated with the downstream structure {}, it needs to be on the - strand. ".format(currSp.locusTag, downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.internalIdentifier)
-                            if strCommentIT not in downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment:
-                                downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment += strCommentIT
-                            icescreen_OO.addCommentToLocusTag2Comment(currSp.locusTag, strCommentIT, locusTagIntegrase2Comment)
+                            rulesAddIntegrases.addCommentOnIntegraseNotCorrectlyOrientedForICEsIMEsStructure(currSp, downstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented, locusTagIntegrase2Comment, "upstream", "-", valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure, "getListIntegraseGroupJustUpstreamOfThisSP")
                             break
                         elif type(valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure) is set and len(valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure) > 0:
                             strCommentIT = "If {} is part of the structure {}, the upstream integrase {} would not be associated with this structure as it needs to be on the - strand. ".format(
@@ -875,11 +756,8 @@ class ListSPs():
                             if upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented is not None :
                                 valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure = rulesAddIntegrases.isIntegraseCorrectlyOrientedForICEsIMEsStructure(currSp, upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented, False)
                                 if valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure == 0:
-                                    #setIntegraseDiscarded.add(currSp.locusTag)
-                                    strCommentIT = "Integrase {} can not be associated with the upstream structure {}, it needs to be on the + strand. ".format(currSp.locusTag, upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.internalIdentifier)
-                                    if strCommentIT not in upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment:
-                                        upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment += strCommentIT
-                                    icescreen_OO.addCommentToLocusTag2Comment(currSp.locusTag, strCommentIT, locusTagIntegrase2Comment)
+                                    # only add comment for adjacent intergase
+                                    # rulesAddIntegrases.addCommentOnIntegraseNotCorrectlyOrientedForICEsIMEsStructure(currSp, upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented, locusTagIntegrase2Comment, "downstream", "+", valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure)
                                     break
                                 elif type(valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure) is set and len(valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure) > 0:
                                     strCommentIT = "If {} is part of the structure {}, the downstream integrase {} would not be associated with this structure as it needs to be on the + strand. ".format(
@@ -896,7 +774,6 @@ class ListSPs():
                                 continue
                             else:
                                 
-                                #setIntegraseDiscarded.add(currSp.locusTag)
                                 strCommentIT = "The downstream integrases {} and {} are adjacent but not of the same type or strand, {} is not considered as part of a tandem. ".format(listDownstreamIntegraseToReturn[-1].locusTag, currSp.locusTag, currSp.locusTag)
                                 if upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented is not None :
                                     if strCommentIT not in upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment:
@@ -913,11 +790,7 @@ class ListSPs():
                         if upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented is not None :
                             valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure = rulesAddIntegrases.isIntegraseCorrectlyOrientedForICEsIMEsStructure(currSp, upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented, False)
                             if valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure == 0:
-                                #setIntegraseDiscarded.add(currSp.locusTag)
-                                strCommentIT = "Integrase {} can not be associated with the upstream structure {}, it needs to be on the + strand. ".format(currSp.locusTag, upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.internalIdentifier)
-                                if strCommentIT not in upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment:
-                                    upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented.comment += strCommentIT
-                                icescreen_OO.addCommentToLocusTag2Comment(currSp.locusTag, strCommentIT, locusTagIntegrase2Comment)
+                                rulesAddIntegrases.addCommentOnIntegraseNotCorrectlyOrientedForICEsIMEsStructure(currSp, upstreamICEsIMEsStructureToTestForIntegraseCorrectlyOriented, locusTagIntegrase2Comment, "downstream", "+", valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure, "getListIntegraseGroupJustUpstreamOfThisSP")
                                 break
                             elif type(valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure) is set and len(valueIsIntegraseCorrectlyOrientedForICEsIMEsStructure) > 0:
                                 strCommentIT = "If {} is part of the structure {}, the downstream integrase {} would not be associated with this structure as it needs to be on the + strand. ".format(
@@ -984,17 +857,12 @@ class ListSPs():
                 nextSP = listSPs[currIndex + 1]
                 distance = abs(currSP.CDSPositionInGenome - nextSP.CDSPositionInGenome) - 1
 
-                # strCurrSP = currSP.SPType[0]
                 if (currSP.SPType == "DDE transposase"):
                     strCurrSP = "D"
                 elif (currSP.SPType in icescreen_OO.setIntegraseNames):
                     strCurrSP = "I"
-                elif (currSP.SPType == "Relaxase"):
-                    strCurrSP = "R"
-                elif (currSP.SPType == "Coupling protein"):
-                    strCurrSP = "C"
-                elif (currSP.SPType == "VirB4"):
-                    strCurrSP = "V"
+                elif (currSP.SPType in icescreen_OO.listTypeSPConjModule):
+                    strCurrSP = currSP.SPType[0]
                 else:
                     raise RuntimeError("Error in PrintICElineFormat: unrecognized currSP.SPType = {}".format(currSP.SPType))
 
@@ -1030,12 +898,8 @@ class ListSPs():
                     strCurrSP = "D"
                 elif (currSP.SPType in icescreen_OO.setIntegraseNames):
                     strCurrSP = "I"
-                elif (currSP.SPType == "Relaxase"):
-                    strCurrSP = "R"
-                elif (currSP.SPType == "Coupling protein"):
-                    strCurrSP = "C"
-                elif (currSP.SPType == "VirB4"):
-                    strCurrSP = "V"
+                elif (currSP.SPType in icescreen_OO.listTypeSPConjModule):
+                    strCurrSP = currSP.SPType[0]
                 else:
                     raise RuntimeError("Error in PrintICElineFormat: unrecognized currSP.SPType = {}".format(currSP.SPType))
 

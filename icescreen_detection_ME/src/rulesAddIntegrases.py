@@ -20,12 +20,13 @@
 import icescreen_OO
 import EMStructure
 import hit
+import commonMethods
+import re
 
 ########
 # GLOBAL VARS  #
 ########
 
-#structureWithBothUpstreamAndDownstreamIntegraseCanNotChoose2structure = {}
 dictIntegraseAttributedByCheckForObviousIntegraseUpstreamAndDownstreamToAdd = {}
 
 
@@ -58,7 +59,6 @@ def changeObviousIntegraseAttributionToUnsureBecauseOfBothUpstreamAndDownstreamE
             otherICEsIMEsStructureToMerge.comment = otherICEsIMEsStructureToMerge.comment.replace(strCommentToRemove, "")
         icescreen_OO.removeCommentToLocusTag2Comment(currSp.locusTag, strCommentToRemove, locusTagIntegrase2Comment)
 
-        # currICEsIMEsStructure.setIntegraseToManuallyCheck.add(currSp.locusTag)
         listUpstreamIntChanged.append(currSp)
         if currSp in currICEsIMEsStructure.listOrderedSPs:
             currICEsIMEsStructure.listOrderedSPs.remove(currSp)
@@ -95,22 +95,21 @@ def changeObviousIntegraseAttributionToUnsureBecauseOfBothUpstreamAndDownstreamE
 # 3: Upstream integrase is significantly further away to ICE/IME structure
 # 4: Upstream integrase is NOT significantly further away to ICE/IME structure
 def useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase(
-        listUpstreamIntToAdd,
-        listDownstreamIntToAdd,
-        currICEsIMEsStructure,
-        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
-        booleanCommentAndCleanUpIfTestIsSignificant,
-        locusTagIntegrase2Comment):
+        listUpstreamIntToAdd
+        , listDownstreamIntToAdd
+        , currICEsIMEsStructure
+        , booleanCommentAndCleanUpIfTestIsSignificant
+        , locusTagIntegrase2Comment
+        ):
 
-    if useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance < 0 or useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance < 0:
+    if commonMethods.ConfigParams.useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance < 0 or commonMethods.ConfigParams.useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance < 0:
         return (0, -1, -1)
     else:
         distCDSWithUpstreamIntegrase = abs(currICEsIMEsStructure.listOrderedSPs[0].CDSPositionInGenome - listUpstreamIntToAdd[-1].CDSPositionInGenome)
         distCDSWithDownstreamIntegrase = abs(listDownstreamIntToAdd[0].CDSPositionInGenome - currICEsIMEsStructure.listOrderedSPs[-1].CDSPositionInGenome)
         if distCDSWithUpstreamIntegrase < distCDSWithDownstreamIntegrase:
             # upstream integrase is closer
-            if distCDSWithUpstreamIntegrase <= useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance and distCDSWithDownstreamIntegrase >= useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance:
+            if distCDSWithUpstreamIntegrase <= commonMethods.ConfigParams.useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance and distCDSWithDownstreamIntegrase >= commonMethods.ConfigParams.useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance:
                 # Downstream integrase is significantly further away to ICE/IME structure
                 if booleanCommentAndCleanUpIfTestIsSignificant:
                     # disregard downstream integrase
@@ -118,10 +117,10 @@ def useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase(
                             hit.ListSPs.GetListProtIdsFromListSP(listDownstreamIntToAdd),
                             str(currICEsIMEsStructure.internalIdentifier),
                             str(distCDSWithDownstreamIntegrase),
-                            str(useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance),
+                            str(commonMethods.ConfigParams.useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance),
                             hit.ListSPs.GetListProtIdsFromListSP(listUpstreamIntToAdd),
                             str(distCDSWithUpstreamIntegrase),
-                            str(useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance),
+                            str(commonMethods.ConfigParams.useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance),
                             str(currICEsIMEsStructure.internalIdentifier))
                     if strCommentIT not in currICEsIMEsStructure.comment:
                         currICEsIMEsStructure.comment += strCommentIT
@@ -136,10 +135,10 @@ def useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase(
                             hit.ListSPs.GetListProtIdsFromListSP(listDownstreamIntToAdd),
                             str(currICEsIMEsStructure.internalIdentifier),
                             str(distCDSWithDownstreamIntegrase),
-                            str(useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance),
+                            str(commonMethods.ConfigParams.useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance),
                             hit.ListSPs.GetListProtIdsFromListSP(listUpstreamIntToAdd),
                             str(distCDSWithUpstreamIntegrase),
-                            str(useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance))
+                            str(commonMethods.ConfigParams.useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance))
                     if strCommentIT not in currICEsIMEsStructure.comment:
                         currICEsIMEsStructure.comment += strCommentIT
                     for currSp in listDownstreamIntToAdd:
@@ -147,17 +146,17 @@ def useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase(
                 return (2, distCDSWithDownstreamIntegrase, distCDSWithUpstreamIntegrase)
         else:
             # downstream integrase is closer
-            if distCDSWithDownstreamIntegrase <= useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance and distCDSWithUpstreamIntegrase >= useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance:
+            if distCDSWithDownstreamIntegrase <= commonMethods.ConfigParams.useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance and distCDSWithUpstreamIntegrase >= commonMethods.ConfigParams.useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance:
                 # Upstream integrase is significantly further away to ICE/IME structure
                 if booleanCommentAndCleanUpIfTestIsSignificant:
                     strCommentIT = "Upstream integrase {} is significantly further away to ICE/IME structure {} ({} CDSs which is >= to higher cutoff {} CDSs) than downstream integrase {} ({} CDSs which is <= to lower cutoff {} CDSs), the upstream integrase is therfore not attributed to ICE/IME structure {}. ".format(
                             hit.ListSPs.GetListProtIdsFromListSP(listUpstreamIntToAdd),
                             str(currICEsIMEsStructure.internalIdentifier),
                             str(distCDSWithUpstreamIntegrase),
-                            str(useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance),
+                            str(commonMethods.ConfigParams.useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance),
                             hit.ListSPs.GetListProtIdsFromListSP(listDownstreamIntToAdd),
                             str(distCDSWithDownstreamIntegrase),
-                            str(useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance),
+                            str(commonMethods.ConfigParams.useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance),
                             str(currICEsIMEsStructure.internalIdentifier))
                     if strCommentIT not in currICEsIMEsStructure.comment:
                         currICEsIMEsStructure.comment += strCommentIT
@@ -171,10 +170,10 @@ def useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase(
                     strCommentIT = "Upstream integrase {} is NOT significantly further away to ICE/IME structure {} ({} CDSs, higher cutoff is {} CDSs) than downstream integrase {} ({} CDSs, lower cutoff is {} CDSs). ".format(
                             hit.ListSPs.GetListProtIdsFromListSP(listUpstreamIntToAdd),
                             str(currICEsIMEsStructure.internalIdentifier), str(distCDSWithUpstreamIntegrase),
-                            str(useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance),
+                            str(commonMethods.ConfigParams.useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance),
                             hit.ListSPs.GetListProtIdsFromListSP(listDownstreamIntToAdd),
                             str(distCDSWithDownstreamIntegrase),
-                            str(useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance))
+                            str(commonMethods.ConfigParams.useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance))
                     if strCommentIT not in currICEsIMEsStructure.comment:
                         currICEsIMEsStructure.comment += strCommentIT
                     for currSp in listUpstreamIntToAdd:
@@ -186,19 +185,25 @@ def useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase(
 
 # return:
 # - 0 if integrase not correctly oriented and this fact is independant of SP in conflict
-# - 1 the set of SP in conflict that trigger the fact that the integrase is not correctly oriented
+# - the set of SP in conflict that trigger the fact that the integrase is not correctly oriented
 # - 2 if integrase correctly oriented and this fact is independant of SP in conflict
 def isIntegraseCorrectlyOrientedForICEsIMEsStructure(
         integraseSent,
         ICEsIMEsStructureSent,
-        integraseIsUpstreamOfICEsIMEsStructure):
+        integraseIsUpstreamOfICEsIMEsStructure
+        ):
+    
     # Upstream ICE integrase needs to be on the - strand
     # Downstream ICE integrase needs to be on the + strand
     valueToReturn = 2
 
+    if commonMethods.CommandLineArguments.taxoMode not in commonMethods.ConfigParams.listTaxonomicModesToCheckIfIntegraseIsCorrectlyOrientedForICEsIMEsStructure:
+        return valueToReturn
+
+
     setVirB4InConflictInICEsIMEsStructureSent = set()
     setVirB4NotInConflictInICEsIMEsStructureSent = set()
-    for currVirB4 in ICEsIMEsStructureSent.listVirB4:
+    for currVirB4 in ICEsIMEsStructureSent.TypeSPConjModule2listSP["VirB4"]:
         if currVirB4 in ICEsIMEsStructureSent.setSPInConflict:
             setVirB4InConflictInICEsIMEsStructureSent.add(currVirB4)
         else:
@@ -216,23 +221,13 @@ def isIntegraseCorrectlyOrientedForICEsIMEsStructure(
         if not integraseIsUpstreamOfICEsIMEsStructure and integraseSent.strand == "-":
             valueToReturn = setVirB4InConflictInICEsIMEsStructureSent
 
-    # print("{} isIntegraseCorrectlyOrientedForICEsIMEsStructure: integraseSent = {} (len(setVirB4InConflictInICEsIMEsStructureSent) = {}) ; ICEsIMEsStructureSent = {} ; integraseIsUpstreamOfICEsIMEsStructure = {} ".format(
-    #             repr(valueToReturn), integraseSent.locusTag, len(setVirB4InConflictInICEsIMEsStructureSent), ICEsIMEsStructureSent.internalIdentifier, integraseIsUpstreamOfICEsIMEsStructure))
-
-    # if valueToReturn == -1:
-    #    raise RuntimeError("Error in isIntegraseCorrectlyOrientedForICEsIMEsStructure: valueToReturn == -1 ; integraseSent = {} (len(setVirB4InConflictInICEsIMEsStructureSent) = {}) ; ICEsIMEsStructureSent = {} ; integraseIsUpstreamOfICEsIMEsStructure = {} " \
-    #          .format(integraseSent.locusTag, len(setVirB4InConflictInICEsIMEsStructureSent), ICEsIMEsStructureSent.internalIdentifier, integraseIsUpstreamOfICEsIMEsStructure))
-
     return valueToReturn
 
 
 def addObviousIntegraseUpstreamAndDownstream_priorMerging(
-        listICEsIMEsStructures,
-        currListSPs,
-        locusTagIntegrase2Comment,
-        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
-        allowAdjacentIntegraseOnlyForSer
+        listICEsIMEsStructures
+        , currListSPs
+        , locusTagIntegrase2Comment
     ):
 
     global dictIntegraseAttributedByCheckForObviousIntegraseUpstreamAndDownstreamToAdd
@@ -249,11 +244,10 @@ def addObviousIntegraseUpstreamAndDownstream_priorMerging(
 
         idxlastSP_currICEsIMEsStructure = hit.ListSPs.GetIdxSPInList(currICEsIMEsStructure.listOrderedSPs[len(currICEsIMEsStructure.listOrderedSPs)-1], currListSPs)
         (listUpstreamObviousIntegrase_currICEsIMEsStructure, listDownstreamObviousIntegrase_currICEsIMEsStructure) = checkForObviousIntegraseUpstreamAndDownstreamToAdd(
-                currICEsIMEsStructure,
-                currListSPs,
-                idxlastSP_currICEsIMEsStructure,
-                allowAdjacentIntegraseOnlyForSer,
-                locusTagIntegrase2Comment
+                currICEsIMEsStructure
+                , currListSPs
+                , idxlastSP_currICEsIMEsStructure
+                , locusTagIntegrase2Comment
                 )
 
         listUpstreamObviousIntegrase_upstreamICEsIMEsStructure = None
@@ -261,11 +255,10 @@ def addObviousIntegraseUpstreamAndDownstream_priorMerging(
         if upstreamICEsIMEsStructure is not None:
             idxlastSP_upstreamICEsIMEsStructure = hit.ListSPs.GetIdxSPInList(upstreamICEsIMEsStructure.listOrderedSPs[len(upstreamICEsIMEsStructure.listOrderedSPs)-1], currListSPs)
             (listUpstreamObviousIntegrase_upstreamICEsIMEsStructure, listDownstreamObviousIntegrase_upstreamICEsIMEsStructure) = checkForObviousIntegraseUpstreamAndDownstreamToAdd(
-                upstreamICEsIMEsStructure,
-                currListSPs,
-                idxlastSP_upstreamICEsIMEsStructure,
-                allowAdjacentIntegraseOnlyForSer,
-                locusTagIntegrase2Comment
+                upstreamICEsIMEsStructure
+                , currListSPs
+                , idxlastSP_upstreamICEsIMEsStructure
+                , locusTagIntegrase2Comment
                 )
 
         listUpstreamObviousIntegrase_downstreamICEsIMEsStructure = None
@@ -273,11 +266,10 @@ def addObviousIntegraseUpstreamAndDownstream_priorMerging(
         if downstreamICEsIMEsStructure is not None:
             idxlastSP_downstreamICEsIMEsStructure = hit.ListSPs.GetIdxSPInList(downstreamICEsIMEsStructure.listOrderedSPs[len(downstreamICEsIMEsStructure.listOrderedSPs)-1], currListSPs)
             (listUpstreamObviousIntegrase_downstreamICEsIMEsStructure, listDownstreamObviousIntegrase_downstreamICEsIMEsStructure) = checkForObviousIntegraseUpstreamAndDownstreamToAdd(
-                downstreamICEsIMEsStructure,
-                currListSPs,
-                idxlastSP_downstreamICEsIMEsStructure,
-                allowAdjacentIntegraseOnlyForSer,
-                locusTagIntegrase2Comment
+                downstreamICEsIMEsStructure
+                , currListSPs
+                , idxlastSP_downstreamICEsIMEsStructure
+                , locusTagIntegrase2Comment
                 )
 
         if len(listUpstreamObviousIntegrase_currICEsIMEsStructure) > 0 and len(listDownstreamObviousIntegrase_currICEsIMEsStructure) > 0 :
@@ -356,26 +348,58 @@ def addObviousIntegraseUpstreamAndDownstream_priorMerging(
                     currICEsIMEsStructure.refreshListIdxOrderedSPs()
 
 
+def addCommentOnIntegraseNotCorrectlyOrientedForICEsIMEsStructure(currSp, EMStructureToAdd, locusTagIntegrase2Comment, upOrDownstream, strand, valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure, fromMethod):
+    
+    # if fromMethod == "checkForObviousIntegraseUpstreamAndDownstreamToAdd":
+    #     print(" ; internalIdentifier=" + EMStructureToAdd.internalIdentifier + " ; idxListDownstrStructMerged=" + str(EMStructureToAdd.idxListDownstrStructMerged) + " ; delMerging_idxListUpstreamStructure=" + str(EMStructureToAdd.delMerging_idxListUpstreamStructure))
 
+    # Upstream ICE integrase needs to be on the - strand
+    # Downstream ICE integrase needs to be on the + strand
+    commentITToAdd = ""
+    patterncommentITToAdd = ""
+    # - 0 if integrase not correctly oriented and this fact is independant of SP in conflict
+    if valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure == 0:
+        commentITToAdd = "The integrase {} and the structure {} have not been associated because {} ICE integrase needs to be on the {} strand in {}. ".format(currSp.locusTag, EMStructureToAdd.internalIdentifier, upOrDownstream, strand, commonMethods.CommandLineArguments.taxoMode)
+        patterncommentITToAdd = "The integrase {} and the structure __IMEICEID_BasicEMStructure__\\d+__ have not been associated because {} ICE integrase needs to be on the \{} strand in {}\. ".format(currSp.locusTag, upOrDownstream, strand, commonMethods.CommandLineArguments.taxoMode)
+    # - 1 the set of SP in conflict that trigger the fact that the integrase is not correctly oriented
+    elif type(valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure) is set and len(valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure) > 0:
+        commentITToAdd = "It is unclear if the structure {} is an ICE, but in case it is the integrase {} should not been associated with it because {} ICE integrase needs to be on the {} strand in {}. ".format(EMStructureToAdd.internalIdentifier, currSp.locusTag, upOrDownstream, strand, commonMethods.CommandLineArguments.taxoMode)
+        patterncommentITToAdd = "It is unclear if the structure  __IMEICEID_BasicEMStructure__\\d+__ is an ICE, but in case it is the integrase {} should not been associated with it because {} ICE integrase needs to be on the \{} strand in {}\. ".format(currSp.locusTag, upOrDownstream, strand, commonMethods.CommandLineArguments.taxoMode)
+    else:
+        # raise exception
+        raise RuntimeError("Error in addCommentOnIntegraseNotCorrectlyOrientedForICEsIMEsStructure {}: valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure ({}) should be 0 or 1".format(upOrDownstream, str(valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure)))
+    
+    # the problem does not happen for EMStructureToAdd.comment but only for addCommentToLocusTag2Comment !!
+    # replace the __IMEICEID_BasicEMStructure__\d+__ that was before the merge in any
+    #EMStructureToAdd.comment = re.sub(patterncommentITToAdd, commentITToAdd, EMStructureToAdd.comment, count=0)
+    if commentITToAdd not in EMStructureToAdd.comment :
+        EMStructureToAdd.comment += commentITToAdd
+
+    # remove similar comment with deleted merged structures ids
+    if currSp.locusTag in locusTagIntegrase2Comment:
+        locusTagIntegrase2Comment[currSp.locusTag] = re.sub(patterncommentITToAdd, "", locusTagIntegrase2Comment[currSp.locusTag], count=0, flags=re.MULTILINE)
+
+    icescreen_OO.addCommentToLocusTag2Comment(
+        currSp.locusTag,
+        commentITToAdd,
+        locusTagIntegrase2Comment)
+    
 
 # look for upstream or downstream subsequent integrase that have been preivously seen associated with the conj module
 def checkForObviousIntegraseUpstreamAndDownstreamToAdd(
-        EMStructureToAdd,
-        listSPs,
-        idxCurrentSP,
-        allowAdjacentIntegraseOnlyForSer,
-        locusTagIntegrase2Comment
-        # useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-        # useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance
+        EMStructureToAdd
+        , listSPs
+        , idxCurrentSP
+        , locusTagIntegrase2Comment
         ):
 
     setIntegraseTypeToCheck = set()
-    if allowAdjacentIntegraseOnlyForSer == "YES":
+    if commonMethods.ConfigParams.allowAdjacentIntegraseOnlyForSer == "YES":
         setIntegraseTypeToCheck = icescreen_OO.setIntegraseSerNames
-    elif allowAdjacentIntegraseOnlyForSer == "NO":
+    elif commonMethods.ConfigParams.allowAdjacentIntegraseOnlyForSer == "NO":
         setIntegraseTypeToCheck = icescreen_OO.setIntegraseNames
     else:
-        raise RuntimeError("Error in checkForObviousIntegraseUpstreamAndDownstreamToAdd: unrecognized allowAdjacentIntegraseOnlyForSer = {}".format(allowAdjacentIntegraseOnlyForSer))
+        raise RuntimeError("Error in checkForObviousIntegraseUpstreamAndDownstreamToAdd: unrecognized allowAdjacentIntegraseOnlyForSer = {}".format(commonMethods.ConfigParams.allowAdjacentIntegraseOnlyForSer))
 
     listUpstreamIntToAdd = []
     idxSPsUpstreamToCheck = idxCurrentSP - len(EMStructureToAdd.listOrderedSPs)
@@ -386,11 +410,14 @@ def checkForObviousIntegraseUpstreamAndDownstreamToAdd(
             # print("HERE up {}".format(currSp.locusTag))
             if listUpstreamIntToAdd:
                 #should be consistent with hit.getListIntegraseGroupJustUpstreamOfThisSP
-                #TODO: TEST also consider fragment as integrase that follow up
+                # also consider fragment as integrase that follow up
                 if (abs(listUpstreamIntToAdd[-1].CDSPositionInGenome - currSp.CDSPositionInGenome) <= 2) or (listUpstreamIntToAdd[-1] in currSp.listSiblingFragmentedSP and currSp in listUpstreamIntToAdd[-1].listSiblingFragmentedSP):  # Integrases are adjacent in genome or separated by a CDS
                     if currSp.SPType in setIntegraseTypeToCheck:
-                        if isIntegraseCorrectlyOrientedForICEsIMEsStructure(currSp, EMStructureToAdd, True) != 2:
-                            # if EMStructureToAdd.listVirB4 and currSp.strand == "+":
+
+                        valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure = isIntegraseCorrectlyOrientedForICEsIMEsStructure(currSp, EMStructureToAdd, True)
+                        if valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure != 2:
+                            # only add comment for adjacent intergase
+                            # addCommentOnIntegraseNotCorrectlyOrientedForICEsIMEsStructure(currSp, EMStructureToAdd, locusTagIntegrase2Comment, "upstream", "-", valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure)
                             break  # int for ICE need to be on the right strand
                         else:
                             if currSp.SPType == listUpstreamIntToAdd[-1].SPType and currSp.strand == listUpstreamIntToAdd[-1].strand:
@@ -405,23 +432,16 @@ def checkForObviousIntegraseUpstreamAndDownstreamToAdd(
                     break
             else:  # listIntegraseUpstream is empty
                 if (currSp.SPType in icescreen_OO.setIntegraseNames):  # currSp.SPType == "IntTyr" or currSp.SPType == "IntSer" or currSp.SPType == "DDE"
-                    if isIntegraseCorrectlyOrientedForICEsIMEsStructure(currSp, EMStructureToAdd, True) != 2:
-                        # if EMStructureToAdd.listVirB4 and currSp.strand == "+":
+
+                    valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure = isIntegraseCorrectlyOrientedForICEsIMEsStructure(currSp, EMStructureToAdd, True)
+                    if valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure != 2:
+                    # if isIntegraseCorrectlyOrientedForICEsIMEsStructure(currSp, EMStructureToAdd, True) != 2:
+                        addCommentOnIntegraseNotCorrectlyOrientedForICEsIMEsStructure(currSp, EMStructureToAdd, locusTagIntegrase2Comment, "upstream", "-", valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure, "checkForObviousIntegraseUpstreamAndDownstreamToAdd")
+
                         break  # int for ICE need to be on the right strand
                     else:
                         listUpstreamIntToAdd.append(currSp)
                         continue
-                        # if isICESuperFamilyIntegraseSameAsICESuperFamilyConjModule(currSp, EMStructureToAdd) == 2:
-                        #    listUpstreamIntToAdd.append(currSp)
-                        #    continue
-                        # if isICEFamillyIntegraseSameAsICEFamilyConjModule(currSp, EMStructureToAdd) == 2:
-                        #     listUpstreamIntToAdd.append(currSp)
-                        #     continue
-                        # elif isIMEFamillyIntegraseSameAsIMESuperFamilyConjModule(currSp, EMStructureToAdd) == 2:
-                        #     listUpstreamIntToAdd.append(currSp)
-                        #     continue
-                        # else:
-                        #     break
                 else:
                     break
 
@@ -433,12 +453,15 @@ def checkForObviousIntegraseUpstreamAndDownstreamToAdd(
         for currSp in listSPsDownstream:
             #print("HERE down {}".format(currSp.locusTag))
             if listDownstreamIntToAdd:  # listIntegraseDownstream is not empty
-                #TODO: TEST also consider fragment as integrase that follow up
+                # also consider fragment as integrase that follow up
                 if (abs(listDownstreamIntToAdd[-1].CDSPositionInGenome - currSp.CDSPositionInGenome) <= 2) or (listDownstreamIntToAdd[-1] in currSp.listSiblingFragmentedSP and currSp in listDownstreamIntToAdd[-1].listSiblingFragmentedSP):  # Integrases are adjacent in genome or separated by a CDS
                     if currSp.SPType in setIntegraseTypeToCheck:  # currSp.SPType == "IntTyr" or currSp.SPType == "IntSer" or currSp.SPType == "DDE"
-                        # if EMStructureToAdd.listVirB4 and currSp.strand == "-":
-                        if isIntegraseCorrectlyOrientedForICEsIMEsStructure(currSp, EMStructureToAdd, False) != 2:
-                            # EMStructureToAdd.comment += "The downstream integrase {} is on the - strand, it has been discarded. ".format(currSp.locusTag)
+
+                        valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure = isIntegraseCorrectlyOrientedForICEsIMEsStructure(currSp, EMStructureToAdd, False)
+                        if valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure != 2:
+                            # only add comment for adjacent intergase
+                            # addCommentOnIntegraseNotCorrectlyOrientedForICEsIMEsStructure(currSp, EMStructureToAdd, locusTagIntegrase2Comment, "downstream", "+", valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure)
+
                             break
                         else:
                             if currSp.SPType == listDownstreamIntToAdd[-1].SPType and currSp.strand == listDownstreamIntToAdd[-1].strand:
@@ -454,25 +477,16 @@ def checkForObviousIntegraseUpstreamAndDownstreamToAdd(
             else:  # listIntegraseDownstream is empty
                 if (currSp.SPType in icescreen_OO.setIntegraseNames):  # currSp.SPType == "IntTyr" or currSp.SPType == "IntSer" or currSp.SPType == "DDE"
                     # if EMStructureToAdd.listVirB4 and currSp.strand == "-":
-                    if isIntegraseCorrectlyOrientedForICEsIMEsStructure(currSp, EMStructureToAdd, False) != 2:
-                        # EMStructureToAdd.comment += "The downstream integrase {} is on the - strand, it has been discarded. ".format(currSp.locusTag)
+                    valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure = isIntegraseCorrectlyOrientedForICEsIMEsStructure(currSp, EMStructureToAdd, False)
+                    if valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure != 2:
+                        addCommentOnIntegraseNotCorrectlyOrientedForICEsIMEsStructure(currSp, EMStructureToAdd, locusTagIntegrase2Comment, "downstream", "+", valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure, "checkForObviousIntegraseUpstreamAndDownstreamToAdd")
+                        
                         break
                     else:
                         #print("\tHERE listDownstreamIntToAdd.append(currSp)")
 
                         listDownstreamIntToAdd.append(currSp)
                         continue
-                        # if isICESuperFamilyIntegraseSameAsICESuperFamilyConjModule(currSp, EMStructureToAdd) == 2:
-                        #    listDownstreamIntToAdd.append(currSp)
-                        #    continue
-                        # if isICEFamillyIntegraseSameAsICEFamilyConjModule(currSp, EMStructureToAdd) == 2:
-                        #     listDownstreamIntToAdd.append(currSp)
-                        #     continue
-                        # elif isIMEFamillyIntegraseSameAsIMESuperFamilyConjModule(currSp, EMStructureToAdd) == 2:
-                        #     listDownstreamIntToAdd.append(currSp)
-                        #     continue
-                        # else:
-                        #     break
                 else:
                     break
     return (listUpstreamIntToAdd, listDownstreamIntToAdd)
@@ -512,7 +526,6 @@ def integraseCouldBeAttributedToMultipleICEIMEStructures(integraseIT, setMultipl
     for currICEsIMEsStructure in setMultipleICEsIMEsStructure:
         if commentITToAdd not in currICEsIMEsStructure.comment:
             currICEsIMEsStructure.comment += commentITToAdd
-        # currICEsIMEsStructure.setIntegraseToManuallyCheck.add(integraseIT.locusTag)
         currICEsIMEsStructure.setIntegraseToManuallyCheck.add(integraseIT)
 
 
@@ -530,7 +543,6 @@ def addStructuresChainedByIntegrase(setIntersectionCommonKeysSent, outer_integra
                 intersectWithInner = setChainsOfStructuresLinkedBySharedIntegraseIT.intersection(valueSetICEsIMEsStructureInner)
                 if len(intersectWithOuter) > 0 or len(intersectWithInner) > 0 :
                     foundASetChainsOfStructuresLinkedBySharedIntegraseITWithAlreadyOneOfOurStructureInIt = True
-                    #setUnionIT = setChainsOfStructuresLinkedBySharedIntegraseIT.union(valueSetICEsIMEsStructureOuter, valueSetICEsIMEsStructureInner)
                     setChainsOfStructuresLinkedBySharedIntegraseIT.update(valueSetICEsIMEsStructureOuter)
                     setChainsOfStructuresLinkedBySharedIntegraseIT.update(valueSetICEsIMEsStructureInner)
             if not foundASetChainsOfStructuresLinkedBySharedIntegraseITWithAlreadyOneOfOurStructureInIt :
@@ -583,16 +595,12 @@ def createListOfListChainsOfStructuresLinkedBySharedIntegrase(integraseAttribute
 
 # add both upstream and downstream valid integrase to a conj module
 def addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure(
-        listSPs,
-        listICEsIMEsStructures,
-        maxNumberCDSForFilterIMESize,
-        groupListSPintoICEsIMEsUsingFamilyInfo,
-        setLocusTagToNotConsiderAseManuallyCheckSent,
-        countIteraddSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure,
-        allowAdjacentIntegraseOnlyForSer,
-        locusTagIntegrase2Comment,
-        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-        useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance):
+        listSPs
+        , listICEsIMEsStructures
+        , setLocusTagToNotConsiderAseManuallyCheckSent
+        , countIteraddSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure
+        , locusTagIntegrase2Comment
+        ):
 
     # is False initially
     DEBUG = False
@@ -613,9 +621,6 @@ def addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure(
         raise RuntimeError(
             "Error in addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure  countIteraddSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure > 1000 for listICEsIMEsStructures = {}".format(
                     EMStructure.BasicEMStructure.GetListInternIdFromListEMStructure(listICEsIMEsStructures)))
-
-    #family2SetICEsIMEsStructures = EMStructure.BasicEMStructure.buildFamily2SetICEsIMEsStructures(listICEsIMEsStructures)
-    #family2SetPutativeIntegrases = buildamFily2SetPutativeIntegrases(listSPs)
 
     integraseAttributedSureUpstream2setICEsIMEsStructure = {}
     integraseAttributedSureDownstream2setICEsIMEsStructure = {}
@@ -654,19 +659,14 @@ def addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure(
                 print("Continue, integrase have already been added with addObviousIntegraseUpstreamAndDownstream_priorMerging : listIntegraseUpstream = {} and listIntegraseDownstream = {}".format(hit.ListSPs.GetListProtIdsFromListSP(currICEsIMEsStructure.listIntegraseUpstream), hit.ListSPs.GetListProtIdsFromListSP(currICEsIMEsStructure.listIntegraseDownstream)))
             continue  # integrase have already been added with checkForObviousIntegraseUpstreamAndDownstreamToAdd
 
-        # flagDoNotCheckIntegraseStrand = False
-        # if len(currICEsIMEsStructure.listVirB4) >= 1:
-        #    flagDoNotCheckIntegraseStrand = True
         setIntegraseTypeToCheck = set()
-        if allowAdjacentIntegraseOnlyForSer == "YES":
+        if commonMethods.ConfigParams.allowAdjacentIntegraseOnlyForSer == "YES":
             setIntegraseTypeToCheck = icescreen_OO.setIntegraseSerNames
-        elif allowAdjacentIntegraseOnlyForSer == "NO":
+        elif commonMethods.ConfigParams.allowAdjacentIntegraseOnlyForSer == "NO":
             setIntegraseTypeToCheck = icescreen_OO.setIntegraseNames
         else:
-            raise RuntimeError("Error in addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure: unrecognized allowAdjacentIntegraseOnlyForSer = {}".format(allowAdjacentIntegraseOnlyForSer))
+            raise RuntimeError("Error in addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure: unrecognized allowAdjacentIntegraseOnlyForSer = {}".format(commonMethods.ConfigParams.allowAdjacentIntegraseOnlyForSer))
 
-
-        #setIntegraseDiscarded = set()
         if currICEsIMEsStructure.delMerging_idxListUpstreamStructure == -1:  # skip if deleted after merge
 
             listUpstreamIntToAdd = hit.ListSPs.getListIntegraseGroupJustUpstreamOfThisSP(currICEsIMEsStructure.listOrderedSPs[0], listSPs, dictIntegraseAttributedByCheckForObviousIntegraseUpstreamAndDownstreamToAdd, setIntegraseTypeToCheck, currICEsIMEsStructure, locusTagIntegrase2Comment)
@@ -705,13 +705,12 @@ def addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure(
                 (valueTestUseCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase,
                  distCDSWithDownstreamIntegrase,
                  distCDSWithUpstreamIntegrase) = useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase(
-                         listUpstreamIntToAdd,
-                         listDownstreamIntToAdd,
-                         currICEsIMEsStructure,
-                         useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                         useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
-                         True,
-                         locusTagIntegrase2Comment)
+                         listUpstreamIntToAdd
+                         , listDownstreamIntToAdd
+                         , currICEsIMEsStructure
+                         , True
+                         , locusTagIntegrase2Comment
+                         )
                 # actually do something with valueTestUseCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase
                 if valueTestUseCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase == 1 :
                     listDownstreamIntToAdd.clear()
@@ -724,7 +723,6 @@ def addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure(
 
 
             if listUpstreamIntToAdd and listDownstreamIntToAdd:
-                #listLocusTagInComment = []
 
                 setIntegraseBothUpstreamAndDownstream = set()
                 for currSp in reversed(listUpstreamIntToAdd):
@@ -738,7 +736,6 @@ def addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure(
                         setICEsIMEsStructureIT.add(currICEsIMEsStructure)
                         IntegraseManuallyCheckUpstream2setICEsIMEsStructure[currSp] = setICEsIMEsStructureIT
                     listUpstreamIntToAdd.remove(currSp)
-                    #listLocusTagInComment.append(currSp.locusTag)
                 for currSp in reversed(listDownstreamIntToAdd):
                     setIntegraseBothUpstreamAndDownstream.add(currSp)
                     # fill up IntegraseManuallyCheckDownstream2setICEsIMEsStructure
@@ -750,9 +747,7 @@ def addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure(
                         setICEsIMEsStructureIT.add(currICEsIMEsStructure)
                         IntegraseManuallyCheckDownstream2setICEsIMEsStructure[currSp] = setICEsIMEsStructureIT
                     listDownstreamIntToAdd.remove(currSp)
-                    #listLocusTagInComment.append(currSp.locusTag)
 
-                #reprSetIntegraseBothUpstreamAndDownstream = hit.ListSPs.GetListProtIdsFromSetSP(setIntegraseBothUpstreamAndDownstream)
                 commentITToAdd = "Could not choose assigning between upstream or downstream integrases {} to structure {}, please manually check. ".format(hit.ListSPs.GetListProtIdsFromSetSP(setIntegraseBothUpstreamAndDownstream), currICEsIMEsStructure.internalIdentifier)
                 addEntryToICEsIMEsStructure2IntegraseManuallyCheck2comment(currICEsIMEsStructure, setIntegraseBothUpstreamAndDownstream, commentITToAdd, ICEsIMEsStructure2IntegraseManuallyCheck2comment)
                 # commented below because can not easily remove comment if the integrase is sure for another structure
@@ -826,8 +821,6 @@ def addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure(
         print("\n ** Done for idxCurrICEsIMEsStructure, currICEsIMEsStructure in enumerate(listICEsIMEsStructures):\n\tintegraseAttributedSureDownstream2setICEsIMEsStructure = {}\n\tintegraseAttributedSureUpstream2setICEsIMEsStructure = {}".format(strToPrintintegraseAttributedSureUpstream2setICEsIMEsStructure, strToPrintintegraseAttributedSureDownstream2setICEsIMEsStructure))
 
 
-
-
     # integrase more sure after phase 1 are in integraseAttributedSureUpstream2setICEsIMEsStructure and ICEsIMEsStructure2setIntegraseMoreSure
     
     afterMultipleICEIMEStructuresCheck_ICEsIMEsStructure2IntegraseUpstreamToRegister = {}
@@ -845,27 +838,18 @@ def addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure(
 
             # move to To check
             del integraseAttributedSureDownstream2setICEsIMEsStructure[keyIntegraseAttributedSureUpstream]
-            integraseCouldBeAttributedToMultipleICEIMEStructures(keyIntegraseAttributedSureUpstream, currSetICEsIMEsStructure, False, locusTagIntegrase2Comment) #, ICEsIMEsStructure2IntegraseManuallyCheck2comment
+            integraseCouldBeAttributedToMultipleICEIMEStructures(keyIntegraseAttributedSureUpstream, currSetICEsIMEsStructure, False, locusTagIntegrase2Comment)
 
         else:
             # register integrase to be added to the ICEsIMEsStructure
             for currValueICEsIMEsStructure in currSetICEsIMEsStructure:
                 if currValueICEsIMEsStructure in afterMultipleICEIMEStructuresCheck_ICEsIMEsStructure2IntegraseUpstreamToRegister:
-                    # raise RuntimeError(
-                    #     "Error in afterMultipleICEIMEStructuresCheck_ICEsIMEsStructure2IntegraseUpstreamToRegister: want to register value keyIntegraseAttributedSureUpstream = {} as key currValueICEsIMEsStructure = {} but this key is already in afterMultipleICEIMEStructuresCheck_ICEsIMEsStructure2IntegraseUpstreamToRegister with value {}".format(
-                    #         keyIntegraseAttributedSureUpstream.locusTag,
-                    #         currValueICEsIMEsStructure.internalIdentifier,
-                    #         afterMultipleICEIMEStructuresCheck_ICEsIMEsStructure2IntegraseUpstreamToRegister[currValueICEsIMEsStructure].locusTag
-                    #         ))
                     setIntegraseAttributedSureUpstream = afterMultipleICEIMEStructuresCheck_ICEsIMEsStructure2IntegraseUpstreamToRegister[currValueICEsIMEsStructure]
                     setIntegraseAttributedSureUpstream.add(keyIntegraseAttributedSureUpstream)
                 else :
                     setIntegraseAttributedSureUpstream = set()
                     setIntegraseAttributedSureUpstream.add(keyIntegraseAttributedSureUpstream)
                     afterMultipleICEIMEStructuresCheck_ICEsIMEsStructure2IntegraseUpstreamToRegister[currValueICEsIMEsStructure] = setIntegraseAttributedSureUpstream
-                # currValueICEsIMEsStructure.listIntegraseUpstream.append(keyIntegraseAttributedSureUpstream)
-                # currValueICEsIMEsStructure.listOrderedSPs.append(keyIntegraseAttributedSureUpstream)
-                # currValueICEsIMEsStructure.refreshListIdxOrderedSPs()
                 break
 
     afterMultipleICEIMEStructuresCheck_ICEsIMEsStructure2IntegraseDownstreamToRegister = {}
@@ -888,23 +872,12 @@ def addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure(
             # register integrase to be added to the ICEsIMEsStructure
             for currValueICEsIMEsStructure in currSetICEsIMEsStructure:
                 if currValueICEsIMEsStructure in afterMultipleICEIMEStructuresCheck_ICEsIMEsStructure2IntegraseDownstreamToRegister:
-                    # raise RuntimeError(
-                    #     # "Error in afterMultipleICEIMEStructuresCheck_ICEsIMEsStructure2IntegraseDownstreamToRegister: currValueICEsIMEsStructure = {} already in afterMultipleICEIMEStructuresCheck_ICEsIMEsStructure2IntegraseDownstreamToRegister".format(
-                    #     #     currValueICEsIMEsStructure.internalIdentifier))
-                    #     "Error in afterMultipleICEIMEStructuresCheck_ICEsIMEsStructure2IntegraseDownstreamToRegister: want to register value keyIntegraseAttributedSureDownstream = {} as key currValueICEsIMEsStructure = {} but this key is already in afterMultipleICEIMEStructuresCheck_ICEsIMEsStructure2IntegraseDownstreamToRegister with value {}".format(
-                    #         keyIntegraseAttributedSureDownstream.locusTag,
-                    #         currValueICEsIMEsStructure.internalIdentifier,
-                    #         afterMultipleICEIMEStructuresCheck_ICEsIMEsStructure2IntegraseDownstreamToRegister[currValueICEsIMEsStructure].locusTag
-                    #         ))
                     setIntegraseAttributedSureDownstream = afterMultipleICEIMEStructuresCheck_ICEsIMEsStructure2IntegraseDownstreamToRegister[currValueICEsIMEsStructure]
                     setIntegraseAttributedSureDownstream.add(keyIntegraseAttributedSureDownstream)
                 else :
                     setIntegraseAttributedSureDownstream = set()
                     setIntegraseAttributedSureDownstream.add(keyIntegraseAttributedSureDownstream)
                     afterMultipleICEIMEStructuresCheck_ICEsIMEsStructure2IntegraseDownstreamToRegister[currValueICEsIMEsStructure] = setIntegraseAttributedSureDownstream
-                # currValueICEsIMEsStructure.listIntegraseDownstream.append(keyIntegraseAttributedSureDownstream)
-                # currValueICEsIMEsStructure.listOrderedSPs.append(keyIntegraseAttributedSureDownstream)
-                # currValueICEsIMEsStructure.refreshListIdxOrderedSPs()
                 break
 
 
@@ -948,14 +921,6 @@ def addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure(
                 if structureToCheckInChainIT in ICEsIMEsStructure2setIntegraseMoreSure :
                     # add the integrase as not sure if they were registred as sure
                     addEntryToICEsIMEsStructure2IntegraseManuallyCheck2comment(structureToCheckInChainIT, ICEsIMEsStructure2setIntegraseMoreSure[structureToCheckInChainIT], commentITToAdd_contradictoryChainReaction, ICEsIMEsStructure2IntegraseManuallyCheck2comment)
-                    # if commentITToAdd_contradictoryChainReaction not in structureToCheckInChainIT.comment :
-                    #     structureToCheckInChainIT.comment += commentITToAdd_contradictoryChainReaction
-                    # for integraseManuallyCheckIT in ICEsIMEsStructure2setIntegraseMoreSure[structureToCheckInChainIT]:
-                    #     structureToCheckInChainIT.setIntegraseToManuallyCheck.add(integraseManuallyCheckIT.locusTag)
-                    #     icescreen_OO.addCommentToLocusTag2Comment(
-                    #         integraseManuallyCheckIT.locusTag,
-                    #         commentITToAdd_contradictoryChainReaction,
-                    #         locusTagIntegrase2Comment)
                     del ICEsIMEsStructure2setIntegraseMoreSure[structureToCheckInChainIT]
 
 
@@ -1213,9 +1178,6 @@ def addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure(
         setLocusTagToNotConsiderAseManuallyCheck = set()
         for keyICEsIMEsStructureManuallyCheck, integraseManuallyCheck2comment in ICEsIMEsStructure2IntegraseManuallyCheck2comment.items():
             for integraseManuallyCheck, valueComment in integraseManuallyCheck2comment.items():
-                # keyICEsIMEsStructureManuallyCheck.comment += valueComment
-                # listIntegraseLocusTag = keyReprSetIntegraseManuallyCheck.split(", ")
-                # for currIntegraseLocusTagManuallyCheck in listIntegraseLocusTag:
                 for keyICEsIMEsStructureMoreSure, valueSetIntegraseMoreSure in ICEsIMEsStructure2setIntegraseMoreSure.items():
                     for currIntegraseMoreSure in valueSetIntegraseMoreSure:
                         if currIntegraseMoreSure == integraseManuallyCheck:
@@ -1229,16 +1191,12 @@ def addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure(
                 print("\n !!! rerun addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure with new setUnionLocusTagToNotConsiderAseManuallyCheck = {}\n".format(setUnionLocusTagToNotConsiderAseManuallyCheck))
 
             addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure(
-                    listSPs,
-                    listICEsIMEsStructures,
-                    maxNumberCDSForFilterIMESize,
-                    groupListSPintoICEsIMEsUsingFamilyInfo,
-                    setUnionLocusTagToNotConsiderAseManuallyCheck,
-                    countIteraddSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure,
-                    allowAdjacentIntegraseOnlyForSer,
-                    locusTagIntegrase2Comment,
-                    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance)
+                    listSPs
+                    , listICEsIMEsStructures
+                    , setUnionLocusTagToNotConsiderAseManuallyCheck
+                    , countIteraddSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure
+                    , locusTagIntegrase2Comment
+                    )
             return
 
 
@@ -1247,9 +1205,6 @@ def addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure(
         for integraseManuallyCheck, valueComment in integraseManuallyCheck2comment.items():
             if valueComment not in keyICEsIMEsStructure.comment :
                 keyICEsIMEsStructure.comment += valueComment
-            # listIntegraseLocusTag = keyReprSetIntegraseManuallyCheck.split(", ")
-            # for currIntegraseLocusTagManuallyCheck in listIntegraseLocusTag:
-            # keyICEsIMEsStructure.setIntegraseToManuallyCheck.add(integraseManuallyCheck.locusTag)
             keyICEsIMEsStructure.setIntegraseToManuallyCheck.add(integraseManuallyCheck)
             icescreen_OO.addCommentToLocusTag2Comment(
                     integraseManuallyCheck.locusTag,
@@ -1293,14 +1248,6 @@ def addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure(
                 setICEsIMEsStructuresIT.add(ICEsIMEsStructuresIT)
                 __integraseAttributedSureDownstream2setICEsIMEsStructures[integraseDownstreamIT] = setICEsIMEsStructuresIT
 
-        # for integraseLocusTagsToManuallyCheckIT in ICEsIMEsStructuresIT.setIntegraseToManuallyCheck :
-        #     if integraseLocusTagsToManuallyCheckIT in __integraseLocusTagAttributedToManuallyCheck2setICEsIMEsStructures:
-        #         setICEsIMEsStructuresIT = __integraseLocusTagAttributedToManuallyCheck2setICEsIMEsStructures[integraseLocusTagsToManuallyCheckIT]
-        #         setICEsIMEsStructuresIT.add(ICEsIMEsStructuresIT)
-        #     else :
-        #         setICEsIMEsStructuresIT = set()
-        #         setICEsIMEsStructuresIT.add(ICEsIMEsStructuresIT)
-        #         __integraseLocusTagAttributedToManuallyCheck2setICEsIMEsStructures[integraseLocusTagsToManuallyCheckIT] = setICEsIMEsStructuresIT
         for integraseToManuallyCheckIT in ICEsIMEsStructuresIT.setIntegraseToManuallyCheck :
             if integraseToManuallyCheckIT.locusTag in __integraseLocusTagAttributedToManuallyCheck2setICEsIMEsStructures:
                 setICEsIMEsStructuresIT = __integraseLocusTagAttributedToManuallyCheck2setICEsIMEsStructures[integraseToManuallyCheckIT.locusTag]

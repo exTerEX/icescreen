@@ -1,0 +1,56 @@
+LOCUS       NZ_TEST6                 107 bp    DNA     circular BCT 16-MAR-2020
+DEFINITION  NZ_TEST6
+ACCESSION   NZ_TEST6
+VERSION     NZ_TEST6
+FEATURES             Location/Qualifiers
+     source          1..107
+                     /organism="Candidatus Frankia datiscae"
+                     /mol_type="genomic DNA"
+                     /strain="Dg1"
+                     /host="Datisca glomerata"
+                     /db_xref="taxon:2716812"
+                     /plasmid="pFSYMDG01"
+     gene            1..107
+                     /locus_tag="FsymDg_4550"
+     CDS             1..107
+                     /locus_tag="FsymDg_4550"
+                     /inference="ab initio prediction:Prodigal:1.4"
+                     /codon_start=1
+                     /transl_table=11
+                     /product="hypothetical protein"
+                     /protein_id="AEH11797.1"
+                     /db_xref="GI:334861324"
+                     /translation="MTPEEEMQKFADSFDWRDGFRSLVEEGKSNREIVEALDLTNGGAI
+                     SFERLDLQY"
+ORIGIN
+        1 gcttgatgtg gcggcggacg cttcatcgtg tctcgtgatc cgtgccgctc tcgcgtacgc
+       61 ggccggcgtc gacgtcgcgg actacacccc ccgacgcaca ggccgtc
+//
+LOCUS       NZ_CP011307.1                 107 bp    DNA     circular BCT 16-MAR-2020
+DEFINITION  NZ_CP011307.1
+ACCESSION   NZ_CP011307.1
+VERSION     NZ_CP011307.1
+FEATURES             Location/Qualifiers
+     source          1..107
+                     /organism="Candidatus Frankia datiscae"
+                     /mol_type="genomic DNA"
+                     /strain="Dg1"
+                     /host="Datisca glomerata"
+                     /db_xref="taxon:2716812"
+                     /plasmid="pFSYMDG01"
+     gene            1..107
+                     /locus_tag="FsymDg_4550"
+     CDS             1..107
+                     /locus_tag="FsymDg_4550"
+                     /inference="ab initio prediction:Prodigal:1.4"
+                     /codon_start=1
+                     /transl_table=11
+                     /product="hypothetical protein"
+                     /protein_id="AEH11797.1"
+                     /db_xref="GI:334861324"
+                     /translation="MTPEEEMQKFADSFDWRDGFRSLVEEGKSNREIVEALDLTNGGAI
+                     SFERLDLQY"
+ORIGIN
+        1 gcttgatgtg gcggcggacg cttcatcgtg tctcgtgatc cgtgccgctc tcgcgtacgc
+       61 ggccggcgtc gacgtcgcgg actacacccc ccgacgcaca ggccgtc
+//

@@ -7,30 +7,33 @@
 # Usage function (show help).
 
 function version(){
-    printf "1.2.0\n"
+    printf "1.3.0\n"
 }
 
 function usage(){
-    printf "\nICEscreen version 1.2.0\n\n"
-    printf "Usage for running an analysis with ICEscreen: icescreen [-o OUTDIR] [-n DATASET_NAME] [-j NB_JOBS] [-m MODE] -g GBDIR\n"
+    printf "\nICEscreen version 1.3.0\n\n"
+    printf "Usage for running an analysis with ICEscreen: icescreen [-o OUTDIR] [-n DATASET_NAME] [-j NB_JOBS] -p TAXONMIC_PHYLUM -g GBDIR\n"
 
     printf "\nShow help:\n"
-    printf "\t-h, --help                 : Show this message and exit\n"
+    printf "\t-h, --help                  : Show this message and exit.\n"
 
-    printf "\nRequired argument for running an analysis:\n"
-    printf "\t-g, --gbdir                : Path to the folder containing the genbank files (Mandatory). Each Genbank file can only contain ONE record, multigenbank files are not supported. Each Genbank file must include the ORIGIN nucleotide sequence at the end\n"
+    printf "\nMandatory arguments for running icescreen:\n"
+    printf "\t-g, --gbdir                 : Path to the folder containing the genbank files (Mandatory). Multigenbank files are supported. Each Genbank file must include the ORIGIN nucleotide sequence at the end.\n"
+    
+    printf "\nSoon to be mandatory arguments for running icescreen:\n"
+    printf "\t-p, --phylum                : Phylum of the organisms to analyse. Supported phylum: \"bacillota\".\n"
 
     printf "\nOptional arguments for running an analysis:\n"
-    printf "\t-o, --outdir               : Path to where ICEscreen results will be written (default "${HOME}")\n"
-    printf "\t-n, --name                 : Name of the analysis (default None)\n"
-    printf "\t-j, --jobs                 : Maximum number of processes running in parallel\n"
-    printf "\t-m, --mode                 : Taxonomy of the organisms to analyse (default \"firmicutes\")\n"
+    printf "\t-o, --outdir                : Path to where ICEscreen results will be written (default "${HOME}").\n"
+    printf "\t-n, --name                  : Name of the analysis (default None).\n"
+    printf "\t-j, --jobs                  : Maximum number of processes running in parallel (default 1).\n"
 
     printf "\nArguments for admin:\n"
-    printf "\t--galaxy                   : [Galaxy admin] Activate parameters to run ICEscreen on Galaxy\n"
-    printf "\t--install_dependencies     : [Tool admin] Install or re-install the dependencies of ICEscreen via Conda\n"
-    printf "\t--index_genomic_resources  : [Tool admin] Index or re-index the genomic resources related to the signature proteins used by ICEscreen (proteins fasta via makeblastdb and HMM profiles via hmmpress)\n"
-    printf "\t--test_installation        : [Tool admin] test whether the process of installing ICEscreen was successful. If so, the sentence \"The installation of ICEscreen is successful\" will appear.\n"
+    printf "\t--galaxy                    : [Galaxy admin] Activate parameters to run ICEscreen on Galaxy.\n"
+    printf "\t--install_dependencies      : [Tool admin] Install or re-install the dependencies of ICEscreen via Conda.\n"
+    printf "\t--print_version_dependencies: [Tool admin] show the version of the dependencies for ICEscreen.\n"
+    printf "\t--index_genomic_resources   : [Tool admin] Index or re-index the genomic resources related to the signature proteins used by ICEscreen (proteins fasta via makeblastdb and HMM profiles via hmmpress).\n"
+    printf "\t--test_installation         : [Tool admin] test whether the process of installing ICEscreen was successful. If so, the sentence \"The installation of ICEscreen is successful\" will appear.\n"
 
 
 }
@@ -53,6 +56,12 @@ exit_if_error() {
     }
 }
 
+function get_abs_filename(){
+  # $1 : relative filename
+  # echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+  echo "$(cd "$(dirname -- "$1")" >/dev/null; pwd -P)/$(basename -- "$1")"
+}
+
 
 function install_dependencies(){
 	# Installation of ICEscreen conda environement from YAML
@@ -63,6 +72,8 @@ function install_dependencies(){
 
 
 function index_genomic_resources(){
+        local galaxy_code_sent=$1
+	conda_activate_icescreen_env "${galaxy_code_sent}"
 
 	for filename in "${Icescreen_root_dir}"/icescreen_detection_SP/database/blastdb/*.faa "${Icescreen_root_dir}"/icescreen_detection_SP/database/blastdb/*.fa "${Icescreen_root_dir}"/icescreen_detection_SP/database/blastdb/*.fasta; do
 	    echo "${filename}"
@@ -91,24 +102,30 @@ function index_genomic_resources(){
 		exit_if_error $? "hmmpress ${filename} failed"
 	    fi
 	done
+	conda_deactivate_icescreen_env "${galaxy_code_sent}"
 }
 
 
 function test_installation(){
 
-	# skipping test compile makeblastdb
+        local galaxy_code_sent=$1
+	conda_activate_icescreen_env "${galaxy_code_sent}"
+        
+	# test compile makeblastdb
 	ls "${Icescreen_root_dir}/icescreen_detection_SP/database/blastdb/" | grep '.psq' > /dev/null
 	exit_if_error $? "test compile makeblastdb failed"
 
-	# skipping test compile HMMPress
+	# test compile HMMPress
 	ls "${Icescreen_root_dir}/icescreen_detection_SP/database/hmmdb/FP_profiles/" | grep '.h3m' > /dev/null
 	exit_if_error $? "test compile HMMPress FP_profiles failed"
 	ls "${Icescreen_root_dir}/icescreen_detection_SP/database/hmmdb/SP_profiles/" | grep '.h3m' > /dev/null
 	exit_if_error $? "test compile HMMPress SP_profiles failed"
 
-	# skipping test icescreen_detection_ME
+	# test modules
 	"${Icescreen_root_dir}/icescreen_detection_ME/runTests.sh" 2>&1 | grep 'Tests successful' > /dev/null
-	exit_if_error $? "test icescreen_detection_ME failed"
+	exit_if_error $? "test icescreen_detection_ME/runTests.sh failed"
+	"${Icescreen_root_dir}/test_pipeline/runTests.sh" 2>&1 | grep 'Tests successful' > /dev/null
+	exit_if_error $? "test test_pipeline/runTests.sh failed"
 
 	# test most dependencies are installed
 	snakemake --version 2>&1 > /dev/null
@@ -122,9 +139,80 @@ function test_installation(){
 	pip3 show biopython 2>&1 > /dev/null
 	exit_if_error $? "test dependencies biopython failed"
 	# testing of bcbio-gff is skipped : from BCBio import GFF ; print(GFF.__version__)
+	conda_deactivate_icescreen_env "${galaxy_code_sent}"
 
 	echo "The installation of ICEscreen is successful"
 
+}
+
+
+function conda_activate_icescreen_env(){
+        local galaxy_code_sent=$1
+        if [[ "${galaxy_code_sent}" -eq 0 ]]
+        then
+		CONDA_BASE=$(conda info --base)
+		if [ -d "${CONDA_BASE}/envs/icescreen_env" ]
+		then
+		    ## Then source conda.sh
+		    source "${CONDA_BASE}/etc/profile.d/conda.sh"
+
+		    ## Now activate environments
+		    printf "\nconda activate icescreen_env\n"
+		    conda activate icescreen_env
+		    exit_if_error $? "conda activate failed"
+		else
+		    echo "Not activating icescreen_env via conda because directory ${CONDA_BASE}/envs/icescreen_env is not found."
+		fi
+	else
+		echo "Not activating icescreen_env via conda because galaxy_code_sent is ${galaxy_code_sent}."
+        fi
+}
+    
+    
+function conda_deactivate_icescreen_env(){
+        local galaxy_code_sent=$1
+        if [[ "${galaxy_code_sent}" -eq 0 ]]
+        then
+		CONDA_BASE=$(conda info --base)
+		if [ -d "${CONDA_BASE}/envs/icescreen_env" ]
+		then
+		    ## Then source conda.sh
+		    source "${CONDA_BASE}/etc/profile.d/conda.sh"
+
+		    ## Now deactivate environments
+		    printf "\nconda deactivate\n"
+		    conda deactivate
+		    exit_if_error $? "conda deactivate failed"
+		else
+		    echo "Not activating icescreen_env via conda because directory ${CONDA_BASE}/envs/icescreen_env is not found."
+		fi
+	else
+		echo "Not activating icescreen_env via conda because galaxy_code_sent is ${galaxy_code_sent}."
+        fi
+}
+
+
+function print_version_dependencies(){
+        local galaxy_code_sent=$1
+	conda_activate_icescreen_env "${galaxy_code_sent}"
+	echo " - icescreen"
+	version
+	echo " - python"
+	python --version
+	echo " - pandas"
+	pip3 show pandas | grep 'Version:'
+	echo " - biopython"
+	pip3 show biopython | grep 'Version:'
+	echo " - bcbio-gff"
+	# testing of bcbio-gff is skipped : from BCBio import GFF ; print(GFF.__version__)
+	python -c "from BCBio import GFF ; print(GFF.__version__)"
+	echo " - snakemake-minimal"
+	snakemake --version
+	echo " - blastp"
+	blastp -version | grep 'blastp:'
+	echo " - phmmer"
+	phmmer -h | grep 'HMMER'
+	conda_deactivate_icescreen_env "${galaxy_code_sent}"
 }
 
 
@@ -139,7 +227,8 @@ gbdir=
 outdir=${HOME}
 name=
 cores=1
-mode="firmicutes" # defaut
+mode="" # mode is legacy name for phylum.
+deprecation_warnings_to_print=""
 
 Icescreen_Executable_Path="${BASH_SOURCE[0]}"
 while [ -h "${Icescreen_Executable_Path}" ]; do # resolve ${Icescreen_Executable_Path} until the file is no longer a symlink
@@ -178,12 +267,16 @@ while test $# -gt 0; do
             install_dependencies
             exit 0
             ;;
+        --print_version_dependencies)
+            print_version_dependencies 0
+            exit 0
+            ;;
         --index_genomic_resources)
-            index_genomic_resources
+            index_genomic_resources 0
             exit 0
             ;;
         --test_installation)
-            test_installation
+            test_installation 0
             exit 0
             ;;
         --galaxy)
@@ -245,7 +338,7 @@ while test $# -gt 0; do
         --jobs=)
             die 'ERROR: "--jobs" requires a non-empty option argument.'
             ;;
-        -m|--mode)
+        -p|--phylum)
             if [ "$2" ]; then
                 mode=$2
                 shift
@@ -253,11 +346,27 @@ while test $# -gt 0; do
                 die 'ERROR: '$1' requires a non-empty option argument.'
             fi
             ;;
-        --mode=?*)
+        --phylum=?*)
             mode=${1#*=}
             ;;
+        --phylum=)
+            die 'ERROR: "--phylum" requires a non-empty option argument.'
+            ;;
+        -m|--mode)
+            if [ "$2" ]; then
+                mode=$2
+                deprecation_warnings_to_print="${deprecation_warnings_to_print}\n - [NAME CHANGE] -m|--mode has been replaced by -p|--phylum. -m|--mode will not be supported in a future release."
+                shift
+            else
+                die 'ERROR: '$1' requires a non-empty option argument.'
+            fi
+            ;;
+        --mode=?*)
+            mode=${1#*=}
+            deprecation_warnings_to_print="${deprecation_warnings_to_print}\n - [NAME CHANGE] -m|--mode has been replaced by -p|--phylum. -m|--mode will not be supported in a future release, please use -p|--phylum instead."
+            ;;
         --mode=)
-            die 'ERROR: "--mode" requires a non-empty option argument.'
+            die 'ERROR: "--mode" requires a non-empty option argument. [NAME CHANGE] -m|--mode has been replaced by -p|--phylum. -m|--mode will not be supported in a future release, please use -p|--phylum instead.'
             ;;
         --)              # End of all options.
             shift
@@ -275,6 +384,8 @@ while test $# -gt 0; do
     shift
 done
 
+
+
 # Check all required arguments (gbdir).
 # Counter of valid required arguments (must be equal to 1).
 counter=0
@@ -291,17 +402,44 @@ else
     fi
 fi
 
-# Check if parameters file for a search mode exist
-#modepath=$(dirname $(realpath -s $0))"/icescreen_pipelines/mode/"${mode}".yml"
-modepath="${Icescreen_root_dir}/icescreen_pipelines/mode/${mode}.yml"
 
 #trim trailing slashes
 gbdir=$(echo "${gbdir}" | sed 's/\/*$//g')
 outdir=$(echo "${outdir}" | sed 's/\/*$//g')
 
+gbdir=$(get_abs_filename "${gbdir}")
+outdir=$(get_abs_filename "${outdir}")
+
+
+# mode lowercase
+mode=$(echo ${mode} | tr '[:upper:]' '[:lower:]')
+
+# Check parameters for the Taxonomy mode
+if [ -z "${mode}" ]
+then
+   # $mode is empty   
+    mode="bacillota" # mode is legacy name for phylum. Soon will be no defaut value anymore. 
+    deprecation_warnings_to_print="${deprecation_warnings_to_print}\n - [SOON TO BE MANDATORY ARGUMENT] -p|--phylum will soon be a mandatory arguments for running icescreen. Running icescreen without -p|--phylum will not be supported in a future release. For this version, --phylum is set to \"bacillota\" by default."
+    # die "ERROR: Option \"-p|--phylum\" is now mandatory. Supported phylum: \"bacillota\".";
+fi
+
+if [ "${mode}" == "firmicutes" ]
+then
+   # $mode is empty   
+    mode="bacillota" # firmicutes is the old name for bacillota. 
+    deprecation_warnings_to_print="${deprecation_warnings_to_print}\n - [NAME CHANGE] \"firmicutes\" has been replaced by \"bacillota\" to keep up with the current taxonomy nomenclature."
+fi
+
+modepath="${Icescreen_root_dir}/icescreen_pipelines/mode/${mode}.yml"
 if [ ! -f "${modepath}" ];
 then
-    die "ERROR: \"${mode}\" mode does not exist.";
+    die "ERROR: phylum ${mode} is not supported. Supported phylum: \"bacillota\".";
+fi
+
+if [ -n "${deprecation_warnings_to_print}" ]
+then
+   # $deprecation_warnings_to_print is not empty   
+    printf "\n\n**DEPRECATION WARNINGS**: $deprecation_warnings_to_print\n\n"
 fi
 
 if [[ "$counter" -eq 1 ]]                             # Check if required argument is valid.
@@ -311,7 +449,7 @@ then
     then
         # Display input of user
         printf "\nInput arguments:\n"
-        printf "\tSearch mode:                          "${mode}"\n"
+        printf "\tPhylum:                               "${mode}"\n"
         printf "\tGenbank folder:                       "${gbdir}"\n"
 	
         if [ -z "${name}" ]
@@ -359,20 +497,20 @@ then
 		fi
         done
 
-        if [[ "${galaxy}" -eq 0 ]]
-        then
-		CONDA_BASE=$(conda info --base)
-		if [ -d "${CONDA_BASE}/envs/icescreen_env" ]
-		then
-		    ## Then source conda.sh
-		    source "${CONDA_BASE}/etc/profile.d/conda.sh"
-
-		    ## Now activate environments
-		    printf "\nconda activate icescreen_env\n"
-		    conda activate icescreen_env
-		    exit_if_error $? "conda activate failed"
-		fi
-        fi
+	conda_activate_icescreen_env "${galaxy}"
+        # if [[ "${galaxy}" -eq 0 ]]
+        # then
+	# 	CONDA_BASE=$(conda info --base)
+	# 	if [ -d "${CONDA_BASE}/envs/icescreen_env" ]
+	# 	then
+	# 	    ## Then source conda.sh
+	# 	    source "${CONDA_BASE}/etc/profile.d/conda.sh"
+	# 	    ## Now activate environments
+	# 	    printf "\nconda activate icescreen_env\n"
+	# 	    conda activate icescreen_env
+	# 	    exit_if_error $? "conda activate failed"
+	# 	fi
+        # fi
 
 
         # Run ICEscreen pipeline
@@ -382,21 +520,20 @@ then
         # Remove genbank folder
         rm -rf "${outdir}/genbank"
 
-
-        if [[ "${galaxy}" -eq 0 ]]
-        then
-		CONDA_BASE=$(conda info --base)
-		if [ -d "${CONDA_BASE}/envs/icescreen_env" ]
-		then
-		    ## Then source conda.sh
-		    source "${CONDA_BASE}/etc/profile.d/conda.sh"
-
-		    ## Now deactivate environments
-		    printf "\nconda deactivate\n"
-		    conda deactivate
-		    exit_if_error $? "conda deactivate failed"
-		fi
-        fi
+	conda_deactivate_icescreen_env "${galaxy}"
+        # if [[ "${galaxy}" -eq 0 ]]
+        # then
+	# 	CONDA_BASE=$(conda info --base)
+	# 	if [ -d "${CONDA_BASE}/envs/icescreen_env" ]
+	# 	then
+	# 	    ## Then source conda.sh
+	# 	    source "${CONDA_BASE}/etc/profile.d/conda.sh"
+	# 	    ## Now deactivate environments
+	# 	    printf "\nconda deactivate\n"
+	# 	    conda deactivate
+	# 	    exit_if_error $? "conda deactivate failed"
+	# 	fi
+        # fi
 
 
     else
@@ -405,3 +542,11 @@ then
 else
     die "ERROR: Not all required parameters are valid."
 fi
+
+
+if [ -n "${deprecation_warnings_to_print}" ]
+then
+   # $deprecation_warnings_to_print is not empty   
+    printf "\n\n**DEPRECATION WARNINGS**: $deprecation_warnings_to_print\n\n"
+fi
+

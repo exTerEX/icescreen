@@ -296,7 +296,7 @@ if __name__ == '__main__':
                 "accepts arbitrary text, and will fail if you input a non-existent feature name. "
                 "Common options are 'CDS', 'rRNA', 'tRNA', or 'gene'. Default is 'CDS'.", required=False)
     facultative.add_argument('-c', '--config',
-                          help="Path to YAML configuration file. An example file is Projects/icescreen/pipelines/mode/firmicutes.yml",
+                          help="Path to YAML configuration file. An example file is Projects/icescreen/pipelines/mode/bacillota.yml",
                           required=False)
     
     args = parser.parse_args()

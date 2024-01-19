@@ -1,0 +1,224 @@
+LOCUS       NZ_TEST10                 107 bp    DNA     circular BCT 16-MAR-2020
+DEFINITION  NZ_TEST10
+ACCESSION   NZ_TEST10
+VERSION     NZ_TEST10
+FEATURES             Location/Qualifiers
+     source          1..107
+                     /organism="Candidatus Frankia datiscae"
+                     /mol_type="genomic DNA"
+                     /strain="Dg1"
+                     /host="Datisca glomerata"
+                     /db_xref="taxon:2716812"
+                     /plasmid="pFSYMDG01"
+     gene            1..107
+                     /locus_tag="FsymDg_4550"
+     CDS             1..107
+                     /locus_tag="FsymDg_4550"
+                     /inference="ab initio prediction:Prodigal:1.4"
+                     /codon_start=1
+                     /transl_table=11
+                     /product="hypothetical protein"
+                     /protein_id="AEH11797.1"
+                     /db_xref="GI:334861324"
+                     /translation="MTPEEEMQKFADSFDWRDGFRSLVEEGKSNREIVEALDLTNGGAI
+                     SFERLDLQY"
+ORIGIN
+        1 gcttgatgtg gcggcggacg cttcatcgtg tctcgtgatc cgtgccgctc tcgcgtacgc
+       61 ggccggcgtc gacgtcgcgg actacacccc ccgacgcaca ggccgtc
+//
+LOCUS       NZ_DS483503.1                 107 bp    DNA     circular BCT 16-MAR-2020
+DEFINITION  NZ_DS483503.1
+ACCESSION   NZ_DS483503.1
+VERSION     NZ_DS483503.1
+FEATURES             Location/Qualifiers
+     source          1..107
+                     /organism="Candidatus Frankia datiscae"
+                     /mol_type="genomic DNA"
+                     /strain="Dg1"
+                     /host="Datisca glomerata"
+                     /db_xref="taxon:2716812"
+                     /plasmid="pFSYMDG01"
+     gene            1..107
+                     /locus_tag="FsymDg_4550"
+     CDS             1..107
+                     /locus_tag="FsymDg_4550"
+                     /inference="ab initio prediction:Prodigal:1.4"
+                     /codon_start=1
+                     /transl_table=11
+                     /product="hypothetical protein"
+                     /protein_id="AEH11797.1"
+                     /db_xref="GI:334861324"
+                     /translation="MTPEEEMQKFADSFDWRDGFRSLVEEGKSNREIVEALDLTNGGAI
+                     SFERLDLQY"
+ORIGIN
+        1 gcttgatgtg gcggcggacg cttcatcgtg tctcgtgatc cgtgccgctc tcgcgtacgc
+       61 ggccggcgtc gacgtcgcgg actacacccc ccgacgcaca ggccgtc
+//
+LOCUS       NS_DS483503.1                 107 bp    DNA     circular BCT 16-MAR-2020
+DEFINITION  NS_DS483503.1
+ACCESSION   NS_DS483503.1
+VERSION     NS_DS483503.1
+FEATURES             Location/Qualifiers
+     source          1..107
+                     /organism="Candidatus Frankia datiscae"
+                     /mol_type="genomic DNA"
+                     /strain="Dg1"
+                     /host="Datisca glomerata"
+                     /db_xref="taxon:2716812"
+                     /plasmid="pFSYMDG01"
+     gene            1..107
+                     /locus_tag="FsymDg_4550"
+     CDS             1..107
+                     /locus_tag="FsymDg_4550"
+                     /inference="ab initio prediction:Prodigal:1.4"
+                     /codon_start=1
+                     /transl_table=11
+                     /product="hypothetical protein"
+                     /protein_id="AEH11797.1"
+                     /db_xref="GI:334861324"
+                     /translation="MTPEEEMQKFADSFDWRDGFRSLVEEGKSNREIVEALDLTNGGAI
+                     SFERLDLQY"
+ORIGIN
+        1 gcttgatgtg gcggcggacg cttcatcgtg tctcgtgatc cgtgccgctc tcgcgtacgc
+       61 ggccggcgtc gacgtcgcgg actacacccc ccgacgcaca ggccgtc
+//
+LOCUS       NZ_TEST10_BIS                 107 bp    DNA     circular BCT 16-MAR-2020
+DEFINITION  NZ_TEST10_BIS
+ACCESSION   NZ_TEST10_BIS
+VERSION     NZ_TEST10_BIS
+FEATURES             Location/Qualifiers
+     source          1..107
+                     /organism="Candidatus Frankia datiscae"
+                     /mol_type="genomic DNA"
+                     /strain="Dg1"
+                     /host="Datisca glomerata"
+                     /db_xref="taxon:2716812"
+                     /plasmid="pFSYMDG01"
+     gene            1..107
+                     /locus_tag="FsymDg_4550"
+     CDS             1..107
+                     /locus_tag="FsymDg_4550"
+                     /inference="ab initio prediction:Prodigal:1.4"
+                     /codon_start=1
+                     /transl_table=11
+                     /product="hypothetical protein"
+                     /protein_id="AEH11797.1"
+                     /db_xref="GI:334861324"
+                     /translation="MTPEEEMQKFADSFDWRDGFRSLVEEGKSNREIVEALDLTNGGAI
+                     SFERLDLQY"
+ORIGIN
+        1 gcttgatgtg gcggcggacg cttcatcgtg tctcgtgatc cgtgccgctc tcgcgtacgc
+       61 ggccggcgtc gacgtcgcgg actacacccc ccgacgcaca ggccgtc
+//
+LOCUS       NZ_CYZU01000008.1                 107 bp    DNA     circular BCT 16-MAR-2020
+DEFINITION  NZ_CYZU01000008.1
+ACCESSION   NZ_CYZU01000008.1
+VERSION     NZ_CYZU01000008.1
+FEATURES             Location/Qualifiers
+     source          1..107
+                     /organism="Candidatus Frankia datiscae"
+                     /mol_type="genomic DNA"
+                     /strain="Dg1"
+                     /host="Datisca glomerata"
+                     /db_xref="taxon:2716812"
+                     /plasmid="pFSYMDG01"
+     gene            1..107
+                     /locus_tag="FsymDg_4550"
+     CDS             1..107
+                     /locus_tag="FsymDg_4550"
+                     /inference="ab initio prediction:Prodigal:1.4"
+                     /codon_start=1
+                     /transl_table=11
+                     /product="hypothetical protein"
+                     /protein_id="AEH11797.1"
+                     /db_xref="GI:334861324"
+                     /translation="MTPEEEMQKFADSFDWRDGFRSLVEEGKSNREIVEALDLTNGGAI
+                     SFERLDLQY"
+ORIGIN
+        1 gcttgatgtg gcggcggacg cttcatcgtg tctcgtgatc cgtgccgctc tcgcgtacgc
+       61 ggccggcgtc gacgtcgcgg actacacccc ccgacgcaca ggccgtc
+//
+LOCUS       NZ_TEST10_TER                 107 bp    DNA     circular BCT 16-MAR-2020
+DEFINITION  NZ_TEST10_TER
+ACCESSION   NZ_TEST10_TER
+VERSION     NZ_TEST10_TER
+FEATURES             Location/Qualifiers
+     source          1..107
+                     /organism="Candidatus Frankia datiscae"
+                     /mol_type="genomic DNA"
+                     /strain="Dg1"
+                     /host="Datisca glomerata"
+                     /db_xref="taxon:2716812"
+                     /plasmid="pFSYMDG01"
+     gene            1..107
+                     /locus_tag="FsymDg_4550"
+     CDS             1..107
+                     /locus_tag="FsymDg_4550"
+                     /inference="ab initio prediction:Prodigal:1.4"
+                     /codon_start=1
+                     /transl_table=11
+                     /product="hypothetical protein"
+                     /protein_id="AEH11797.1"
+                     /db_xref="GI:334861324"
+                     /translation="MTPEEEMQKFADSFDWRDGFRSLVEEGKSNREIVEALDLTNGGAI
+                     SFERLDLQY"
+ORIGIN
+        1 gcttgatgtg gcggcggacg cttcatcgtg tctcgtgatc cgtgccgctc tcgcgtacgc
+       61 ggccggcgtc gacgtcgcgg actacacccc ccgacgcaca ggccgtc
+//
+LOCUS       NZ_TEST10_TER2                 107 bp    DNA     circular BCT 16-MAR-2020
+DEFINITION  NZ_TEST10_TER2
+ACCESSION   NZ_TEST10_TER2
+VERSION     NZ_TEST10_TER2
+FEATURES             Location/Qualifiers
+     source          1..107
+                     /organism="Candidatus Frankia datiscae"
+                     /mol_type="genomic DNA"
+                     /strain="Dg1"
+                     /host="Datisca glomerata"
+                     /db_xref="taxon:2716812"
+                     /plasmid="pFSYMDG01"
+     gene            1..107
+                     /locus_tag="FsymDg_4550"
+     CDS             1..107
+                     /locus_tag="FsymDg_4550"
+                     /inference="ab initio prediction:Prodigal:1.4"
+                     /codon_start=1
+                     /transl_table=11
+                     /product="hypothetical protein"
+                     /protein_id="AEH11797.1"
+                     /db_xref="GI:334861324"
+                     /translation="MTPEEEMQKFADSFDWRDGFRSLVEEGKSNREIVEALDLTNGGAI
+                     SFERLDLQY"
+ORIGIN
+        1 gcttgatgtg gcggcggacg cttcatcgtg tctcgtgatc cgtgccgctc tcgcgtacgc
+       61 ggccggcgtc gacgtcgcgg actacacccc ccgacgcaca ggccgtc
+//
+LOCUS       NZ_CP026548.1                 107 bp    DNA     circular BCT 16-MAR-2020
+DEFINITION  NZ_CP026548.1
+ACCESSION   NZ_CP026548.1
+VERSION     NZ_CP026548.1
+FEATURES             Location/Qualifiers
+     source          1..107
+                     /organism="Candidatus Frankia datiscae"
+                     /mol_type="genomic DNA"
+                     /strain="Dg1"
+                     /host="Datisca glomerata"
+                     /db_xref="taxon:2716812"
+                     /plasmid="pFSYMDG01"
+     gene            1..107
+                     /locus_tag="FsymDg_4550"
+     CDS             1..107
+                     /locus_tag="FsymDg_4550"
+                     /inference="ab initio prediction:Prodigal:1.4"
+                     /codon_start=1
+                     /transl_table=11
+                     /product="hypothetical protein"
+                     /protein_id="AEH11797.1"
+                     /db_xref="GI:334861324"
+                     /translation="MTPEEEMQKFADSFDWRDGFRSLVEEGKSNREIVEALDLTNGGAI
+                     SFERLDLQY"
+ORIGIN
+        1 gcttgatgtg gcggcggacg cttcatcgtg tctcgtgatc cgtgccgctc tcgcgtacgc
+       61 ggccggcgtc gacgtcgcgg actacacccc ccgacgcaca ggccgtc
+//

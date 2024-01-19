@@ -338,7 +338,7 @@ def get_annotation(dbpath, dbtable, data):
     # Initalization of cursor
     dbCursor = db.cursor()
 
-    if dbtable == "Firmicutes_SP_detailed":
+    if dbtable == "Metadata_SP_detailed":
         # Dictionary with:
         # keys: Columns of ICEscreen annotation database table to be retrieved
         # values: Associated columns names in dataframe for retrieved info
@@ -362,7 +362,7 @@ def get_annotation(dbpath, dbtable, data):
                 "False_positives": "False_positives"
                 }
 
-    elif dbtable == "Firmicutes_SP":
+    elif dbtable == "Metadata_SP":
         # Dictionary with:
         # keys: Columns of ICEscreen annotation database table to be retrieved
         # values: Associated columns names in dataframe for retrieved info
@@ -562,7 +562,7 @@ def pretty_df(df):
                                                      False, False]))
 
     # Sanitize annotations (remove leading and trailing whitespace)
-    df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+    df = df.map(lambda x: x.strip() if isinstance(x, str) else x) # applymap was deprecated in 2.1.0
 
     # Format numeric columns
     df['pident'] = df['pident'].map(lambda x: '{0:.2f}'.format(x))
@@ -769,9 +769,9 @@ if __name__ == "__main__":
 
     # Add ICEscreen annotation to each possible SPs
     if detailed is True:
-        dbtable = "Firmicutes_SP_detailed"
+        dbtable = "Metadata_SP_detailed"
     elif detailed is False:
-        dbtable = "Firmicutes_SP"
+        dbtable = "Metadata_SP"
 
     data = get_annotation(annotdb, dbtable, data)
 

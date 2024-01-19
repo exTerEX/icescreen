@@ -61,7 +61,7 @@ def parse_arguments():
 
 
 def get_XerS_annotation(data, tyr):
-    """Annotate potential XerS proteins of Firmicutes genomes.
+    """Annotate potential XerS proteins of Bacillota genomes.
 
     :param data: SP to evaluate
     :param tyr:  BlastP hits with Tyrosine integrase
@@ -75,7 +75,7 @@ def get_XerS_annotation(data, tyr):
         "ACO17137" XerS then it is annotated as "Streptococcal XerS"
       - If the CDS has a BlastP hit with "WP_011835230" XerS protein and is not
         annotated as "Streptococcal XerS" then it might be a XerS protein of
-        Firmicutes and will be annotated as "-"
+        Bacillota and will be annotated as "-"
       - If the CDS has a BlastP hit with less than 70% identity with "ACO17137"
         XerS then it might be an invertase and will be annotated
         "Possible invertase"
@@ -87,7 +87,7 @@ def get_XerS_annotation(data, tyr):
     if not candidates.empty:
         # Initialize list of verified CDS number
         xers_streptococcal = []  # XerS streptococcal proteins
-        xers_firmicutes = []     # Other XerS proteins of Firmicutes genomes
+        xers_bacillota = []     # Other XerS proteins of Bacillota genomes
         fp = []                  # False positives that will be removed
 
         # For each CDS, classify into 3 categories
@@ -105,12 +105,12 @@ def get_XerS_annotation(data, tyr):
                 elif any(xers_strep.Blast_ali_identity_perc.values < 70):
                     # If there is a hit with WP_011835230
                     if not xers_firmi.empty:
-                        xers_firmicutes.append(cds_num)
+                        xers_bacillota.append(cds_num)
                     else:
                         fp.append(cds_num)
             elif xers_strep.empty:
                 if not xers_firmi.empty:
-                    xers_firmicutes.append(cds_num)
+                    xers_bacillota.append(cds_num)
 
         # Reannotate data
         for cds_num in xers_streptococcal:
@@ -118,7 +118,7 @@ def get_XerS_annotation(data, tyr):
             data.loc[idx, "False_positives"] = "Streptococcal XerS"
             data.loc[idx, "Possible_SP"] = "no"
 
-        for cds_num in xers_firmicutes:
+        for cds_num in xers_bacillota:
             idx = data[data["CDS_num"] == cds_num].index
             #data.shape
             #data.ndim
@@ -157,8 +157,8 @@ def check_tyrosine_integrase(yamlpath, df, tyr):
               file=sys.stderr)
         sys.exit(1)
 
-    # Check tyrosine integrase only in firmicutes genomes
-    if mode == "firmicutes":
+    # Check tyrosine integrase only in bacillota genomes
+    if mode == "bacillota":
         # Get annotation of potential XerS proteins
         df = get_XerS_annotation(df, tyr)
 

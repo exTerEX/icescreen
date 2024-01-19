@@ -25,6 +25,7 @@ from Bio.SeqRecord import SeqRecord
 from Bio import Seq
 from requests.utils import quote
 import commonMethods
+import os
 
 def parse_arguments():
     """Parse generate_annotation_files.py script arguments.
@@ -699,17 +700,25 @@ def write_GFF3(listRecordsToWrite, outfile):
 if __name__ == "__main__":
     spPath, mePath, gbPath, outPath = parse_arguments()
 
+
+    spPath = os.path.abspath(spPath)
+    mePath = os.path.abspath(mePath)
+    gbPath = os.path.abspath(gbPath)
+    outPath = os.path.abspath(outPath)
+
+
     # Get SeqFeature of all SPs detected
     spdata = pd.read_csv(spPath, sep="\t")
     #print(str(spdata["CDS"])+"\t"+str(spdata["HMM_ali_E-value"])) # Name: HMM_ali_E-value, Length: 68, dtype: float64 => 4     1.700000e-13 for WP_158394679.1
 
-    if len(spdata.index) == 0:
-        open(outPath + ".embl", "a").close()
-        open(outPath + ".gff", "a").close()
-        open(outPath + ".gb", "a").close()
-        sys.exit(0)
+    # if len(spdata.index) == 0:
+    #     open(outPath + ".embl", "a").close()
+    #     open(outPath + ".gff", "a").close()
+    #     open(outPath + ".gb", "a").close()
+    #     sys.exit(0)
 
-    hasMultipleGenomeAccesion = commonMethods.determineIfResultSPFileHasMultipleGenomeAccesion(spPath)
+    (hasMultipleGenomeAccesion, listGenomeAccessionFromGenbankFile) = commonMethods.parseListGenomeAccessionFromGenbankFile(gbPath)
+    # hasMultipleGenomeAccesion = commonMethods.determineIfResultSPFileHasMultipleGenomeAccesion(spPath)
 
     # Get annotation of mobile elements that have all SPs as "assigned"
     data_tsv = pd.read_csv(mePath, sep="\t")
@@ -719,68 +728,125 @@ if __name__ == "__main__":
     record_iterator = SeqIO.parse(gbPath, "genbank")
     listRecordsToWrite_embl_gff = []
     listRecordsToWrite_gb = []
+    
     for gbdata in record_iterator:
 
         genomeAccesionIT = gbdata.id
-
         #https://pandas.pydata.org/docs/getting_started/intro_tutorials/03_subset_data.html
         spdata_filter_genomeAccesionIT = spdata[spdata["Genome_accession"] == genomeAccesionIT].copy(deep=True) #copy else SettingWithCopyWarning
+        # if len(spdata_filter_genomeAccesionIT.index) == 0:
+        #     continue
         data_tsv_filter_genomeAccesionIT = data_tsv[data_tsv["Genome_accession"] == genomeAccesionIT].copy(deep=True) #copy else SettingWithCopyWarning
 
-        CDS_dict = get_CDS_dict(gbdata, hasMultipleGenomeAccesion)
-        sp_feats = spdata_filter_genomeAccesionIT.apply(lambda x: SP_to_SeqFeature(x, CDS_dict[genomeAccesionIT], hasMultipleGenomeAccesion), axis=1).tolist()
 
-        myrecord_embl_gff = None
-        if len(data_tsv_filter_genomeAccesionIT.index) > 0:
+        # NEW WAY
+        featuresToPrint = []
+        if len(spdata_filter_genomeAccesionIT.index) == 0 and len(data_tsv_filter_genomeAccesionIT.index) == 0 :
+            # no SP detected and no ME detected
+            # featuresToPrint = gbdata.features # print original features too
+            pass
+        elif len(spdata_filter_genomeAccesionIT.index) != 0 and len(data_tsv_filter_genomeAccesionIT.index) == 0 :
+            # some SP detected but no ME detected
+            CDS_dict = get_CDS_dict(gbdata, hasMultipleGenomeAccesion)
+            spdata_filter_genomeAccesionIT_afterApply = spdata_filter_genomeAccesionIT.apply(lambda x: SP_to_SeqFeature(x, CDS_dict[genomeAccesionIT], hasMultipleGenomeAccesion), axis=1)
+            sp_feats = spdata_filter_genomeAccesionIT_afterApply.tolist()
+            # featuresToPrint = gbdata.features + sp_feats # print original features too
+            featuresToPrint = sp_feats
+        elif len(spdata_filter_genomeAccesionIT.index) == 0 and len(data_tsv_filter_genomeAccesionIT.index) != 0 :
+            # some ME detected but no SP detected, should not be possible
+            raise Exception("ERROR: Something went wrong when filtering data_tsv and spdata, some ME detected but no SP detected, should not be possible: len(spdata_filter_genomeAccesionIT.index) = {}, len(data_tsv_filter_genomeAccesionIT.index) = {}".format(len(spdata_filter_genomeAccesionIT.index), len(data_tsv_filter_genomeAccesionIT.index)))
+        elif len(spdata_filter_genomeAccesionIT.index) != 0 and len(data_tsv_filter_genomeAccesionIT.index) != 0 :
+            # some SP detected and some ME detected
+            CDS_dict = get_CDS_dict(gbdata, hasMultipleGenomeAccesion)
+            spdata_filter_genomeAccesionIT_afterApply = spdata_filter_genomeAccesionIT.apply(lambda x: SP_to_SeqFeature(x, CDS_dict[genomeAccesionIT], hasMultipleGenomeAccesion), axis=1)
+            sp_feats = spdata_filter_genomeAccesionIT_afterApply.tolist()
             data_tsv_filter_genomeAccesionIT["element_type"] = data_tsv_filter_genomeAccesionIT.apply(get_element_type, axis=1)
             data_tsv_filter_genomeAccesionIT["element_structure"] = data_tsv_filter_genomeAccesionIT.apply(get_element_structure, axis=1)
-
             # Get SeqFeature of detected mobile elements
-            me_feats = data_tsv_filter_genomeAccesionIT.apply(lambda x: make_element_features(CDS_dict[genomeAccesionIT], x),
-                                    axis=1).to_list()
+            me_feats = data_tsv_filter_genomeAccesionIT.apply(lambda x: make_element_features(CDS_dict[genomeAccesionIT], x), axis=1).to_list()
             me_feats = [x for x in me_feats if x is not None]
+            # featuresToPrint= gbdata.features + sp_feats + me_feats # print original features too
+            featuresToPrint= sp_feats + me_feats
+        else :
+            raise Exception("ERROR: Something went wrong when filtering data_tsv and spdata: len(spdata_filter_genomeAccesionIT.index) = {}, len(data_tsv_filter_genomeAccesionIT.index) = {}".format(len(spdata_filter_genomeAccesionIT.index), len(data_tsv_filter_genomeAccesionIT.index)))
 
-            # Create SeqRecord with "light" annotation (without FASTA sequence)
-            myrecord_embl_gff = SeqRecord(seq=Seq.Seq(''),
-                                id=gbdata.id,
-                                name=gbdata.name,
-                                description=gbdata.description,
-                                dbxrefs=gbdata.dbxrefs,
-                                features=sp_feats + me_feats,
-                                annotations={"molecule_type": "DNA"})
-        else:
-            # Create SeqRecord with "light" annotation (without FASTA sequence)
-            myrecord_embl_gff = SeqRecord(seq=Seq.Seq(''),
-                                id=gbdata.id,
-                                name=gbdata.name,
-                                description=gbdata.description,
-                                dbxrefs=gbdata.dbxrefs,
-                                features=sp_feats,
-                                annotations={"molecule_type": "DNA"})
+        # Create SeqRecord with "light" annotation (without FASTA sequence)
+        myrecord_embl_gff = SeqRecord(seq=Seq.Seq(''),
+                            id=gbdata.id,
+                            name=gbdata.name,
+                            description=gbdata.description,
+                            dbxrefs=gbdata.dbxrefs,
+                            features=featuresToPrint,
+                            annotations={"molecule_type": "DNA"})
         listRecordsToWrite_embl_gff.append(myrecord_embl_gff)
 
-        myrecord_gb = None
-        if data_tsv_filter_genomeAccesionIT.empty is False:
-            # Create SeqRecord with "heavy" annotation (with FASTA sequence)
-            # Sequence of the SeqRecord is extracted from en genbank
-            myrecord_gb = SeqRecord(seq=gbdata.seq,
-                                id=gbdata.id,
-                                name=gbdata.name,
-                                description=gbdata.description,
-                                dbxrefs=gbdata.dbxrefs,
-                                features=gbdata.features + sp_feats + me_feats,
-                                annotations={"molecule_type": "DNA"})
-        else:
-            # Create SeqRecord with "heavy" annotation (with FASTA sequence)
-            # Sequence of the SeqRecord is extracted from en genbank
-            myrecord_gb = SeqRecord(seq=gbdata.seq,
-                                id=gbdata.id,
-                                name=gbdata.name,
-                                description=gbdata.description,
-                                dbxrefs=gbdata.dbxrefs,
-                                features=gbdata.features + sp_feats,
-                                annotations={"molecule_type": "DNA"})
+        # Create SeqRecord with "heavy" annotation (with FASTA sequence)
+        # Sequence of the SeqRecord is extracted from the genbank
+        myrecord_gb = SeqRecord(seq=gbdata.seq,
+                            id=gbdata.id,
+                            name=gbdata.name,
+                            description=gbdata.description,
+                            dbxrefs=gbdata.dbxrefs,
+                            features= gbdata.features + featuresToPrint,
+                            annotations={"molecule_type": "DNA"})
         listRecordsToWrite_gb.append(myrecord_gb)
+
+        # OLD WAY
+        # CDS_dict = get_CDS_dict(gbdata, hasMultipleGenomeAccesion)
+        # spdata_filter_genomeAccesionIT_afterApply = spdata_filter_genomeAccesionIT.apply(lambda x: SP_to_SeqFeature(x, CDS_dict[genomeAccesionIT], hasMultipleGenomeAccesion), axis=1)
+        # sp_feats = spdata_filter_genomeAccesionIT_afterApply.tolist()
+
+        # myrecord_embl_gff = None
+        # if len(data_tsv_filter_genomeAccesionIT.index) > 0:
+        #     data_tsv_filter_genomeAccesionIT["element_type"] = data_tsv_filter_genomeAccesionIT.apply(get_element_type, axis=1)
+        #     data_tsv_filter_genomeAccesionIT["element_structure"] = data_tsv_filter_genomeAccesionIT.apply(get_element_structure, axis=1)
+
+        #     # Get SeqFeature of detected mobile elements
+        #     me_feats = data_tsv_filter_genomeAccesionIT.apply(lambda x: make_element_features(CDS_dict[genomeAccesionIT], x),
+        #                             axis=1).to_list()
+        #     me_feats = [x for x in me_feats if x is not None]
+
+        #     # Create SeqRecord with "light" annotation (without FASTA sequence)
+        #     myrecord_embl_gff = SeqRecord(seq=Seq.Seq(''),
+        #                         id=gbdata.id,
+        #                         name=gbdata.name,
+        #                         description=gbdata.description,
+        #                         dbxrefs=gbdata.dbxrefs,
+        #                         features=sp_feats + me_feats,
+        #                         annotations={"molecule_type": "DNA"})
+        # else:
+        #     # Create SeqRecord with "light" annotation (without FASTA sequence)
+        #     myrecord_embl_gff = SeqRecord(seq=Seq.Seq(''),
+        #                         id=gbdata.id,
+        #                         name=gbdata.name,
+        #                         description=gbdata.description,
+        #                         dbxrefs=gbdata.dbxrefs,
+        #                         features=sp_feats,
+        #                         annotations={"molecule_type": "DNA"})
+        # listRecordsToWrite_embl_gff.append(myrecord_embl_gff)
+
+        # myrecord_gb = None
+        # if data_tsv_filter_genomeAccesionIT.empty is False:
+        #     # Create SeqRecord with "heavy" annotation (with FASTA sequence)
+        #     # Sequence of the SeqRecord is extracted from en genbank
+        #     myrecord_gb = SeqRecord(seq=gbdata.seq,
+        #                         id=gbdata.id,
+        #                         name=gbdata.name,
+        #                         description=gbdata.description,
+        #                         dbxrefs=gbdata.dbxrefs,
+        #                         features=gbdata.features + sp_feats + me_feats,
+        #                         annotations={"molecule_type": "DNA"})
+        # else:
+        #     # Create SeqRecord with "heavy" annotation (with FASTA sequence)
+        #     # Sequence of the SeqRecord is extracted from en genbank
+        #     myrecord_gb = SeqRecord(seq=gbdata.seq,
+        #                         id=gbdata.id,
+        #                         name=gbdata.name,
+        #                         description=gbdata.description,
+        #                         dbxrefs=gbdata.dbxrefs,
+        #                         features=gbdata.features + sp_feats,
+        #                         annotations={"molecule_type": "DNA"})
+        # listRecordsToWrite_gb.append(myrecord_gb)
 
 
         

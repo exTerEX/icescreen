@@ -2,6 +2,29 @@
 To access the different releases, see https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/releases
 
 
+## v1.3.0, January 2024
+#### Minor changes
+* The following conda dependencies were upgraded: pandas >=2.1.4, and snakemake-minimal >=8.2.1.
+* The command line argument "--mode" has been renamed "--phylum" to better reflect its scope and is now case insensitive. The command line argument "--mode" is still supported but raises a deprecation warning. Absence of the argument "--phylum" (or "--mode") in the command line now raises a deprecation warning, this argument is to become mandatory in a future release. The option "Phylum of the genomes to analyze" is now visible and expanded by default on the galaxy user interface. "Firmicutes" has been replaced by "Bacillota" to keep up with the current taxonomy nomenclature. "Firmicutes" is still supported for "--phylum" but raises a deprecation warning.
+* The columns "Start_of_most_upstream_SP" and "Stop_of_most_downstream_SP" were added in the _detected_ME.tsv output file. Those columns are **not to be mistaken for the start and stop of the element however**.
+* Genome accession that generates no significant alignment match with any of the ICEscreen reference signature proteins now produces a complete summary output file filled with 0 values instead of an empty output file.
+* New ICEscreen command line option: "--print_version_dependencies" prints the version of the dependencies.
+* The ICEscreen command line option "--test_installation" now works for user without OS root privileges.
+* The experimental support for "Streptomyces" has been removed for now as it needs more polishing.
+* v1.3.0 (January 2024) of the reference signature proteins database, see log file icescreen_detection_SP/database/LOG/summary_log_modif_SP_database.md for more details.
+#### Bugs and warnings fixes
+* [Issue #15](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/15) and [Issue #16](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/16): incompatibility between bcbio-gff version 0.7.0 and biopython version 1.82 and 1.83. The version of those two conda dependencies were set as follow: bcbio-gff =0.7.0, biopython =1.81.
+* If a query locus tag had multiple valid alignment matches from multiple different fasta files of ICEscreen reference signature proteins, all those matches were considered and generated duplicated lines for a query locus tag in the final output files. This has been fixed and only the overall best alignment match for a query locus tag is now considered.
+* Ascending sorting by i-Evalue of multiple HMM profile matches for a query locus tag was not working properly. As a result, the best scoring HMM profile was not always selected. HMM profile matches are now sorted by domain_score (descending) to ensure the selection of the best HMM profile.
+* [Issue #13](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/13): in some case, there are multiple ICE or IME element structures that could be validly attributed to a query signature protein. When that happens, this query signature protein is attributed multiple potential ICE_IME_id which should appear in the column "ICE_IME_id_need_manual_curation" of the file _detected_SP_withICEIMEIds.tsv. A bug was fixed where the multiple potential ICE_IME_id would appear in the column "ICE_IME_id" when multiple such query signature protein were adjacent to each other.
+* [Issue #14](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/14): generate_annotation_files.py 'DataFrame' object has no attribute 'tolist'. This bug happens for a Genbank file with multiple accessions (multiple chromosomes or contigs) and at least one of the accession has no significant alignment match with any of the ICEscreen reference signature proteins.
+* A genome accession that generates no significant alignment match with any of the ICEscreen reference signature proteins produced empty visualization files (gb, embl, gff). It now produces valid gb, embl, and gff files with no ICEscreen result.
+* Fixed warning "FutureWarning: DataFrame.applymap has been deprecated. Use DataFrame.map instead.". Updated dependencies for pandas >=2.1.0.
+* Fixed warning "relative file path is strongly discouraged. It can also lead to inconsistent results of the file-matching approach used by Snakemake."
+#### Other source code improvements
+* The module to detect the structure of the mobile element has been updated: the source code is now generic for the type of signature proteins from the conjugation module (relaxase, coupling protein, virB4). This modification will make the integration of other type of signature proteins from the conjugation module easier in the future.
+
+
 ## v1.2.0, April 2023
 #### Major changes
 * Merging of the integrase fragments that are detectable by blast (i.e. insertion of mobile element in the integrase).
@@ -25,7 +48,7 @@ To access the different releases, see https://forgemia.inra.fr/ices_imes_analysi
 
 ## v1.1.0, November 2022
 #### Major changes
-* v1.1.0 (November 2022) of the signature proteins database, see log file icescreen_detection_SP/database/blastdb/LOG/log_signature_proteins_database.md for more details.
+* v1.1.0 (November 2022) of the signature proteins database, see log file icescreen_detection_SP/database/blastdb/LOG/summary_log_modif_SP_database.md for more details.
 * Support for multigenbank files (i.e. gbff files featuring multiple genome or contig records back to back).
 * Improvements regarding the assignation of the integrases to the conjugation modules in some specific cases: (1) take into account the possibility for a multiple succession of integrases in between conjugation modules (only attribute the integrases if there are no ambiguity) ; (2) take into account the possibility for two sequential integrases to form a host/guest relationship with 2 downstream or upstream sequential conjugation modules.
 * Detection of some fragmented SP of the conjugation module and merge into a structure.

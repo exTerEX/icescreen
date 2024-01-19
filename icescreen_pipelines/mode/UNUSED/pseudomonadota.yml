@@ -1,5 +1,5 @@
 ---
-mode: firmicutes
+mode: pseudomonadota
 SP_detection:
     cds_extraction:
         # codon table must be one of the following -> https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
@@ -7,17 +7,23 @@ SP_detection:
     blastp:
         params_SP_type: &SP_types
             Relaxase: Relaxase
+            RelaxaseTraI2: Relaxase
             Couplingprot: Coupling protein
             Couplingprot2: Coupling protein
+            CouplingTraD: Coupling protein
             VirB4: VirB4
+            VirB4TraC: VirB4
             IntTyr: Tyrosine integrase
             IntSer: Serine integrase
             DDE: DDE transposase
         params_usage:
             Relaxase: relaxase
+            RelaxaseTraI2: relaxase
             Couplingprot: coupling_protein_short
             Couplingprot2: coupling_protein_long
+            CouplingTraD: coupling_protein_short
             VirB4: virb4
+            VirB4TraC: virb4
             IntTyr: tyrosine_integrase
             IntSer: serine_integrase
             DDE: DDE_transposase
@@ -153,6 +159,7 @@ SP_detection:
             T4SS_MOBT: default
             T4SS_MOBV: default
             T4SS_MOBC: default
+            SXT_TraI2: default
             firmi_MOBL: default
             firmi_Viral_Rep_A: default
             firmi_Viral_Rep_B1: default

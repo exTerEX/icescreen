@@ -20,12 +20,10 @@
 import argparse
 import configparser
 import os
-# import sys
 import time
 import datetime
 from datetime import timedelta
 import csv
-# import re
 # import specific class OO for this script
 import hit
 import EMStructure
@@ -33,19 +31,21 @@ import rulesAddIntegrases
 from EMTypeStructure import printOverallStatsToSummaryFile
 import rulesMergeICEIMEStructures
 import commonMethods
+from pathlib import Path
 
 ########
 # GLOBAL VARS #
 ########
-#scriptVersion = "1.4"
-# setIntegraseTyrNames = {"IntTyr", "TyrInt"}
 setIntegraseTyrNames = {"Tyrosine integrase"}
-# setIntegraseSerNames = {"IntSer", "SerInt"}
 setIntegraseSerNames = {"Serine integrase"}
 setIntegraseDDENames = {"DDE transposase"}
 setIntegraseNames = set()
 setIntegraseNames.update(setIntegraseTyrNames, setIntegraseSerNames, setIntegraseDDENames)
-# regexSplitBlastFamilyIntoTokens = '-|\||;|; |\n|, |,' # not multi familly in file detectedSP yet
+listTypeSPConjModule = ["Relaxase", "Coupling protein", "VirB4"]
+distanceCDSPositionInGenomeForSPToBeConsideredNotAdjacentInTheGenome = {}
+distanceCDSPositionInGenomeForSPToBeConsideredNotAdjacentInTheGenome["Relaxase"] = 2 # There can be 1 CDS in between 2 Relaxase and they still would be considered Adjacent In The Genome
+distanceCDSPositionInGenomeForSPToBeConsideredNotAdjacentInTheGenome["Coupling protein"] = 0 # 2 Coupling should be considered 2 different EM regardless of wether they are adjacent in genome or not
+distanceCDSPositionInGenomeForSPToBeConsideredNotAdjacentInTheGenome["VirB4"] = 0 # 2 virB4 should be considered 2 different EM regardless of wether they are adjacent in genome or not
 segmentIdx2startGenomicRegion = {}
 segmentIdx2stopGenomicRegion = {}
 
@@ -74,6 +74,8 @@ def removeCommentToLocusTag2Comment(locusTagSent, commentSent, locusTag2Comment)
         pass
 
 
+
+
 # This method generates the content of the output csv file: input cvs file + information on the ICE or IME structure.
 def printAllICEsIMEsStructureToInputFile(
         listOfListAllICEsIMEsStructure,
@@ -88,25 +90,11 @@ def printAllICEsIMEsStructureToInputFile(
         ):
 
     printSegmentNumber = True
-
-    # totalNumberSP = 0
-    # totalNumberIntegrase = 0
-    # totalNumberUnaffectedIntegrase = 0
-    # totalNumberRelaxase = 0
-    # totalNumberUnaffectedRelaxase = 0
-    # totalNumberCoupling = 0
-    # totalNumberUnaffectedCoupling = 0
-    # totalNumberVirb4 = 0
-    # totalNumberUnaffectedVirb4 = 0
     dictGenomeAccnum2totalNumberSP = {}
     dictGenomeAccnum2totalNumberIntegrase = {}
     dictGenomeAccnum2totalNumberUnaffectedIntegrase = {}
-    dictGenomeAccnum2totalNumberRelaxase = {}
-    dictGenomeAccnum2totalNumberUnaffectedRelaxase = {}
-    dictGenomeAccnum2totalNumberCoupling = {}
-    dictGenomeAccnum2totalNumberUnaffectedCoupling = {}
-    dictGenomeAccnum2totalNumberVirb4 = {}
-    dictGenomeAccnum2totalNumberUnaffectedVirb4 = {}
+    dictGenomeAccnum_2TypeSPConjModule_2totalNumberSP = {}
+    dictGenomeAccnum_2TypeSPConjModule_2totalNumberSP_unaffected = {}
     dictGenomeAccnum2totalsetFragmentedSP = {}
     dictLocusTagSure2ICEIMEInternalId = {}
     dictLocusTagNotSure2ICEIMEInternalId = {}
@@ -172,8 +160,6 @@ def printAllICEsIMEsStructureToInputFile(
                         setFragmentedSPIT.add(currSPIntegraseToManuallyCheckIT)
                     dictGenomeAccnum2totalsetFragmentedSP[currSPIntegraseToManuallyCheckIT.genomeAccession] = setFragmentedSPIT
 
-
-
     for idx, currListSPsLonelyIntegrases in enumerate(listOfListSPsLonelyIntegrases):
         for currSPLonelyIntegrases in currListSPsLonelyIntegrases:
             dictLocusTag2segmentNumber[currSPLonelyIntegrases.locusTag] = idx + 1
@@ -192,8 +178,6 @@ def printAllICEsIMEsStructureToInputFile(
                 # check header
                 countIterCol = 0
                 for column in row:
-                    # if column == "CDS":
-                    #     idxColCDS = countIterCol
                     if column == "CDS_locus_tag":
                         idxColCDS_locus_tag = countIterCol
                     elif column == "CDS_protein_id":
@@ -216,17 +200,10 @@ def printAllICEsIMEsStructureToInputFile(
                 currSPGenomeAccession = ""
                 currSPstart = ""
                 currSPType = ""  # Coupling, Relaxase, Virb4, or integrase
-                #geneHasRealLocusTag = False
-                # if idxColCDS >= 0:
-                #     parsedCell = row[idxColCDS]
-                #     currSPProteinId = parsedCell
-                # else:
-                #     raise RuntimeError('printAllICEsIMEsStructureToInputFile error: missing mandatory column \"CDS\"')
                 if idxColCDS_locus_tag >= 0:
                     parsedCell = row[idxColCDS_locus_tag]
                     if len(parsedCell) > 0:
                         currSPLocusTag = parsedCell
-                        #geneHasRealLocusTag = True
                 else:
                     raise RuntimeError('printAllICEsIMEsStructureToInputFile error: missing mandatory column \"CDS_locus_tag\" in file {}'.format(str(pathInputFile)))
                 if idxColCDS_protein_id >= 0:
@@ -252,13 +229,11 @@ def printAllICEsIMEsStructureToInputFile(
                 else:
                     raise RuntimeError('printAllICEsIMEsStructureToInputFile error: missing mandatory column \"CDS_start\"')
                 
-                #currSPLocusTag = currSPProteinId + "-" + str(currSPstart)
-                #if not geneHasRealLocusTag:
                 currSPLocusTag = commonMethods.makeCompositeUniqLocusTag(hasMultipleGenomeAccesion, currSPLocusTag, currSPProteinId, currSPGenomeAccession, currSPstart)
 
                 if idxColCDS_Protein_Type >= 0:
                     parsedCell = row[idxColCDS_Protein_Type]
-                    if (parsedCell == "Coupling protein" or parsedCell == "Relaxase" or parsedCell == "VirB4" or parsedCell in setIntegraseNames):  # parsedCell == "IntTyr" or parsedCell == "IntSer" or parsedCell == "DDE"
+                    if (parsedCell in listTypeSPConjModule or parsedCell in setIntegraseNames):
                         currSPType = parsedCell
                     else:
                         raise RuntimeError(
@@ -303,56 +278,39 @@ def printAllICEsIMEsStructureToInputFile(
                 else:
                     print(strSure + "\t" + strNotSure + "\t" + strLocusTag2CommentIT + "\t" + "\t".join(str(i) for i in row), file=modifiedInputFile)
 
-
-                #totalNumberSP += 1
                 if currSPGenomeAccession in dictGenomeAccnum2totalNumberSP:
                     dictGenomeAccnum2totalNumberSP[currSPGenomeAccession] += 1
                 else :
                     dictGenomeAccnum2totalNumberSP[currSPGenomeAccession] = 1
-                if currSPType == "Coupling protein":
-                    #totalNumberCoupling += 1
-                    if currSPGenomeAccession in dictGenomeAccnum2totalNumberCoupling:
-                        dictGenomeAccnum2totalNumberCoupling[currSPGenomeAccession] += 1
-                    else :
-                        dictGenomeAccnum2totalNumberCoupling[currSPGenomeAccession] = 1
-                    if not strSure:
-                        #totalNumberUnaffectedCoupling += 1
-                        if currSPGenomeAccession in dictGenomeAccnum2totalNumberUnaffectedCoupling:
-                            dictGenomeAccnum2totalNumberUnaffectedCoupling[currSPGenomeAccession] += 1
-                        else :
-                            dictGenomeAccnum2totalNumberUnaffectedCoupling[currSPGenomeAccession] = 1
-                elif currSPType == "Relaxase":
-                    #totalNumberRelaxase += 1
-                    if currSPGenomeAccession in dictGenomeAccnum2totalNumberRelaxase:
-                        dictGenomeAccnum2totalNumberRelaxase[currSPGenomeAccession] += 1
-                    else:
-                        dictGenomeAccnum2totalNumberRelaxase[currSPGenomeAccession] = 1
-                    if not strSure:
-                        #totalNumberUnaffectedRelaxase += 1
-                        if currSPGenomeAccession in dictGenomeAccnum2totalNumberUnaffectedRelaxase:
-                            dictGenomeAccnum2totalNumberUnaffectedRelaxase[currSPGenomeAccession] += 1
+
+                if currSPType in listTypeSPConjModule:
+                    if currSPGenomeAccession in dictGenomeAccnum_2TypeSPConjModule_2totalNumberSP:
+                        TypeSPConjModule_2totalNumberSP = dictGenomeAccnum_2TypeSPConjModule_2totalNumberSP[currSPGenomeAccession]
+                        if currSPType in TypeSPConjModule_2totalNumberSP:
+                            TypeSPConjModule_2totalNumberSP[currSPType] += 1
                         else:
-                            dictGenomeAccnum2totalNumberUnaffectedRelaxase[currSPGenomeAccession] = 1
-                elif currSPType == "VirB4":
-                    #totalNumberVirb4 += 1
-                    if currSPGenomeAccession in dictGenomeAccnum2totalNumberVirb4:
-                        dictGenomeAccnum2totalNumberVirb4[currSPGenomeAccession] += 1
+                            TypeSPConjModule_2totalNumberSP[currSPType] = 1
                     else:
-                        dictGenomeAccnum2totalNumberVirb4[currSPGenomeAccession] = 1
+                        TypeSPConjModule_2totalNumberSP = {}
+                        TypeSPConjModule_2totalNumberSP[currSPType] = 1
+                        dictGenomeAccnum_2TypeSPConjModule_2totalNumberSP[currSPGenomeAccession] = TypeSPConjModule_2totalNumberSP
                     if not strSure:
-                        #totalNumberUnaffectedVirb4 += 1
-                        if currSPGenomeAccession in dictGenomeAccnum2totalNumberUnaffectedVirb4:
-                            dictGenomeAccnum2totalNumberUnaffectedVirb4[currSPGenomeAccession] += 1
+                        if currSPGenomeAccession in dictGenomeAccnum_2TypeSPConjModule_2totalNumberSP_unaffected:
+                            TypeSPConjModule_2totalNumberSP = dictGenomeAccnum_2TypeSPConjModule_2totalNumberSP_unaffected[currSPGenomeAccession]
+                            if currSPType in TypeSPConjModule_2totalNumberSP:
+                                TypeSPConjModule_2totalNumberSP[currSPType] += 1
+                            else:
+                                TypeSPConjModule_2totalNumberSP[currSPType] = 1
                         else:
-                            dictGenomeAccnum2totalNumberUnaffectedVirb4[currSPGenomeAccession] = 1
+                            TypeSPConjModule_2totalNumberSP = {}
+                            TypeSPConjModule_2totalNumberSP[currSPType] = 1
+                            dictGenomeAccnum_2TypeSPConjModule_2totalNumberSP_unaffected[currSPGenomeAccession] = TypeSPConjModule_2totalNumberSP
                 elif currSPType in setIntegraseNames:
-                    #totalNumberIntegrase += 1
                     if currSPGenomeAccession in dictGenomeAccnum2totalNumberIntegrase:
                         dictGenomeAccnum2totalNumberIntegrase[currSPGenomeAccession] += 1
                     else:
                         dictGenomeAccnum2totalNumberIntegrase[currSPGenomeAccession] = 1
                     if not strSure:
-                        #totalNumberUnaffectedIntegrase += 1
                         if currSPGenomeAccession in dictGenomeAccnum2totalNumberUnaffectedIntegrase:
                             dictGenomeAccnum2totalNumberUnaffectedIntegrase[currSPGenomeAccession] += 1
                         else:
@@ -366,28 +324,13 @@ def printAllICEsIMEsStructureToInputFile(
 
     csvfile.close()
 
-    # return (totalNumberSP,
-    #         totalNumberIntegrase,
-    #         totalNumberUnaffectedIntegrase,
-    #         totalNumberRelaxase,
-    #         totalNumberUnaffectedRelaxase,
-    #         totalNumberCoupling,
-    #         totalNumberUnaffectedCoupling,
-    #         totalNumberVirb4,
-    #         totalNumberUnaffectedVirb4)
     return (dictGenomeAccnum2totalNumberSP,
         dictGenomeAccnum2totalNumberIntegrase,
         dictGenomeAccnum2totalNumberUnaffectedIntegrase,
-        dictGenomeAccnum2totalNumberRelaxase,
-        dictGenomeAccnum2totalNumberUnaffectedRelaxase,
-        dictGenomeAccnum2totalNumberCoupling,
-        dictGenomeAccnum2totalNumberUnaffectedCoupling,
-        dictGenomeAccnum2totalNumberVirb4,
-        dictGenomeAccnum2totalNumberUnaffectedVirb4,
+        dictGenomeAccnum_2TypeSPConjModule_2totalNumberSP,
+        dictGenomeAccnum_2TypeSPConjModule_2totalNumberSP_unaffected,
         dictGenomeAccnum2totalsetFragmentedSP
         )
-
-
 
 
 # This method parse the input file into objects used internally in the program.
@@ -397,7 +340,6 @@ def parse_csv(pathInputFile, hasMultipleGenomeAccesion):
     with open(pathInputFile, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter="\t")
         countIterRow = 0
-        #idxColCDS = -1
         idxColCDS_locus_tag = -1
         idxColCDS_protein_id = -1
         idxColGenome_accession = -1
@@ -421,8 +363,6 @@ def parse_csv(pathInputFile, hasMultipleGenomeAccesion):
         idxColBlast_ali_bitscore = -1
         idxColCDS_coverage_blast = -1
         idxColBlast_ali_coverage_most_similar_ref_SP = -1
-        # idxColIs_hit_HMM_CC = -1
-        # idxColElement_family = -1
         idxColICE_superfamily_of_most_similar_ref_SP = -1
         idxColICE_family_of_most_similar_ref_SP = -1
         idxColIME_superfamily_of_most_similar_ref_SP = -1
@@ -433,15 +373,12 @@ def parse_csv(pathInputFile, hasMultipleGenomeAccesion):
         idxColSP_blast_validation = -1
         idxColUse_annotation = -1
         idxColBest_hmmprofile = -1
-        # idxColBest_hmmprofile_CC = -1
         dictCheckUniquLocusTag = {}
         for row in reader:
             if countIterRow == 0:
                 # check header
                 countIterCol = 0
                 for column in row:
-                    # if column == "CDS":
-                    #     idxColCDS = countIterCol
                     if column == "CDS_locus_tag":
                         idxColCDS_locus_tag = countIterCol
                     elif column == "CDS_protein_id":
@@ -488,10 +425,6 @@ def parse_csv(pathInputFile, hasMultipleGenomeAccesion):
                         idxColCDS_coverage_blast = countIterCol
                     elif column == "Blast_ali_coverage_most_similar_ref_SP":
                         idxColBlast_ali_coverage_most_similar_ref_SP = countIterCol
-                    # elif column=="Is_hit_HMM_CC":
-                    #    idxColIs_hit_HMM_CC = countIterCol
-                    # elif column=="Element_family":
-                    #    idxColElement_family = countIterCol
                     elif column == "ICE_superfamily_of_most_similar_ref_SP":
                         idxColICE_superfamily_of_most_similar_ref_SP = countIterCol
                     elif column == "ICE_family_of_most_similar_ref_SP":
@@ -513,33 +446,16 @@ def parse_csv(pathInputFile, hasMultipleGenomeAccesion):
                     elif column == "Description_of_matching_HMM_profile":
                         # was elif column=="Best_hmmprofile":
                         idxColBest_hmmprofile = countIterCol
-                    # elif column=="Best_hmmprofile_CC":
-                    #    idxColBest_hmmprofile_CC = countIterCol
                     countIterCol += 1
                 if ((idxColIs_hit_blast + idxColIs_hit_HMM) == -2):  # + idxColIs_hit_HMM_CC
                     raise RuntimeError('Input file error: absence of at least one of the mandatory columns \"Is_hit_blast\" or \"Is_hit_HMM\"')
             else:
                 currSP = hit.SP()
-                #geneHasRealLocusTag = False
-                # if idxColCDS >= 0:
-                #     parsedCell = row[idxColCDS]
-                #     currSP.proteinId = parsedCell
-                #     if outputPrintCDSNumberInsteadOfProteinIdAndStart == "NO":
-                #         currSP.locusTag = currSP.proteinId + "-" + str(currSP.start)
-                #     elif outputPrintCDSNumberInsteadOfProteinIdAndStart == "YES":
-                #         pass
-                #     else:
-                #         raise RuntimeError(
-                #                 "Error in parse_csv: unrecognized outputPrintCDSNumberInsteadOfProteinIdAndStart = {}".format(
-                #                         outputPrintCDSNumberInsteadOfProteinIdAndStart))
-                # else:
-                #     raise RuntimeError('Input file error: missing mandatory column \"CDS\"')
                 locusTagParsed = ""
                 if idxColCDS_locus_tag >= 0:
                     parsedCell = row[idxColCDS_locus_tag]
                     if len(parsedCell) > 0:
                         locusTagParsed = parsedCell
-                        #geneHasRealLocusTag = True
                 else:
                     raise RuntimeError('Input file error: missing mandatory column \"CDS_locus_tag\" in file {}'.format(str(pathInputFile)))
                 if idxColCDS_protein_id >= 0:
@@ -572,18 +488,9 @@ def parse_csv(pathInputFile, hasMultipleGenomeAccesion):
                     if len(parsedCell) > 0:
                         parsedCell = int(parsedCell)
                         currSP.start = parsedCell
-                    # if outputPrintCDSNumberInsteadOfProteinIdAndStart == "NO":
-                    #     currSP.locusTag = currSP.proteinId + "-" + str(currSP.start)
-                    # elif outputPrintCDSNumberInsteadOfProteinIdAndStart == "YES":
-                    #     pass
-                    # else:
-                    #     raise RuntimeError(
-                    #             "Error in parse_csv: unrecognized outputPrintCDSNumberInsteadOfProteinIdAndStart = {}".format(
-                    #                     outputPrintCDSNumberInsteadOfProteinIdAndStart))
                 else:
                     raise RuntimeError('Input file error: missing mandatory column \"CDS_start\" in file {}'.format(str(pathInputFile)))
                 
-                #if not geneHasRealLocusTag:
                 currSP.locusTag = commonMethods.makeCompositeUniqLocusTag(hasMultipleGenomeAccesion, locusTagParsed, currSP.proteinId, currSP.genomeAccession, currSP.start)
                 if len(currSP.locusTag) == 0:
                     raise RuntimeError('Input file error: could not determine locusTag for row\n{}\n in file {}'.format(str(row), str(pathInputFile)))
@@ -612,19 +519,11 @@ def parse_csv(pathInputFile, hasMultipleGenomeAccesion):
                     parsedCell = row[idxColCDS_num]
                     parsedCell = int(parsedCell)
                     currSP.CDSPositionInGenome = parsedCell
-                    # if outputPrintCDSNumberInsteadOfProteinIdAndStart == "NO":
-                    #     pass
-                    # elif outputPrintCDSNumberInsteadOfProteinIdAndStart == "YES":
-                    #     currSP.locusTag = str(currSP.CDSPositionInGenome)
-                    # else:
-                    #     raise RuntimeError(
-                    #             "Error in parse_csv: unrecognized outputPrintCDSNumberInsteadOfProteinIdAndStart = {}".format(
-                    #                     outputPrintCDSNumberInsteadOfProteinIdAndStart))
                 else:
                     raise RuntimeError('Input file error: missing mandatory column \"CDS_num\" in file {}'.format(str(pathInputFile)))
                 if idxColCDS_Protein_Type >= 0:
                     parsedCell = row[idxColCDS_Protein_Type]
-                    if (parsedCell == "Coupling protein" or parsedCell == "Relaxase" or parsedCell == "VirB4" or parsedCell in setIntegraseNames):  # parsedCell == "IntTyr" or parsedCell == "IntSer" or parsedCell == "DDE"
+                    if (parsedCell in listTypeSPConjModule or parsedCell in setIntegraseNames):
                         currSP.SPType = parsedCell
                     else:
                         raise RuntimeError(
@@ -637,12 +536,6 @@ def parse_csv(pathInputFile, hasMultipleGenomeAccesion):
                     parsedCell = int(parsedCell[0])  # [0] to get only the first character and avoid issues with number formatting according to different locale
                     if (parsedCell == 0 or parsedCell == 1):
                         currSP.SPDetectedByBlast = parsedCell
-                        # if ( parsedCell == 1 and idxColElement_family >= 0 ):
-                        #    parsedCell = row[idxColElement_family]
-                        #    listFamilyTokens = re.split(regexSplitBlastFamilyIntoTokens, parsedCell)
-                        #    for currFamilyToken in listFamilyTokens:
-                        #        if currFamilyToken:# add only if not empty or null
-                        #            currSP.setSPFamilyFromBlast.add(currFamilyToken)
                         if parsedCell == 1:
                             if idxColICE_superfamily_of_most_similar_ref_SP >= 0:
                                 parsedCell = row[idxColICE_superfamily_of_most_similar_ref_SP]
@@ -701,10 +594,6 @@ def parse_csv(pathInputFile, hasMultipleGenomeAccesion):
                         currSP.SPDetectedByHMM = parsedCell
                         if (parsedCell == 1 and idxColBest_hmmprofile >= 0):
                             parsedCell = row[idxColBest_hmmprofile]
-                            # listFamilyTokens = re.split(regexSplitBlastFamilyIntoTokens, parsedCell)
-                            # for currFamilyToken in listFamilyTokens:
-                            #    if currFamilyToken:# add only if not empty or null
-                            #        currSP.setSPFamilyFromHMM.add(currFamilyToken)
                             if parsedCell:  # add only if not empty or null
                                 currSP.setSPFamilyFromHMM.add(parsedCell)
                     else:
@@ -796,22 +685,6 @@ def parse_csv(pathInputFile, hasMultipleGenomeAccesion):
                 else:
                     raise RuntimeError('Input file error: missing mandatory column \"Blast_ali_coverage_most_similar_ref_SP\" in file {}'.format(str(pathInputFile)))
 
-#                if idxColIs_hit_HMM_CC >= 0:
-#                    if (currSP.SPDetectedByHMM == 1):
-#                        pass # already detected by Is_hit_HMM_JL
-#                    else:
-#                        parsedCell = row[idxColIs_hit_HMM_CC]
-#                        parsedCell = int(parsedCell[0]) # [0] to get only the first character and avoid issues with number formatting according to different locale
-#                        if (parsedCell == 0 or parsedCell == 1):
-#                            currSP.SPDetectedByHMM = parsedCell
-#                            if ( parsedCell == 1 and idxColBest_hmmprofile_CC >= 0 ):
-#                                parsedCell = row[idxColBest_hmmprofile_CC]
-#                                listFamilyTokens = re.split(regexSplitBlastFamilyIntoTokens, parsedCell)
-#                                for currFamilyToken in listFamilyTokens:
-#                                    if currFamilyToken:# add only if not empty or null
-#                                        currSP.setSPFamilyFromHMM.add(currFamilyToken)
-#                        else:
-#                            raise RuntimeError('Input file error: could not parse value \"{}\" of column \"Is_hit_HMM_CC\" in row number {}'.format(parsedCell, countIterRow+1))
                 listSPsParsed.list.append(currSP)
             countIterRow += 1
     csvfile.close()
@@ -835,16 +708,6 @@ def createDictIMEICEID2humanReadableIMEICEIIdentifier(listOfListAllICEsIMEsStruc
                 idxCountIdStructure += 1
     return dictIMEICEID2humanReadableIMEICEIIdentifier
 
-    #carefull, changed internalIdentifier to a non digit, can cause the following problems:
-    # - src/EMStructure.py : problems maybe ??
-        # DONE !!! if self.internalIdentifier >= otherICEsIMEsStructureToMerge.internalIdentifier:
-        # DONE !!! if self.internalIdentifier == lowerBoundMergedInternalIdentifierIT and otherICEsIMEsStructureToMerge.internalIdentifier == higherBoundMergedInternalIdentifierIT:
-        # DONE !!! and rest of the method
-        # DONE !!! ICEsIMEsStructure.listLowerBoundHigherBoundStructureMergedInternalIdentifier.append(
-        # DONE !!! if self.internalIdentifier < currICEIMEInConflict.internalIdentifier:
-
-
-
 # This method prints the output file (tsv file) that details the list of ICEs and IMEs including their signature proteins.
 def printAllICEsIMEsStructureToOutputFile(
         listOfListAllICEsIMEsStructure,
@@ -865,7 +728,6 @@ def printAllICEsIMEsStructureToOutputFile(
                 pass
             else :
                 listStToPrint = currICEIMEStructure.GetSummaryObjectAsTsv(
-                        # outputPrintCDSNumberInsteadOfProteinIdAndStart,
                         idx + 1,
                         dictIMEICEID2humanReadableIMEICEIIdentifier)
                 stToPrintPrefix = listStToPrint[0]
@@ -879,11 +741,6 @@ def printAllICEsIMEsStructureToOutputFile(
 
 
 def main():
-
-    # Get folder of icescreen.py (folder src)
-    # src_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-    # Change work directory to src
-    # os.chdir(src_path)
 
     # Parse script arguments
     parser = argparse.ArgumentParser(description="ICEscreen (Searching for ICEs and IMEs)")
@@ -911,20 +768,41 @@ def main():
             help="path to output csv file: input cvs file + information on the ICE or IME structure",
             required=True)
     required.add_argument(
+            '-g',
+            '--gb_input',
+            help="path to input genbank file",
+            required=True)
+    required.add_argument(
             '-l',
             '--log',
             help="path to the log file",
             required=True)
     required.add_argument(
+            '-t',
+            '--taxo_mode_file',
+            help="path to the taxonomic mode file",
+            required=True)
+    optional = parser.add_argument_group('optional arguments')
+    optional.add_argument(
             '-verbose',
             help="Turn on verbose mode ; default=False",
             action='store_true')
-
+    
     args = parser.parse_args()
-    pathInputFile = args.input
-    pathOutputFile = args.output
-    pathModifiedInputFile = args.modified_input
-    pathLogFile = args.log
+    commonMethods.CommandLineArguments.pathInputFile = args.input
+    commonMethods.CommandLineArguments.pathInputFile = os.path.abspath(commonMethods.CommandLineArguments.pathInputFile)
+    commonMethods.CommandLineArguments.pathOutputFile = args.output
+    commonMethods.CommandLineArguments.pathOutputFile = os.path.abspath(commonMethods.CommandLineArguments.pathOutputFile)
+    commonMethods.CommandLineArguments.pathModifiedInputFile = args.modified_input
+    commonMethods.CommandLineArguments.pathModifiedInputFile = os.path.abspath(commonMethods.CommandLineArguments.pathModifiedInputFile)
+    commonMethods.CommandLineArguments.pathGbInputFile = args.gb_input
+    commonMethods.CommandLineArguments.pathGbInputFile = os.path.abspath(commonMethods.CommandLineArguments.pathGbInputFile)
+    commonMethods.CommandLineArguments.pathLogFile = args.log
+    commonMethods.CommandLineArguments.pathLogFile = os.path.abspath(commonMethods.CommandLineArguments.pathLogFile)
+    commonMethods.CommandLineArguments.pathTaxoModeFile = args.taxo_mode_file
+    commonMethods.CommandLineArguments.pathTaxoModeFile = os.path.abspath(commonMethods.CommandLineArguments.pathTaxoModeFile)
+    commonMethods.CommandLineArguments.pathConfigFile = args.config
+    commonMethods.CommandLineArguments.pathConfigFile = os.path.abspath(commonMethods.CommandLineArguments.pathConfigFile)
     verbose = args.verbose
 
     start_time = time.time()
@@ -933,82 +811,87 @@ def main():
 
     # Get configuration file
     config = configparser.ConfigParser()
-    config.read(args.config)
+    config.read(commonMethods.CommandLineArguments.pathConfigFile)
 
-    maxNumberCDSForSplitSPsByColocalizion = int(config["PARAMS"]["maxNumberCDSForSplitSPsByColocalizion"])
-    maxNumberCDSForFilterIMESize = int(config["PARAMS"]["maxNumberCDSForFilterIMESize"])
-    groupListSPintoICEsIMEsUsingFamilyInfo = config["PARAMS"]["groupListSPintoICEsIMEsUsingFamilyInfo"]
-    useFamilyInfoToTryToResolveSPModuleConjConflict = config["PARAMS"]["useFamilyInfoToTryToResolveSPModuleConjConflict"]
-    useDistanceCDSInfoToTryToResolveSPModuleConjConflict = config["PARAMS"]["useDistanceCDSInfoToTryToResolveSPModuleConjConflict"]
-    moveSingleSPToCheck = config["PARAMS"]["moveSingleSPToCheck"]
-    # outputPrintCDSNumberInsteadOfProteinIdAndStart = config["PARAMS"]["outputPrintCDSNumberInsteadOfProteinIdAndStart"]
-    allowAdjacentIntegraseOnlyForSer = config["PARAMS"]["allowAdjacentIntegraseOnlyForSer"]
-    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance = int(config["PARAMS"]["useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance"])
-    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance = int(config["PARAMS"]["useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance"])
-    maxOverlappingAliLenghtFragmentedSPs = int(config["PARAMS"]["maxOverlappingAliLenghtFragmentedSPs"])
-    maxCDSDistanceToMergeFragmentedSPs = int(config["PARAMS"]["maxCDSDistanceToMergeFragmentedSPs"])
+    # raise exception if pathTaxoModeFile does not exist
+    if not os.path.exists(commonMethods.CommandLineArguments.pathTaxoModeFile):
+        raise Exception("Taxonomic mode file does not exist: \"{}\"".format(
+                commonMethods.CommandLineArguments.pathTaxoModeFile))
+    
+    # set commonMethods.GlobalSettings.taxoMode from file name in pathTaxoModeFile
+    commonMethods.CommandLineArguments.taxoMode = Path(commonMethods.CommandLineArguments.pathTaxoModeFile).stem
+
+    commonMethods.ConfigParams.maxNumberCDSForSplitSPsByColocalizion = int(config["PARAMS"]["maxNumberCDSForSplitSPsByColocalizion"])
+    commonMethods.ConfigParams.maxNumberCDSForFilterIMESize = int(config["PARAMS"]["maxNumberCDSForFilterIMESize"])
+    commonMethods.ConfigParams.groupListSPintoICEsIMEsUsingFamilyInfo = config["PARAMS"]["groupListSPintoICEsIMEsUsingFamilyInfo"]
+    commonMethods.ConfigParams.useFamilyInfoToTryToResolveSPModuleConjConflict = config["PARAMS"]["useFamilyInfoToTryToResolveSPModuleConjConflict"]
+    commonMethods.ConfigParams.useDistanceCDSInfoToTryToResolveSPModuleConjConflict = config["PARAMS"]["useDistanceCDSInfoToTryToResolveSPModuleConjConflict"]
+    commonMethods.ConfigParams.moveSingleSPToCheck = config["PARAMS"]["moveSingleSPToCheck"]
+    commonMethods.ConfigParams.allowAdjacentIntegraseOnlyForSer = config["PARAMS"]["allowAdjacentIntegraseOnlyForSer"]
+    commonMethods.ConfigParams.useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance = int(config["PARAMS"]["useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance"])
+    commonMethods.ConfigParams.useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance = int(config["PARAMS"]["useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance"])
+    commonMethods.ConfigParams.maxOverlappingAliLenghtFragmentedSPs = int(config["PARAMS"]["maxOverlappingAliLenghtFragmentedSPs"])
+    commonMethods.ConfigParams.maxCDSDistanceToMergeFragmentedSPs = int(config["PARAMS"]["maxCDSDistanceToMergeFragmentedSPs"])
     EMStructure.BasicEMStructure.threshold_blast_ali_identity_perc_transfert_ICEFamily_to_structure_module_conj = int(config["PARAMS"]["threshold_blast_ali_identity_perc_transfert_ICEFamily_to_structure_module_conj"])
+    listTaxonomicModesToCheckIfIntegraseIsCorrectlyOrientedForICEsIMEsStructure = config["PARAMS"]["listTaxonomicModesToCheckIfIntegraseIsCorrectlyOrientedForICEsIMEsStructure"]
+    commonMethods.ConfigParams.listTaxonomicModesToCheckIfIntegraseIsCorrectlyOrientedForICEsIMEsStructure = listTaxonomicModesToCheckIfIntegraseIsCorrectlyOrientedForICEsIMEsStructure.split(',')
 
     # open and truncate outputFile and logFile
-    outputFile = open(pathOutputFile, "w")
-    modifiedInputFile = open(pathModifiedInputFile, "w")
-    logFile = open(pathLogFile, "w")
+    outputFile = open(commonMethods.CommandLineArguments.pathOutputFile, "w")
+    modifiedInputFile = open(commonMethods.CommandLineArguments.pathModifiedInputFile, "w")
+    logFile = open(commonMethods.CommandLineArguments.pathLogFile, "w")
 
     # print path to file
-    # print("Input file: \"{}\"".format(pathInputFile))
     if verbose:
-        print("Output file: \"{}\"".format(pathOutputFile))
-        print("Modified input file: \"{}\"".format(pathModifiedInputFile))
-        print("Log file: \"{}\"".format(pathLogFile))
+        print("Input file: \"{}\"".format(commonMethods.CommandLineArguments.pathInputFile))
+        print("Output file: \"{}\"".format(commonMethods.CommandLineArguments.pathOutputFile))
+        print("Modified input file: \"{}\"".format(commonMethods.CommandLineArguments.pathModifiedInputFile))
+        print("Genbank input file: \"{}\"".format(commonMethods.CommandLineArguments.pathGbInputFile))
+        print("Log file: \"{}\"".format(commonMethods.CommandLineArguments.pathLogFile))
+        print("Taxonomic mode file: \"{}\"".format(commonMethods.CommandLineArguments.pathTaxoModeFile))
 
     print("** Path to file:", file=logFile)
     print("Input file: \"{}\"".format(
-            pathInputFile), file=logFile)
+            commonMethods.CommandLineArguments.pathInputFile), file=logFile)
     print("Output file: \"{}\"".format(
-            pathOutputFile), file=logFile)
+            commonMethods.CommandLineArguments.pathOutputFile), file=logFile)
     print("Modified input file: \"{}\"".format(
-            pathModifiedInputFile), file=logFile)
+            commonMethods.CommandLineArguments.pathModifiedInputFile), file=logFile)
+    print("Genbank input file: \"{}\"".format(
+            commonMethods.CommandLineArguments.pathGbInputFile), file=logFile)
+    print("Taxonomic mode file: \"{}\"".format(
+            commonMethods.CommandLineArguments.pathTaxoModeFile), file=logFile)
 
-    #print("\n** Script version: \"{}\"".format( scriptVersion), file=logFile)
     print("\n** Parameters:", file=logFile)
     print("maxNumberCDSForSplitSPsByColocalizion: \"{}\"".format(
-            maxNumberCDSForSplitSPsByColocalizion), file=logFile)
+            commonMethods.ConfigParams.maxNumberCDSForSplitSPsByColocalizion), file=logFile)
     print("maxNumberCDSForFilterIMESize: \"{}\"".format(
-            maxNumberCDSForFilterIMESize), file=logFile)
+            commonMethods.ConfigParams.maxNumberCDSForFilterIMESize), file=logFile)
     print("groupListSPintoICEsIMEsUsingFamilyInfo: \"{}\"".format(
-            groupListSPintoICEsIMEsUsingFamilyInfo), file=logFile)
+            commonMethods.ConfigParams.groupListSPintoICEsIMEsUsingFamilyInfo), file=logFile)
     print("useFamilyInfoToTryToResolveSPModuleConjConflict: \"{}\"".format(
-            useFamilyInfoToTryToResolveSPModuleConjConflict), file=logFile)
+            commonMethods.ConfigParams.useFamilyInfoToTryToResolveSPModuleConjConflict), file=logFile)
     print("useDistanceCDSInfoToTryToResolveSPModuleConjConflict: \"{}\"".format(
-            useDistanceCDSInfoToTryToResolveSPModuleConjConflict), file=logFile)
+            commonMethods.ConfigParams.useDistanceCDSInfoToTryToResolveSPModuleConjConflict), file=logFile)
     print("moveSingleSPToCheck: \"{}\"".format(
-            moveSingleSPToCheck), file=logFile)
-    # print("outputPrintCDSNumberInsteadOfProteinIdAndStart: \"{}\"".format(
-    #         outputPrintCDSNumberInsteadOfProteinIdAndStart), file=logFile)
+            commonMethods.ConfigParams.moveSingleSPToCheck), file=logFile)
     print("allowAdjacentIntegraseOnlyForSer: \"{}\"".format(
-            allowAdjacentIntegraseOnlyForSer), file=logFile)
+            commonMethods.ConfigParams.allowAdjacentIntegraseOnlyForSer), file=logFile)
     print("useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance: \"{}\"".format(
-            useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance), file=logFile)
+            commonMethods.ConfigParams.useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance), file=logFile)
     print("useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance: \"{}\"".format(
-            useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance), file=logFile)
+            commonMethods.ConfigParams.useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance), file=logFile)
 
-    
-    hasMultipleGenomeAccesion = commonMethods.determineIfResultSPFileHasMultipleGenomeAccesion(pathInputFile)
-
+    (hasMultipleGenomeAccesion, listGenomeAccessionFromGenbankFile) = commonMethods.parseListGenomeAccessionFromGenbankFile(commonMethods.CommandLineArguments.pathGbInputFile)
 
     SPsWholeGenome = parse_csv(
-            # outputPrintCDSNumberInsteadOfProteinIdAndStart,
-            pathInputFile,
+            commonMethods.CommandLineArguments.pathInputFile,
             hasMultipleGenomeAccesion
             )
     
     SPsWholeGenome.sortListSPsByStart()
 
-    # for testing
-    # for currSP in SPsWholeGenome.list:
-    #    print("{}".format(currSP.GetObjectAsJson()))
-
-    listOfListOfColocalizedSPs = SPsWholeGenome.splitListOrderedSPs_colocalizeByMaxNumberCDS(maxNumberCDSForSplitSPsByColocalizion)
+    listOfListOfColocalizedSPs = SPsWholeGenome.splitListOrderedSPs_colocalizeByMaxNumberCDS() #commonMethods.ConfigParams.maxNumberCDSForSplitSPsByColocalizion
     listOfListAllICEsIMEsStructure = [] # [ICEsIMEsStructure] the outer broader list correspond to segments, while each inner sub-list correspond to ICEsIMEsStructure within the segments
     listOfListSPsLonelyIntegrases = [] # [SP] the outer broader list correspond to segments, while each inner sub-list correspond to integrase that are not assigned to any ICE or IME structures
     locusTagIntegrase2Comment = {} # locusTagIntegrase2Comment is a dictionary used to store the comments that will be visible in the output files for each integrase
@@ -1020,21 +903,14 @@ def main():
     for currListSPs in listOfListOfColocalizedSPs:
         currListSPs.fillUpIdxOfSPsInListSP()
         currListSPs.searchForFragmentedSPs(
-            #currListSPs.list,
             locusTagMerge2Comment,
-            locusTagIntegrase2Comment,
-            groupListSPintoICEsIMEsUsingFamilyInfo,
-            useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-            useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
-            maxOverlappingAliLenghtFragmentedSPs,
-            maxCDSDistanceToMergeFragmentedSPs
+            locusTagIntegrase2Comment
             )
         listOfListOfColocalizedSPs_newTakingIntoConsiderationSplitByFragmentedSPs = currListSPs.splitListOrderedSPs_colocalizeByFragmentedSPs(locusTagMerge2Comment)
         listOfSegmentListOfSubsegmentListColocalizedSPs_afterSecondSplitByFragmentedSPs.append(listOfListOfColocalizedSPs_newTakingIntoConsiderationSplitByFragmentedSPs)
 
 
     # The following algorithm generates listOfListAllICEsIMEsStructure and listOfListSPsLonelyIntegrases from listOfListOfColocalizedSPs
-    #OLD for currListSPs in listOfListOfColocalizedSPs:
     for segmentListOfSubsegmentListColocalizedSPs_afterSecondSplitByFragmentedSPsIT in listOfSegmentListOfSubsegmentListColocalizedSPs_afterSecondSplitByFragmentedSPs: # search ICEIMEStrucutre in subsegments
 
         tmpBuildUp_listICEsIMEsStructures = []
@@ -1046,56 +922,41 @@ def main():
 
             listSameFamilyMergeStructures = []  # listSameFamilyMergeStructures contains information about the SPs that belong to the same family and that should be grouped in priority.
             SPsInSameFamilyMergeStructures2SameFamilyMergeStructure = {}  # key = SP, value = EMStructureMerged
-            if useFamilyInfoToTryToResolveSPModuleConjConflict == "YES":
+            if commonMethods.ConfigParams.useFamilyInfoToTryToResolveSPModuleConjConflict == "YES":
                 (listSameFamilyMergeStructures,
                 SPsInSameFamilyMergeStructures2SameFamilyMergeStructure) = rulesMergeICEIMEStructures.buildSameFamilyMergeStructures(
                         currListSPs.list,
-                        locusTagMerge2Comment,
-                        groupListSPintoICEsIMEsUsingFamilyInfo)
-
+                        locusTagMerge2Comment
+                        )
 
             # seedICEsIMEsStructure is a method that initiate anchors from subsequent SPs of the conjugation module. Anchors will eventually be finalized as ICEs and IME structures.
             listICEsIMEsStructures = currListSPs.seedICEsIMEsStructure(
-                    groupListSPintoICEsIMEsUsingFamilyInfo,
-                    useFamilyInfoToTryToResolveSPModuleConjConflict,
-                    useDistanceCDSInfoToTryToResolveSPModuleConjConflict,
-                    allowAdjacentIntegraseOnlyForSer,
-                    locusTagIntegrase2Comment,
-                    SPsInSameFamilyMergeStructures2SameFamilyMergeStructure,
-                    listSameFamilyMergeStructures,
-                    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance)
+                    locusTagIntegrase2Comment
+                    , SPsInSameFamilyMergeStructures2SameFamilyMergeStructure
+                    , listSameFamilyMergeStructures
+                    )
 
             # integrase can now be SP.listSiblingFragmentedSP too
-            # checkForObviousIntegraseUpstreamAndDownstreamToAdd
             rulesAddIntegrases.addObviousIntegraseUpstreamAndDownstream_priorMerging(
-                listICEsIMEsStructures,
-                currListSPs.list,
-                locusTagIntegrase2Comment,
-                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance,
-                allowAdjacentIntegraseOnlyForSer
+                listICEsIMEsStructures
+                , currListSPs.list
+                , locusTagIntegrase2Comment
             )
 
             # tryMergeSameFamilyStructures merge distant anchors of SPs of the conjugation module that are of the same family
             rulesMergeICEIMEStructures.tryMergeSameFamilyStructures(
-                    listICEsIMEsStructures,
-                    listSameFamilyMergeStructures,
-                    groupListSPintoICEsIMEsUsingFamilyInfo,
-                    locusTagMerge2Comment,
-                    locusTagIntegrase2Comment,
-                    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance)
+                    listICEsIMEsStructures
+                    , listSameFamilyMergeStructures
+                    , locusTagMerge2Comment
+                    , locusTagIntegrase2Comment
+                    )
 
             # tryMergeSameFamilyStructures merge distant anchors of SPs of the conjugation module that are not of the same family but compatible
             rulesMergeICEIMEStructures.tryMergeNestedICEsIMEsStructures(
-                    listICEsIMEsStructures,
-                    maxNumberCDSForFilterIMESize,
-                    groupListSPintoICEsIMEsUsingFamilyInfo,
-                    locusTagMerge2Comment,
-                    locusTagIntegrase2Comment,
-                    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance)
+                    listICEsIMEsStructures
+                    , locusTagMerge2Comment
+                    , locusTagIntegrase2Comment
+                    )
 
             for currICEsIMEsStructure in listICEsIMEsStructures:
                 # tryResolveSPsInConflictAfterMergeEvents solves SPs that were attributed to multiple anchors initially and whose at least 1 anchor was involved in a merge with another anchor.
@@ -1103,20 +964,15 @@ def main():
 
             # integrase can now be SP.listSiblingFragmentedSP too
             rulesAddIntegrases.addSPIntegraseUpstreamAndDownstream_afterMergeDistantStructure(
-                    currListSPs.list,
-                    listICEsIMEsStructures,
-                    maxNumberCDSForFilterIMESize,
-                    groupListSPintoICEsIMEsUsingFamilyInfo,
-                    set(),
-                    0,
-                    allowAdjacentIntegraseOnlyForSer,
-                    locusTagIntegrase2Comment,
-                    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_lowCutoffCDSDistance,
-                    useCDSDistanceToChooseBetweenUpstreamAndDownstreamIntegrase_highCutoffCDSDistance)
+                    currListSPs.list
+                    , listICEsIMEsStructures
+                    , set()
+                    , 0
+                    , locusTagIntegrase2Comment
+                    )
             
             tmpBuildUp_listICEsIMEsStructures.extend(listICEsIMEsStructures)
             tmpBuildUp_currListSPs.list.extend(currListSPs.list)
-
 
         # reattach all subsegment into one listICEsIMEsStructures as well as all SP in new all containing currListSPs
         tmpBuildUp_listICEsIMEsStructures = sorted(tmpBuildUp_listICEsIMEsStructures, key=lambda x: x.listOrderedSPs[0].start, reverse=False)
@@ -1128,16 +984,14 @@ def main():
             if currICEsIMEsStructure.delMerging_idxListUpstreamStructure == -1:
                 # finalizeICEIMEStruct assigns the type of the ICE or IME and check for potential errors in the structures
                 currICEsIMEsStructure.finalizeICEIMEStruct(
-                        tmpBuildUp_listICEsIMEsStructures,
-                        maxNumberCDSForFilterIMESize,
-                        moveSingleSPToCheck,
-                        locusTagFinalize2Comment)
+                        tmpBuildUp_listICEsIMEsStructures
+                        , locusTagFinalize2Comment
+                        )
                 # List integrases found in structure, so that we can find integrases not found in structure latter
                 for currSPIntegrase in currICEsIMEsStructure.listIntegraseUpstream:
                     dictIntegraseLocusTagFoundInStructure[currSPIntegrase.locusTag] = 1
                 for currSPIntegrase in currICEsIMEsStructure.listIntegraseDownstream:
                     dictIntegraseLocusTagFoundInStructure[currSPIntegrase.locusTag] = 1
-                # print("{}".format(currICEsIMEsStructure.GetObjectAsJson(True, "")))
 
         # del if delMerging_idxListUpstreamStructure
         for i in range(len(tmpBuildUp_listICEsIMEsStructures) - 1, -1, -1):
@@ -1152,12 +1006,11 @@ def main():
             # find integrases not found in structure
             listIntegraseNotFoundInStructureSegment = []
             for currSP in tmpBuildUp_currListSPs.list:
-                if (currSP.SPType in setIntegraseNames):  # currSP.SPType == "IntTyr" or currSP.SPType == "IntSer" or currSP.SPType == "DDE"
+                if (currSP.SPType in setIntegraseNames):
                     if currSP.locusTag in dictIntegraseLocusTagFoundInStructure:
                         pass
                     else:
                         listIntegraseNotFoundInStructureSegment.append(currSP)
-                        # dictIntegraseNotFoundInStructure[currSP] = 1
             listOfListSPsLonelyIntegrases.append(listIntegraseNotFoundInStructureSegment)
         else:
             listOfListAllICEsIMEsStructure.append(tmpBuildUp_listICEsIMEsStructures)
@@ -1168,34 +1021,20 @@ def main():
     # print in output files
     printAllICEsIMEsStructureToOutputFile(
             listOfListAllICEsIMEsStructure,
-            # outputPrintCDSNumberInsteadOfProteinIdAndStart,
             outputFile,
             dictIMEICEID2humanReadableIMEICEIIdentifier)
     
-    
-    # (totalNumberSP,
-    #  totalNumberIntegrase,
-    #  totalNumberUnaffectedIntegrase,
-    #  totalNumberRelaxase,
-    #  totalNumberUnaffectedRelaxase,
-    #  totalNumberCoupling,
-    #  totalNumberUnaffectedCoupling,
-    #  totalNumberVirb4,
-    #  totalNumberUnaffectedVirb4) = printAllICEsIMEsStructureToInputFile(
+
     (dictGenomeAccnum2totalNumberSP,
     dictGenomeAccnum2totalNumberIntegrase,
     dictGenomeAccnum2totalNumberUnaffectedIntegrase,
-    dictGenomeAccnum2totalNumberRelaxase,
-    dictGenomeAccnum2totalNumberUnaffectedRelaxase,
-    dictGenomeAccnum2totalNumberCoupling,
-    dictGenomeAccnum2totalNumberUnaffectedCoupling,
-    dictGenomeAccnum2totalNumberVirb4,
-    dictGenomeAccnum2totalNumberUnaffectedVirb4,
+    dictGenomeAccnum_2TypeSPConjModule_2totalNumberSP,
+    dictGenomeAccnum_2TypeSPConjModule_2totalNumberSP_unaffected,
     dictGenomeAccnum2totalsetFragmentedSP
     ) = printAllICEsIMEsStructureToInputFile(
         listOfListAllICEsIMEsStructure,
         listOfListSPsLonelyIntegrases,
-        pathInputFile,
+        commonMethods.CommandLineArguments.pathInputFile,
         modifiedInputFile,
         locusTagIntegrase2Comment,
         locusTagFinalize2Comment,
@@ -1203,38 +1042,20 @@ def main():
         dictIMEICEID2humanReadableIMEICEIIdentifier,
         hasMultipleGenomeAccesion
         )
-    pathSummaryFile = os.path.splitext(pathOutputFile)[0] + '.summary'
+    pathSummaryFile = os.path.splitext(commonMethods.CommandLineArguments.pathOutputFile)[0] + '.summary'
     summaryFile = open(pathSummaryFile, "w")
-    # print summary file
-    # printOverallStatsToSummaryFile(
-    #         totalNumberSP,
-    #         totalNumberIntegrase,
-    #         totalNumberUnaffectedIntegrase,
-    #         totalNumberRelaxase,
-    #         totalNumberUnaffectedRelaxase,
-    #         totalNumberCoupling,
-    #         totalNumberUnaffectedCoupling,
-    #         totalNumberVirb4,
-    #         totalNumberUnaffectedVirb4,
-    #         listOfListAllICEsIMEsStructure,
-    #         maxNumberCDSForSplitSPsByColocalizion,
-    #         maxNumberCDSForFilterIMESize,
-    #         summaryFile)
+
     printOverallStatsToSummaryFile(
-        dictGenomeAccnum2totalNumberSP,
-        dictGenomeAccnum2totalNumberIntegrase,
-        dictGenomeAccnum2totalNumberUnaffectedIntegrase,
-        dictGenomeAccnum2totalNumberRelaxase,
-        dictGenomeAccnum2totalNumberUnaffectedRelaxase,
-        dictGenomeAccnum2totalNumberCoupling,
-        dictGenomeAccnum2totalNumberUnaffectedCoupling,
-        dictGenomeAccnum2totalNumberVirb4,
-        dictGenomeAccnum2totalNumberUnaffectedVirb4,
-        dictGenomeAccnum2totalsetFragmentedSP,
-        listOfListAllICEsIMEsStructure,
-        maxNumberCDSForSplitSPsByColocalizion,
-        maxNumberCDSForFilterIMESize,
-        summaryFile)
+        dictGenomeAccnum2totalNumberSP
+        , dictGenomeAccnum2totalNumberIntegrase
+        , dictGenomeAccnum2totalNumberUnaffectedIntegrase
+        , dictGenomeAccnum_2TypeSPConjModule_2totalNumberSP
+        , dictGenomeAccnum_2TypeSPConjModule_2totalNumberSP_unaffected
+        , dictGenomeAccnum2totalsetFragmentedSP
+        , listOfListAllICEsIMEsStructure
+        , summaryFile
+        , listGenomeAccessionFromGenbankFile
+        )
 
     summaryFile.close()
 
@@ -1246,7 +1067,6 @@ def main():
     elapsed_time_secs = time.time() - start_time
     if verbose:
         print("Execution took: %s secs (Wall clock time)\n\n" % timedelta(seconds=round(elapsed_time_secs)))
-
 
 if __name__ == '__main__':
     main()

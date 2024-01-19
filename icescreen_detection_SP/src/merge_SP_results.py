@@ -153,7 +153,8 @@ if __name__ == "__main__":
     merged_results = merge_results(blastres, hmmres)
 
     # Order SP by position on the genome
-    merged_results = merged_results.sort_values(by="CDS_num", ascending=True)
+    #merged_results = merged_results.sort_values(by="CDS_num", ascending=True)
+    merged_results = merged_results.sort_values(by=["Genome_accession", "CDS_num"], ascending=[True, True])
 
     merged_results.to_csv(outtsv, index=False, sep="\t", decimal=".",
                           na_rep="NA")

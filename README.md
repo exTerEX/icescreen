@@ -1,4 +1,4 @@
-ICEscreen is a bioinformatic pipeline for the detection and annotation of ICEs (Integrative and Conjugative Elements) and IMEs (Integrative and Mobilizable Elements) in Firmicutes genomes. 
+ICEscreen is a bioinformatic pipeline for the detection and annotation of ICEs (Integrative and Conjugative Elements) and IMEs (Integrative and Mobilizable Elements) in Bacillota genomes. 
 
 **Main features of ICEscreen**
 

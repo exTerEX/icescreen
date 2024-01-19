@@ -121,3 +121,42 @@ Number of segments with several elements:	1
 Number of segments with nested elements:	0
 Number of segments with exclusively isolated SPs to manually verify:	0
 
+##################### ICEscreen statistics for genome accession NZ_TEST3_QUATRO #####################
+
+##### Mobile elements #####
+## Number of complete elements
+Complete ICE (4 types of SP):	3
+Complete IME (R+I, R+C+I with distance between consecutive SPs <= 14 CDSs):	0
+## Number of complete modules
+Conjugation module (R+C+V):	0
+Mobilizable element (R+C with distance between consecutive SPs <= 14 CDS):	0
+## Number of partial elements
+Partial ICE (at least V):	1
+Other partial element (R+C, R+V, V+C with distance between consecutive SPs > 14 CDS):	1
+## Composite elements
+Total nested elements (partial or complete):	0
+Host element:	0
+Guest element:	0
+Element that are both host and guest:	0
+
+##### Signature proteins (SPs) #####
+## Total SPs detected
+Total SPs:	17
+Total Integrase:	4
+Total Relaxase:	5
+Total Coupling protein:	4
+Total VirB4:	4
+Fragmented SPs:	0
+## Unassigned SPs
+Unassigned SPs:	2
+Unassigned Integrase:	0
+Unassigned Relaxase:	0
+Unassigned Coupling protein:	1
+Unassigned VirB4:	1
+
+##### Segments #####
+Number of segments with one element:	3
+Number of segments with several elements:	1
+Number of segments with nested elements:	0
+Number of segments with exclusively isolated SPs to manually verify:	0
+
