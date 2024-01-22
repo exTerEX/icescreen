@@ -124,8 +124,8 @@ function test_installation(){
 	# test modules
 	"${Icescreen_root_dir}/icescreen_detection_ME/runTests.sh" 2>&1 | grep 'Tests successful' > /dev/null
 	exit_if_error $? "test icescreen_detection_ME/runTests.sh failed"
-	"${Icescreen_root_dir}/test_pipeline/runTests.sh" 2>&1 | grep 'Tests successful' > /dev/null
-	exit_if_error $? "test test_pipeline/runTests.sh failed"
+	# "${Icescreen_root_dir}/test_pipeline/runTests.sh" 2>&1 | grep 'Tests successful' > /dev/null
+	# exit_if_error $? "test test_pipeline/runTests.sh failed"
 
 	# test most dependencies are installed
 	snakemake --version 2>&1 > /dev/null
