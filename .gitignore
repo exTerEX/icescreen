@@ -8,7 +8,7 @@
 # Ignorer les fichiers pour Migale
 migale/
 icescreen_migale.sh
-envs/icescreen_env
+envs/icescreen_env*
 
 # Byte-compiled / optimized / DLL files
 **__pycache__

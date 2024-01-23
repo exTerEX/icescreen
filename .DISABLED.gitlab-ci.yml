@@ -13,13 +13,14 @@ before_script:
   - source ~/.bashrc
   - export PATH=~/miniconda/bin:$PATH
   - source ~/miniconda3/etc/profile.d/conda.sh
-  - conda create -y --name icescreen_env icescreen -c conda-forge -c bioconda
+  - conda create -y --name icescreen_env_1-3-1 icescreen -c conda-forge -c bioconda
 
 test_install_icescreen:
   script:
-  - conda activate icescreen_env && icescreen --version
-  - conda activate icescreen_env && icescreen --test_installation
-  - conda activate icescreen_env && icescreen --test_installation 2>&1 | grep "The installation of ICEscreen is successful" > /dev/null
+  - conda activate icescreen_env_1-3-1
+  - icescreen --version
+  - icescreen --test_installation
+  - icescreen --test_installation 2>&1 | grep "The installation of ICEscreen is successful" > /dev/null
   - mkdir -p ~/tmp/test_icescreen
   - cd ~/tmp/test_icescreen
   - mkdir genbank_files
@@ -27,10 +28,11 @@ test_install_icescreen:
   - curl -s  "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&id=${i}&rettype=gbwithparts&retmode=txt" > genbank_files/$i.gbk
   - i=NZ_CP026548
   - curl -s  "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&id=${i}&rettype=gbwithparts&retmode=txt" > genbank_files/$i.gbk
-  - conda activate icescreen_env && icescreen -g ~/tmp/test_icescreen/genbank_files -o ~/tmp/test_icescreen/ --mode firmicutes
+  - icescreen -g ~/tmp/test_icescreen/genbank_files -o ~/tmp/test_icescreen/ --mode firmicutes
   - head ~/tmp/test_icescreen/ICEscreen_results/results/NC_004668/icescreen_detection_ME/NC_004668_detected_ME.summary 2>&1 | grep "ICEscreen statistics for genome accession" > /dev/null
   - head ~/tmp/test_icescreen/ICEscreen_results/results/NZ_CP026548/icescreen_detection_ME/NZ_CP026548_detected_ME.summary 2>&1 | grep "ICEscreen statistics for genome accession" > /dev/null
   - rm -rf ~/tmp/test_icescreen
+  - conda deactivate
   only:
   - master
   - main

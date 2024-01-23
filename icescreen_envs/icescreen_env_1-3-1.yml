@@ -1,4 +1,4 @@
-name: icescreen_env
+name: icescreen_env_1-3-1
 channels:
     - conda-forge
     - bioconda

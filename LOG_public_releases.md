@@ -2,9 +2,14 @@
 To access the different releases, see https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/releases
 
 
+
+## v1.3.1, January 2024
+#### Minor changes
+* The name of the conda environment now reflects the version of the tool. This is to ensure a clearer separation between two different versions of ICEscreen installed on the same machine.
+
 ## v1.3.0, January 2024
 #### Minor changes
-* The following conda dependencies were upgraded: pandas >=2.1.4, and snakemake-minimal >=8.2.1.
+* The following conda dependencies were upgraded: pandas >=2.1.0, and snakemake-minimal >=7.32.
 * The command line argument "--mode" has been renamed "--phylum" to better reflect its scope and is now case insensitive. The command line argument "--mode" is still supported but raises a deprecation warning. Absence of the argument "--phylum" (or "--mode") in the command line now raises a deprecation warning, this argument is to become mandatory in a future release. The option "Phylum of the genomes to analyze" is now visible and expanded by default on the galaxy user interface. "Firmicutes" has been replaced by "Bacillota" to keep up with the current taxonomy nomenclature. "Firmicutes" is still supported for "--phylum" but raises a deprecation warning.
 * The columns "Start_of_most_upstream_SP" and "Stop_of_most_downstream_SP" were added in the _detected_ME.tsv output file. Those columns are **not to be mistaken for the start and stop of the element however**.
 * Genome accession that generates no significant alignment match with any of the ICEscreen reference signature proteins now produces a complete summary output file filled with 0 values instead of an empty output file.
