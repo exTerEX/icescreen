@@ -1,9 +1,10 @@
 image: ubuntu:latest
 
 before_script:
+
   - apt-get -yq update
   - apt-get -yq upgrade
-  - apt-get -yq install git wget curl build-essential
+  - apt-get -yq install git wget curl build-essential xz-utils
   - mkdir -p ~/miniconda3
   - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda3/miniconda.sh
   - chmod +x ~/miniconda3/miniconda.sh
@@ -19,6 +20,7 @@ test_install_icescreen:
   script:
   - conda activate icescreen_env_1-3-1
   - icescreen --version
+  - icescreen --print_version_dependencies
   - icescreen --test_installation
   - icescreen --test_installation 2>&1 | grep "The installation of ICEscreen is successful" > /dev/null
   - mkdir -p ~/tmp/test_icescreen
