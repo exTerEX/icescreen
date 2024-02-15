@@ -91,6 +91,7 @@ def get_XerS_annotation(data, tyr):
         fp = []                  # False positives that will be removed
 
         # For each CDS, classify into 3 categories
+        # CDS_num is uniq even in case of multiple accession in the gbff file
         for candidate in candidates.groupby("CDS_num"):
             cds_num = candidate[0]
             info = candidate[1]

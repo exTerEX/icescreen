@@ -309,7 +309,7 @@ rule extract_SP_faa:
         then
             touch {output}
         else
-            protid=$(tail -n +2 {input.tsvfile} | cut -f3 -d'\t' | sed 's/^/\>/' | sed 's/$/_\\\\/' | paste -s -d'|' | sed 's/^/\//' | sed 's/\\\\$/\/,+1p/')
+            protid=$(tail -n +2 {input.tsvfile} | cut -f3 | sed 's#^#>#' | sed 's#$#_\\\\#' | paste -s -d'|' | sed 's#^#/#' | sed 's#\\\\$#/,+1p#')
             sed -n "$protid" {input.faafile} > {output}
         fi
         """

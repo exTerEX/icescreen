@@ -342,7 +342,7 @@ def pretty_df(df):
     # sort each result from best to worst
     # sorting by i-Evalue is not working properly. sort_values with CDS_num and then HMM_ali_Score.
     # df = df.sort_values(by=["CDS_num", "i-Evalue"], ascending=[True, True])
-    df = df.sort_values(by=["CDS_num", "domain_score"], ascending=[True, False])
+    df = df.sort_values(by=["Genome_accession_rank", "CDS_num", "domain_score"], ascending=[True, True, False])
 
     # Sanitize annotations (remove leading and trailing whitespace)
     df = df.map(lambda x: x.strip() if isinstance(x, str) else x) # applymap was deprecated in 2.1.0
@@ -494,7 +494,7 @@ if __name__ == "__main__":
     # sort_values with CDS_num and then HMM_ali_Score (like the other one earlier in code). Sorting by HMM_ali_i-Evalue is buggy.
     # data = data.sort_values(by="CDS_num", ascending=False)
     # data = data.sort_values(by=["CDS_num", "HMM_ali_i-Evalue"], ascending=[False, True])
-    data = data.sort_values(by=["CDS_num", "HMM_ali_Score"], ascending=[False, False])
+    data = data.sort_values(by=["Genome_accession_rank", "CDS_num", "HMM_ali_Score"], ascending=[True, False, False])
 
     data.to_csv(outall, index=False, sep="\t", decimal=".", na_rep="NA")
 

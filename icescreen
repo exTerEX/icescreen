@@ -7,11 +7,11 @@
 # Usage function (show help).
 
 function version(){
-    printf "1.3.1\n"
+    printf "1.3.2\n"
 }
 
 function usage(){
-    printf "\nICEscreen version 1.3.1\n\n"
+    printf "\nICEscreen version 1.3.2\n\n"
     printf "Usage for running an analysis with ICEscreen: icescreen [-o OUTDIR] [-n DATASET_NAME] [-j NB_JOBS] -p TAXONMIC_PHYLUM -g GBDIR\n"
 
     printf "\nShow help:\n"
@@ -65,8 +65,8 @@ function get_abs_filename(){
 
 function install_dependencies(){
 	# Installation of ICEscreen conda environement from YAML
-	conda env remove -n icescreen_env_1-3-1
-	conda env create -f "$(dirname $(readlink -f $0))"/icescreen_envs/icescreen_env_1-3-1.yml
+	conda env remove -n icescreen_env_1-3-2
+	conda env create -f "$(dirname $(readlink -f $0))"/icescreen_envs/icescreen_env_1-3-2.yml
 	exit_if_error $? "conda env create failed"
 }
 
@@ -122,6 +122,7 @@ function test_installation(){
 	exit_if_error $? "test compile HMMPress SP_profiles failed"
 
 	# test modules
+	# "${Icescreen_root_dir}/icescreen_detection_ME/runTests.sh"
 	"${Icescreen_root_dir}/icescreen_detection_ME/runTests.sh" 2>&1 | grep 'Tests successful' > /dev/null
 	exit_if_error $? "test icescreen_detection_ME/runTests.sh failed"
 	# "${Icescreen_root_dir}/test_pipeline/runTests.sh" 2>&1 | grep 'Tests successful' > /dev/null
@@ -151,21 +152,21 @@ function conda_activate_icescreen_env(){
         if [[ "${galaxy_code_sent}" -eq 0 ]]
         then
 		# if [ -d "${CONDA_BASE}/envs/icescreen_env" ]
-		if [[ $(conda info --envs | grep 'icescreen_env_1-3-1') ]]
+		if [[ $(conda info --envs | grep 'icescreen_env_1-3-2') ]]
 		then
 		    ## Then source conda.sh
 		    CONDA_BASE=$(conda info --base)
 		    source "${CONDA_BASE}/etc/profile.d/conda.sh"
 
 		    ## Now activate environments
-		    printf "\nconda activate icescreen_env_1-3-1\n"
-		    conda activate icescreen_env_1-3-1
+		    printf "\nconda activate icescreen_env_1-3-2\n"
+		    conda activate icescreen_env_1-3-2
 		    exit_if_error $? "conda activate failed"
 		else
-		    echo "Not automatically activating icescreen_env_1-3-1 via conda because it is not found via conda info --envs."
+		    printf "\nWARNING: not automatically activating icescreen_env_1-3-2 via conda because it is not found via conda info --envs.\n"
 		fi
 	else
-		echo "Not automatically activating icescreen_env_1-3-1 via conda because galaxy_code_sent is ${galaxy_code_sent}."
+		printf "\nWARNING: not automatically activating icescreen_env_1-3-2 via conda because galaxy_code_sent is ${galaxy_code_sent}.\n"
         fi
 }
     
@@ -175,7 +176,7 @@ function conda_deactivate_icescreen_env(){
         if [[ "${galaxy_code_sent}" -eq 0 ]]
         then
 		# if [ -d "${CONDA_BASE}/envs/icescreen_env" ]
-		if [[ $(conda info --envs | grep 'icescreen_env_1-3-1') ]]
+		if [[ $(conda info --envs | grep 'icescreen_env_1-3-2') ]]
 		then
 		    ## Then source conda.sh
 		    CONDA_BASE=$(conda info --base)
@@ -186,10 +187,10 @@ function conda_deactivate_icescreen_env(){
 		    conda deactivate
 		    exit_if_error $? "conda deactivate failed"
 		else
-		    echo "Not automatically deactivating icescreen_env_1-3-1 via conda because it is not found via conda info --envs."
+		    printf "\nWARNING: not automatically deactivating icescreen_env_1-3-2 via conda because it is not found via conda info --envs.\n"
 		fi
 	else
-		echo "Not automatically deactivating icescreen_env_1-3-1 via conda because galaxy_code_sent is ${galaxy_code_sent}."
+		printf "\nWARNING: not automatically deactivating icescreen_env_1-3-2 via conda because galaxy_code_sent is ${galaxy_code_sent}.\n"
         fi
 }
 
@@ -205,9 +206,9 @@ function print_version_dependencies(){
 	pip3 show pandas | grep 'Version:'
 	echo " - biopython"
 	pip3 show biopython | grep 'Version:'
-	echo " - bcbio-gff"
+	# echo " - bcbio-gff"
 	# testing of bcbio-gff is skipped : from BCBio import GFF ; print(GFF.__version__)
-	python -c "from BCBio import GFF ; print(GFF.__version__)"
+	# python -c "from BCBio import GFF ; print(GFF.__version__)"
 	echo " - snakemake-minimal"
 	snakemake --version
 	echo " - blastp"
@@ -375,7 +376,7 @@ while test $# -gt 0; do
             break
             ;;
         -?*)
-            printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
+            printf 'WARNING: Unknown option (ignored): %s\n' "$1" >&2
             die
             ;;
         *)               # Default case: No more options, so break out of the loop.
@@ -495,7 +496,7 @@ then
 				bash "${Icescreen_root_dir}/icescreen_pipelines/edit_configfile.sh" --conffile "${outdir}/results/${sanitizedname%*.*}/icescreen.conf" --gbfile "${gborig}"
 			fi
 		else
-			printf "\t- WARNING : "${x}" has been skipped\n"
+			printf "WARNING: "${x}" has been skipped and the Genbank file(s) in it will not be analysed.\n"
 		fi
         done
 

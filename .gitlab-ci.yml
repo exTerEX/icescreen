@@ -14,11 +14,11 @@ before_script:
   - source ~/.bashrc
   - export PATH=~/miniconda/bin:$PATH
   - source ~/miniconda3/etc/profile.d/conda.sh
-  - conda create -y --name icescreen_env_1-3-1 icescreen -c conda-forge -c bioconda
+  - conda create -y --name icescreen_env_1-3-2 icescreen -c conda-forge -c bioconda
 
 test_install_icescreen:
   script:
-  - conda activate icescreen_env_1-3-1
+  - conda activate icescreen_env_1-3-2
   - icescreen --version
   - icescreen --print_version_dependencies
   - icescreen --test_installation

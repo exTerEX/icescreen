@@ -555,11 +555,15 @@ def pretty_df(df):
 
     # Order SP by position on the genome and
     # sort each result from best to worst
-    df = df.groupby("CDS_num", as_index=False, group_keys=True)\
-           .apply(lambda x: x.sort_values(["evalue", "bitscore", "qcovs",
+    # df = df.groupby("CDS_num", as_index=False, group_keys=True)\
+    #        .apply(lambda x: x.sort_values(["evalue", "bitscore", "qcovs",
+    #                                        "scovs", "pident"],
+    #                                       ascending=[True, False, False,
+    #                                                  False, False]))
+    df = df.sort_values(by=["Genome_accession_rank", "CDS_num", "evalue", "bitscore", "qcovs",
                                            "scovs", "pident"],
-                                          ascending=[True, False, False,
-                                                     False, False]))
+                                          ascending=[True, True, True, False, False,
+                                                     False, False])
 
     # Sanitize annotations (remove leading and trailing whitespace)
     df = df.map(lambda x: x.strip() if isinstance(x, str) else x) # applymap was deprecated in 2.1.0

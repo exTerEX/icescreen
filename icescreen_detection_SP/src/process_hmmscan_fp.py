@@ -175,7 +175,7 @@ if __name__ == "__main__":
 
     # Order SP by position on the genome and
     # sort each result from best to worst
-    data_sp = data_sp.sort_values(by="CDS_num", ascending=True)
+    data_sp = data_sp.sort_values(by=["Genome_accession_rank", "CDS_num"], ascending=[True, True])
 
     data_sp.to_csv(outfiltered, index=False, sep="\t", decimal=".",
                    na_rep="NA")

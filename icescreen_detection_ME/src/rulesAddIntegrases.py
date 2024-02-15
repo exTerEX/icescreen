@@ -360,11 +360,11 @@ def addCommentOnIntegraseNotCorrectlyOrientedForICEsIMEsStructure(currSp, EMStru
     # - 0 if integrase not correctly oriented and this fact is independant of SP in conflict
     if valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure == 0:
         commentITToAdd = "The integrase {} and the structure {} have not been associated because {} ICE integrase needs to be on the {} strand in {}. ".format(currSp.locusTag, EMStructureToAdd.internalIdentifier, upOrDownstream, strand, commonMethods.CommandLineArguments.taxoMode)
-        patterncommentITToAdd = "The integrase {} and the structure __IMEICEID_BasicEMStructure__\\d+__ have not been associated because {} ICE integrase needs to be on the \{} strand in {}\. ".format(currSp.locusTag, upOrDownstream, strand, commonMethods.CommandLineArguments.taxoMode)
+        patterncommentITToAdd = "The integrase {} and the structure __IMEICEID_BasicEMStructure__\\d+__ have not been associated because {} ICE integrase needs to be on the {} strand in {}. ".format(currSp.locusTag, upOrDownstream, strand, commonMethods.CommandLineArguments.taxoMode)
     # - 1 the set of SP in conflict that trigger the fact that the integrase is not correctly oriented
     elif type(valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure) is set and len(valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure) > 0:
         commentITToAdd = "It is unclear if the structure {} is an ICE, but in case it is the integrase {} should not been associated with it because {} ICE integrase needs to be on the {} strand in {}. ".format(EMStructureToAdd.internalIdentifier, currSp.locusTag, upOrDownstream, strand, commonMethods.CommandLineArguments.taxoMode)
-        patterncommentITToAdd = "It is unclear if the structure  __IMEICEID_BasicEMStructure__\\d+__ is an ICE, but in case it is the integrase {} should not been associated with it because {} ICE integrase needs to be on the \{} strand in {}\. ".format(currSp.locusTag, upOrDownstream, strand, commonMethods.CommandLineArguments.taxoMode)
+        patterncommentITToAdd = "It is unclear if the structure  __IMEICEID_BasicEMStructure__\\d+__ is an ICE, but in case it is the integrase {} should not been associated with it because {} ICE integrase needs to be on the {} strand in {}. ".format(currSp.locusTag, upOrDownstream, strand, commonMethods.CommandLineArguments.taxoMode)
     else:
         # raise exception
         raise RuntimeError("Error in addCommentOnIntegraseNotCorrectlyOrientedForICEsIMEsStructure {}: valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure ({}) should be 0 or 1".format(upOrDownstream, str(valueReturned_isIntegraseCorrectlyOrientedForICEsIMEsStructure)))

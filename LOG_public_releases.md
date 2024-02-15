@@ -1,7 +1,14 @@
 
-To access the different releases, see https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/releases
+
+For a summary of the different releases, see https://icescreen.migale.inrae.fr/new/ ; to access the different releases, see https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/releases
 
 
+## v1.3.2, February 2024
+#### Minor changes
+* The following conda dependencies were upgraded: hmmer =3.4, snakemake-minimal >=8.4, biopython =1.83 and blast =2.15.
+* The bcbio-gff dependency is not compatible with the latest version of biopython and snakemake-minimal and has been removed. The generation of GFF files (_icescreen.gff and _source.gff) is now handled by a specific module in ICEscreen.
+#### Bug fixes
+* [Issue #17](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/17) _icescreen.gff files (visualization folder) had multiple issues: The phase for the CDS was incorrect, there were only 8 tab-separated fields instead of 9, truncated gene location were not reported.
 
 ## v1.3.1, January 2024
 #### Minor changes
@@ -17,15 +24,13 @@ To access the different releases, see https://forgemia.inra.fr/ices_imes_analysi
 * The ICEscreen command line option "--test_installation" now works for user without OS root privileges.
 * The experimental support for "Streptomyces" has been removed for now as it needs more polishing.
 * v1.3.0 (January 2024) of the reference signature proteins database, see log file icescreen_detection_SP/database/LOG/summary_log_modif_SP_database.md for more details.
-#### Bugs and warnings fixes
+#### Bug fixes
 * [Issue #15](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/15) and [Issue #16](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/16): incompatibility between bcbio-gff version 0.7.0 and biopython version 1.82 and 1.83. The version of those two conda dependencies were set as follow: bcbio-gff =0.7.0, biopython =1.81.
 * If a query locus tag had multiple valid alignment matches from multiple different fasta files of ICEscreen reference signature proteins, all those matches were considered and generated duplicated lines for a query locus tag in the final output files. This has been fixed and only the overall best alignment match for a query locus tag is now considered.
 * Ascending sorting by i-Evalue of multiple HMM profile matches for a query locus tag was not working properly. As a result, the best scoring HMM profile was not always selected. HMM profile matches are now sorted by domain_score (descending) to ensure the selection of the best HMM profile.
 * [Issue #13](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/13): in some case, there are multiple ICE or IME element structures that could be validly attributed to a query signature protein. When that happens, this query signature protein is attributed multiple potential ICE_IME_id which should appear in the column "ICE_IME_id_need_manual_curation" of the file _detected_SP_withICEIMEIds.tsv. A bug was fixed where the multiple potential ICE_IME_id would appear in the column "ICE_IME_id" when multiple such query signature protein were adjacent to each other.
 * [Issue #14](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/14): generate_annotation_files.py 'DataFrame' object has no attribute 'tolist'. This bug happens for a Genbank file with multiple accessions (multiple chromosomes or contigs) and at least one of the accession has no significant alignment match with any of the ICEscreen reference signature proteins.
 * A genome accession that generates no significant alignment match with any of the ICEscreen reference signature proteins produced empty visualization files (gb, embl, gff). It now produces valid gb, embl, and gff files with no ICEscreen result.
-* Fixed warning "FutureWarning: DataFrame.applymap has been deprecated. Use DataFrame.map instead.". Updated dependencies for pandas >=2.1.0.
-* Fixed warning "relative file path is strongly discouraged. It can also lead to inconsistent results of the file-matching approach used by Snakemake."
 #### Other source code improvements
 * The module to detect the structure of the mobile element has been updated: the source code is now generic for the type of signature proteins from the conjugation module (relaxase, coupling protein, virB4). This modification will make the integration of other type of signature proteins from the conjugation module easier in the future.
 
@@ -43,8 +48,6 @@ To access the different releases, see https://forgemia.inra.fr/ices_imes_analysi
 * Fixed Error in mergeWith: not greenLightAddSPConjugaisonModule and not currSP.setICEsIMEsStructureInConflict for merging locus tag. This error happen when merging a distant fragmented SP. [Link in gitlab](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/9).
 * Fixed Error in icescreen_detection_ME/src/rulesMergeICEIMEStructures.py : AttributeError: type object 'BasicEMStructure' has no attribute 'getGetListInternIdFromListEMStructure'. This error happens when a fragmented SP could be attributed to multiple adjacent SP from the conj module. [Link in gitlab](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/10).
 * Fixed RuntimeError: Error in IsThereAnIntegraseBetweenThoseTwoConjModule: unrecognized positioning ofICEsIMEsStructureOne. This error occur when ICEsIMEsStructureTwo is upstream of ICEsIMEsStructureOne but they share one or more SP (SP in conflict) [Link in gitlab](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/11).
-* Fixed BiopythonWarning: Partial codon, len(sequence) not a multiple of three.
-* Fixed BiopythonDeprecationWarning: Use int(feature.end) and int(feature.start) rather than feature.nofuzzy_end and feature.nofuzzy_start.
 
 ## v1.1.1, February 2023
 #### Minor changes
@@ -75,8 +78,6 @@ To access the different releases, see https://forgemia.inra.fr/ices_imes_analysi
 * Bug fix: the stops of the SPs detected by ICEscreen were off by 1 nt in the genbank, embl, and gff reports.
 * Bug fix: nested directory structure for input genbank files was causing problems. Now only genbank files that are at the root of the input genbank directory are taken into account (sub-directories are ignored).
 * Bug fix: very low E-values were wrongly rounded down to 0.0 in the output files, they are now correctly displayed in a scientific format.
-* Warning fix: File path ...ICEscreen_results//genbank/XXX.gb contains double '/'. This is likely unintended. It can also lead to inconsistent results of the file-matching approach used by Snakemake.
-* Warning fix: Not prepending group keys to the result index of transform-like apply. In the future, the group keys will be included in the index, regardless of whether the applied function returns a like-indexed object.
 * Five genomes were added to test for the coherence of the pipeline.
 * The documentation was updated to reflect the changes for this version.
 * The version of the conda dependencies were upgraded: python >=3.9, pandas >=1.5.2, snakemake-minimal >=7.18.2, biopython >=1.80, bcbio-gff >=0.6.9.

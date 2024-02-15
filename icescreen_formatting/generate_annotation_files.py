@@ -15,16 +15,17 @@
 # along with ICEscreen.
 # If not, see <https://www.gnu.org/licenses/>.
 
-import sys
+
 import argparse
 import pandas as pd
-import re
+# import re
 from Bio import SeqIO
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 from Bio.SeqRecord import SeqRecord
 from Bio import Seq
-from requests.utils import quote
+# from requests.utils import quote
 import commonMethods
+import GFF3_Module
 import os
 
 def parse_arguments():
@@ -577,25 +578,25 @@ def make_element_features(CDS_dict, elm_info):
     return(myFeature)
 
 
-def sanitize_seqid(mystring):
-    """Sanitize a string for GFF3 file 9th field.
+# def sanitize_seqid(mystring):
+#     """Sanitize a string for GFF3 file 9th field.
 
-    :param mystring: String to sanitize
-    :type mystring:  str
-    :return:         Sanitized string
-    :rtype:          str
-    """
-    reencoded_str = ""
+#     :param mystring: String to sanitize
+#     :type mystring:  str
+#     :return:         Sanitized string
+#     :rtype:          str
+#     """
+#     reencoded_str = ""
 
-    for c in mystring:
-        # [a-zA-Z0-9.:^*$@!+_?-|] characters can be in seqid
-        # Else have to escape it by reencoding in percent-encoding
-        if re.match("[a-zA-Z0-9.:^*$@!+_?-|]", c) is not None:
-            reencoded_str = reencoded_str + c
-        else:
-            reencoded_str = reencoded_str + quote(c)
+#     for c in mystring:
+#         # [a-zA-Z0-9.:^*$@!+_?-|] characters can be in seqid
+#         # Else have to escape it by reencoding in percent-encoding
+#         if re.match("[a-zA-Z0-9.:^*$@!+_?-|]", c) is not None:
+#             reencoded_str = reencoded_str + c
+#         else:
+#             reencoded_str = reencoded_str + quote(c)
 
-    return(reencoded_str)
+#     return(reencoded_str)
 
 
 #def write_GFF3(myrecord, seq_length, outfile):
@@ -613,86 +614,11 @@ def write_GFF3(listRecordsToWrite, outfile):
     filout = open(outfile, "w")
 
     # GFF3 header
-    filout.write("##gff-version 3\n")
+    # filout.write("##gff-version 3\n")
+    GFF3_Module.write_GFF3_header(filout)
 
     for myrecord in listRecordsToWrite:
-
-        filout.write("##sequence-region {} 1 {}\n".format(myrecord.id,
-                                                        #seq_length
-                                                        len(myrecord.seq)
-                                                        ))
-
-        # GFF3 File structure is as follow:
-        # 9 fields tab separated. All fields must be filled out ('.' if nothing).
-        # (1) seq id: (mandatory) Name of reference sequence
-        # (2) source: (mandatory) Source of annotation
-        # (3) type  : (mandatory) Type of annotation
-        # (4) start : (mandatory) The 1-based begin position of the annotation
-        # (5) end   : (mandatory) The 1-based end position of the annotation
-        # (6) score : (optional ) Score of the annotation (floating point value)
-        # (7) strand: (mandatory) Strand of the annotation '+' and '-' for forward
-        #                         and reverse strand, '.' for features not stranded
-        # (8) phase : (optional ) Shift of feature regarding to the reading frame,
-        #                         one of "0","1","2" and "." for missing/don't care
-        # (9) attributes: (opt  ) A list of key/value attributes (key=value)
-        #                         separated by semicolons.
-
-        # Build all columns first
-        # 1. seqid
-        seqid = sanitize_seqid(myrecord.id)
-
-        # 2. source
-        source = "ICEscreen"
-
-        # Other columns
-        strand_dict = {1: "+", -1: "-"}
-        predefined_attributes = ["id", "name", "alias", "parent", "target", "gap",
-                                "derives_from", "note", "dbxref", "ontology_term",
-                                "is_circular"]
-
-        for feat in myrecord.features:
-            feat_type = feat.type
-            start = int(feat.location.start) + 1 # feat.location.nofuzzy_start + 1
-            end = int(feat.location.end) # feat.location.nofuzzy_end
-            score = "."
-            strand = strand_dict[feat.location.strand]
-
-            if feat.type == "CDS":
-                if "codon_start" in feat.qualifiers.keys():
-                    phase = feat.qualifiers["codon_start"]
-                else:
-                    phase = "."
-            else:
-                phase = "."
-
-            attribute_field = []
-            for key, value in feat.qualifiers.items():
-                # There is some predefined attributes in 9th column of GFF3 file
-                # these attributes names are capitalized
-                if key.lower() in predefined_attributes:
-                    attribute_key = key.capitalize()
-                else:
-                    attribute_key = key
-                attribute_value = []
-                # There are some qualifiers without values (i.e. "pseudo")
-                # if the qualifier exist -> True
-                if value == "":
-                    attribute_value = "True"
-                else:
-                    # Spaces can be in 9th column of GFF3 file
-                    # So encode each chunk of string in %-encoding then concatenate
-                    for val in str(value).split(" "):
-                        attribute_value_part = ""
-                        attribute_value_part = attribute_value_part + quote(val)
-                        attribute_value.append(attribute_value_part)
-                    attribute_value = " ".join(attribute_value)
-
-                attribute_field.append(attribute_key + "=" + attribute_value)
-
-            attribute_field = ";".join(attribute_field)
-
-            filout.write(f'{seqid}\t{source}\t{feat_type}\t{start}\t{end}\t{score}'
-                        f'{strand}\t{phase}\t{attribute_field}\n')
+        GFF3_Module.write_SeqRecord(filout, myrecord, "ICEscreen")
 
     filout.close()
 

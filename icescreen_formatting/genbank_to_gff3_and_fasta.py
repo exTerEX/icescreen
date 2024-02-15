@@ -17,7 +17,8 @@
 
 import argparse
 from Bio import SeqIO
-import BCBio.GFF as GFF
+# import BCBio.GFF as GFF
+import GFF3_Module
 
 
 def parse_arguments():
@@ -50,8 +51,12 @@ if __name__ == "__main__":
     gb_file, gff_file, fasta_file = parse_arguments()
 
     with open(gff_file, "w") as gff_out:
-        filin = SeqIO.parse(gb_file, "genbank")
-        GFF.write(filin, gff_out, include_fasta=False)
+        # filin = SeqIO.parse(gb_file, "genbank")
+        # GFF.write(filin, gff_out, include_fasta=False)
+        GFF3_Module.write_GFF3_header(gff_out)
+        record_iterator = SeqIO.parse(gb_file, "genbank")
+        for gbdata in record_iterator:
+            GFF3_Module.write_SeqRecord(gff_out, gbdata, "feature")
 
     with open(fasta_file, "w") as fasta_out:
         #filin = SeqIO.read(gb_file, "genbank")
