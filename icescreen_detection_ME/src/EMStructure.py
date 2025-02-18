@@ -107,6 +107,11 @@ class BasicEMStructure():
         # True at the same time
         return not(self == other)
 
+    def __lt__(self, other):
+        if not isinstance(other, BasicEMStructure):
+            # don't attempt to compare against unrelated types
+            return NotImplemented
+        return self.listOrderedSPs[0].start < other.listOrderedSPs[0].start
 
     def structureHasThoseIntegraseRegistred(self, listIntegraseToCheckForPresence):
         foundInlistIntegraseUpstream = any(check in listIntegraseToCheckForPresence for check in self.listIntegraseUpstream)
@@ -364,7 +369,7 @@ class BasicEMStructure():
                 # if currentSP is part of SPsInSameFamilyMergeStructures2SameFamilyMergeStructure
                 if currentSP in SPsInSameFamilyMergeStructures2SameFamilyMergeStructure:
                     sameFamilyMergeStructureToCheck = SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[currentSP]
-                    greenLightAddSPConjugaisonModule = self.listSPsIsContainedWithinOtherStructure(currentSP, sameFamilyMergeStructureToCheck)
+                    greenLightAddSPConjugaisonModule = self.listSPsIsContainedWithinOtherStructure(currentSP, sameFamilyMergeStructureToCheck, True)
                     if greenLightAddSPConjugaisonModule:
                         setAllowCheckingForMultipleDistantSameSPType = set()
                         greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
@@ -375,7 +380,7 @@ class BasicEMStructure():
                 # if self is in SameFamilyMergeStructures but not currentSP
                 elif len(self.listOrderedSPs) > 0 and self.listOrderedSPs[0] in SPsInSameFamilyMergeStructures2SameFamilyMergeStructure:
                     sameFamilyMergeStructureToCheck = SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[self.listOrderedSPs[0]]
-                    greenLightAddSPConjugaisonModule = self.listSPsIsContainedWithinOtherStructure(currentSP, sameFamilyMergeStructureToCheck)
+                    greenLightAddSPConjugaisonModule = self.listSPsIsContainedWithinOtherStructure(currentSP, sameFamilyMergeStructureToCheck, True)
                     if greenLightAddSPConjugaisonModule:
                         setAllowCheckingForMultipleDistantSameSPType = set()
                         greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
@@ -517,19 +522,49 @@ class BasicEMStructure():
 
     # return boolean True/False
     # check if the SP registred in this EMStructure are contained in another EMStructure, for example FamilyMergeStructure that was built previously
-    def listSPsIsContainedWithinOtherStructure(self, currentSP, EMStructureToCompareSent):
+    def listSPsIsContainedWithinOtherStructure(self, currentSP, EMStructureToCompareSent, ignoreAbsenceIfSPTypeRepresentedInEMStructureToCompareSent):
         # print("listSPsIsContainedWithinOtherStructure self {}: {}".format(self.internalIdentifier, self.GetObjectAsJson(True, "")))
         # print("listSPsIsContainedWithinOtherStructure EMStructureToCompareSent {}: {}".format(EMStructureToCompareSent.internalIdentifier, EMStructureToCompareSent.GetObjectAsJson(True, "")))
 
+        debug_listSPsIsContainedWithinOtherStructure = False
+
+        if debug_listSPsIsContainedWithinOtherStructure:
+            print("listSPsIsContainedWithinOtherStructure self {}: {}".format(self.internalIdentifier, hit.ListSPs.GetListProtIdsFromListSP(self.listOrderedSPs)))
+            print("currentSP {}".format(currentSP.locusTag))
+            print("listSPsIsContainedWithinOtherStructure EMStructureToCompareSent {}: {}".format(EMStructureToCompareSent.internalIdentifier, hit.ListSPs.GetListProtIdsFromListSP(EMStructureToCompareSent.listOrderedSPs)))
+
         if currentSP not in EMStructureToCompareSent.listOrderedSPs:
             # The SP we want to add is not in the modele structure
+            if debug_listSPsIsContainedWithinOtherStructure:
+                print("listSPsIsContainedWithinOtherStructure: The SP we want to add is not in the modele structure")
             return False
 
         if len(self.listOrderedSPs) == 0:
+            if debug_listSPsIsContainedWithinOtherStructure:
+                print("listSPsIsContainedWithinOtherStructure: len(self.listOrderedSPs) == 0")
             return True
         else:
-            boolToReturn = set(self.listOrderedSPs).issubset(set(EMStructureToCompareSent.listOrderedSPs))
-            # print("boolToReturn: {}".format(boolToReturn))
+            boolToReturn = False
+            if ignoreAbsenceIfSPTypeRepresentedInEMStructureToCompareSent:
+                # if not ignoreAbsenceIfSPTypeRepresentedInEMStructureToCompareSent, approach was buggy for when 2 relaxases are right next to each other
+                setSPType_NotSubset = set()
+                setSPType_Subset = set()
+                for currSP_self in self.listOrderedSPs:
+                    if currSP_self in EMStructureToCompareSent.listOrderedSPs:
+                        setSPType_Subset.add(currSP_self.SPType)
+                    else:
+                        setSPType_NotSubset.add(currSP_self.SPType)
+                # remove items in setSPType_NotSubset that are in setSPType_Subset
+                setSPType_NotSubset.difference_update(setSPType_Subset)
+                if len(setSPType_NotSubset) == 0:
+                    boolToReturn = True
+                else:
+                    boolToReturn = False
+            else:
+                boolToReturn = set(self.listOrderedSPs).issubset(set(EMStructureToCompareSent.listOrderedSPs))
+
+            if debug_listSPsIsContainedWithinOtherStructure:
+                print("boolToReturn: {}".format(boolToReturn))
             return boolToReturn
 
 
@@ -783,6 +818,14 @@ class ICEsIMEsStructure(BasicEMStructure):
             # don't attempt to compare against unrelated types
             return NotImplemented
         return super(ICEsIMEsStructure, self).__ne__(other)
+
+    def __lt__(self, other):
+        if not isinstance(other, ICEsIMEsStructure):
+            # don't attempt to compare against unrelated types
+            return NotImplemented
+        return super(ICEsIMEsStructure, self).__lt__(other)
+
+
 
     def isFilterIMESizeOk(self
                         #   , maxNumberCDSForFilterIMESize

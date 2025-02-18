@@ -2,6 +2,25 @@
 
 For a summary of the different releases, see https://icescreen.migale.inrae.fr/new/ ; to access the different releases, see https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/releases
 
+## v1.3.3, February 2025
+#### Minor changes
+* The output file structure has been modified to prepare for the integration of new modules. The output files themselves do not change but their locations on disk do. See [this section of the documentation](https://icescreen.migale.inrae.fr/interpret_results/description_output_files) for more details.
+* The documentation now mentions how to install miniforge3 and informs on miniconda3 licencing updates.
+* The following conda dependencies were added to prepare for the integration of new modules: pyarrow, bash, decorator, scipy.
+* The following conda dependencies were upgraded: biopython =1.85, pandas >=2.2, snakemake-minimal >=8, and blast =2.16.
+#### Bug fixes
+* [Issue #19](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/19) Wrongly reported as duplicate locusTag. Caused by reannot_XerS: the dataframe data was accessed instead of the dataframe df.
+* [Issue #20](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/20) RuntimeError: Error in IsThereAnIntegraseBetweenThoseTwoConjModule: unrecognized positioning ofICEsIMEsStructureOne. This error happens when 2 relaxases are neighbors on the genome and one of them is found by blastp only while the other one is found by HMM only.
+* [Issue #21](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/21) RuntimeError: Error in fillUpColocalizedOtherICEsIMEsStructures: ICEsIMEsStructureIT_mostUpstreamStart == -1. In EMStructure.py->listSPsIsContainedWithinOtherStructure, added a parameter to ignore the absence if an SPType was represented in EMStructureToCompareSent.
+* [Issue #22](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/22) RuntimeError: Error in fillUpColocalizedOtherICEsIMEsStructures: self_mostUpstreamStart == -1. fillUpColocalizedOtherICEsIMEsStructures was not checking for the case when 2 SP of the same type are part of a tuplet.
+* [Issue #23](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/23) ValueError: End location must be greater than or equal to start location. Cause : method reannot_XerS: df["CDS_num"] == i was used instead of df["CDS_num"] == CDS_numTarget.
+* [Issue #24](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/24) splitListOrderedSPs colocalizeByMaxNumberCDS distanceWithNextSp. Cause : error while reverting a integrase false positive to metadata of the second best blast hit.
+* [Issue #25](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/25) TypeError: '<' not supported between instances of 'SP' and 'SP'. Cause: def lt(self, other) was not implemented for the object class.
+* [Issue #26](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/26) ValueError End location. Cause : mishandling of CDS features end location for SP that are re-annotated.
+* [Issue #27](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/27) Adding Relaxase family domain of most similar ref SP Type Tyrosine integrase.
+* [Issue #28](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/28) Another case of splitListOrderedSPs colocalizeByMaxNumberCDS. Cause: wrong command line in Error in rule detect_mobile_elements.
+* [Issue #29](https://forgemia.inra.fr/ices_imes_analysis/icescreen/-/issues/29) SP to SeqFeature error. Cause : Biopython error due to misformating of SP matrice in the blastp step.
+
 
 ## v1.3.2, February 2024
 #### Minor changes

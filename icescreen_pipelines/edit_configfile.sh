@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+# Any subsequent(*) commands which fail will cause the shell script to exit immediately
 
 ########################################
 # FUNCTIONS
@@ -9,12 +11,19 @@ function die() {
     exit 1
 }
 
+# usage / help for parameters
+function usage() {
+cat << EOF
+usage: bash edit_configfile.sh [--conffile <Path to icescreen.conf> --gbfile <Path to genome genbank file> --meconffile <Path to icescreen.conf of detection ME> --spfile <Path to detected SP tsv file> --mefile <Path to detected ME tsv file> --spidsfile <Path to detected ME SP with ME Ids tsv file> --melogfile <Path to detected ME log file> --srcfastafile <Path to genome source fasta file> --srcgfffile <Path to genome source gff3 file> --gffannotfile <Path to ICEscreen results GFF3 annotation file> --emblannotfile <Path to ICEscreen results EMBL annotation file> --gbannotfile <Path to ICEscreen results GB annotation file>][--help]
+EOF
+}
+
 ########################################
 # VARIABLES INITIALIZATION
 ########################################
 
 # Initialize all option variables.
-# This unsures we are not contaminated by variables from the environment.
+# This ensures we are not contaminated by variables from the environment.
 # Path to icescreen.conf
 conffile=
 # Genome genbank file

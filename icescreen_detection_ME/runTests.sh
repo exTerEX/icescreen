@@ -92,7 +92,13 @@ value="1"
 if [[ ${performAllTests} == "true" ]] || [[ " ${array[*]} " =~ " ${value} " ]]; then
 	performTest ${value} "test1_NC_004668.1" "bacillota"
 fi
-
+# run manually
+# rm -rf /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/*
+# python3 /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/src/icescreen_OO.py -c /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/icescreen.conf -i /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/test1_NC_004668.1_detected_SP.tsv -o /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test1_NC_004668.1_results_EM.tsv -m /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test1_NC_004668.1_detected_SP_withICEIMEIds.tsv -l /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test1_NC_004668.1_results_EM.log --gb_input /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/test1_NC_004668.1.gb --taxo_mode_file /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/mode/bacillota.yml
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test1_NC_004668.1_results_EM.tsv /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test1_NC_004668.1_results_EM.tsv
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test1_NC_004668.1_detected_SP_withICEIMEIds.tsv /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test1_NC_004668.1_detected_SP_withICEIMEIds.tsv
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test1_NC_004668.1_results_EM.summary /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test1_NC_004668.1_results_EM.summary
+# rm -rf /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/*
 
 
 : '
@@ -103,7 +109,13 @@ value="2"
 if [[ ${performAllTests} == "true" ]] || [[ " ${array[*]} " =~ " ${value} " ]]; then
 	performTest ${value} "test2_NZ_AP013072" "bacillota"
 fi
-
+# run manually
+# rm -rf /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/*
+# python3 /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/src/icescreen_OO.py -c /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/icescreen.conf -i /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/test2_NZ_AP013072_detected_SP.tsv -o /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test2_NZ_AP013072_results_EM.tsv -m /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test2_NZ_AP013072_detected_SP_withICEIMEIds.tsv -l /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test2_NZ_AP013072_results_EM.log --gb_input /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/test2_NZ_AP013072.gb --taxo_mode_file /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/mode/bacillota.yml
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test2_NZ_AP013072_results_EM.tsv /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test2_NZ_AP013072_results_EM.tsv
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test2_NZ_AP013072_detected_SP_withICEIMEIds.tsv /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test2_NZ_AP013072_detected_SP_withICEIMEIds.tsv
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test2_NZ_AP013072_results_EM.summary /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test2_NZ_AP013072_results_EM.summary
+# rm -rf /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/*
 
 
 : '
@@ -114,7 +126,13 @@ value="3"
 if [[ ${performAllTests} == "true" ]] || [[ " ${array[*]} " =~ " ${value} " ]]; then
 	performTest ${value} "test3_Streptococcus_salivarius_strain_LAB813" "bacillota"
 fi
-
+# run manually
+# rm -rf /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/*
+# python3 /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/src/icescreen_OO.py -c /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/icescreen.conf -i /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/test3_Streptococcus_salivarius_strain_LAB813_detected_SP.tsv -o /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test3_Streptococcus_salivarius_strain_LAB813_results_EM.tsv -m /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test3_Streptococcus_salivarius_strain_LAB813_detected_SP_withICEIMEIds.tsv -l /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test3_Streptococcus_salivarius_strain_LAB813_results_EM.log --gb_input /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/test3_Streptococcus_salivarius_strain_LAB813.gb --taxo_mode_file /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/mode/bacillota.yml
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test3_Streptococcus_salivarius_strain_LAB813_results_EM.tsv /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test3_Streptococcus_salivarius_strain_LAB813_results_EM.tsv
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test3_Streptococcus_salivarius_strain_LAB813_detected_SP_withICEIMEIds.tsv /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test3_Streptococcus_salivarius_strain_LAB813_detected_SP_withICEIMEIds.tsv
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test3_Streptococcus_salivarius_strain_LAB813_results_EM.summary /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test3_Streptococcus_salivarius_strain_LAB813_results_EM.summary
+# rm -rf /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/*
 
 
 : '
@@ -126,7 +144,13 @@ value="4"
 if [[ ${performAllTests} == "true" ]] || [[ " ${array[*]} " =~ " ${value} " ]]; then
 	performTest ${value} "test4_NZ_AFRY01000001" "bacillota"
 fi
-
+# run manually
+# rm -rf /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/*
+# python3 /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/src/icescreen_OO.py -c /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/icescreen.conf -i /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/test4_NZ_AFRY01000001_detected_SP.tsv -o /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test4_NZ_AFRY01000001_results_EM.tsv -m /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test4_NZ_AFRY01000001_detected_SP_withICEIMEIds.tsv -l /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test4_NZ_AFRY01000001_results_EM.log --gb_input /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/test4_NZ_AFRY01000001.gb --taxo_mode_file /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/mode/bacillota.yml
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test4_NZ_AFRY01000001_results_EM.tsv /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test4_NZ_AFRY01000001_results_EM.tsv
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test4_NZ_AFRY01000001_detected_SP_withICEIMEIds.tsv /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test4_NZ_AFRY01000001_detected_SP_withICEIMEIds.tsv
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test4_NZ_AFRY01000001_results_EM.summary /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test4_NZ_AFRY01000001_results_EM.summary
+# rm -rf /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/*
 
 
 : '
@@ -138,7 +162,13 @@ value="5"
 if [[ ${performAllTests} == "true" ]] || [[ " ${array[*]} " =~ " ${value} " ]]; then
 	performTest ${value} "test5_NC_022239" "bacillota"
 fi
-
+# run manually
+# rm -rf /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/*
+# python3 /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/src/icescreen_OO.py -c /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/icescreen.conf -i /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/test5_NC_022239_detected_SP.tsv -o /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test5_NC_022239_results_EM.tsv -m /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test5_NC_022239_detected_SP_withICEIMEIds.tsv -l /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test5_NC_022239_results_EM.log --gb_input /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/test5_NC_022239.gb --taxo_mode_file /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/mode/bacillota.yml
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test5_NC_022239_results_EM.tsv /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test5_NC_022239_results_EM.tsv
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test5_NC_022239_detected_SP_withICEIMEIds.tsv /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test5_NC_022239_detected_SP_withICEIMEIds.tsv
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test5_NC_022239_results_EM.summary /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test5_NC_022239_results_EM.summary
+# rm -rf /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/*
 
 : '
  - Test 6 : 
@@ -149,7 +179,13 @@ value="6"
 if [[ ${performAllTests} == "true" ]] || [[ " ${array[*]} " =~ " ${value} " ]]; then
 	performTest ${value} "test6_medley" "pseudomonadota"
 fi
-
+# run manually
+# rm -rf /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/*
+# python3 /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/src/icescreen_OO.py -c /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/icescreen.conf -i /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/test6_medley_detected_SP.tsv -o /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test6_medley_results_EM.tsv -m /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test6_medley_detected_SP_withICEIMEIds.tsv -l /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test6_medley_results_EM.log --gb_input /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/test6_medley.gb --taxo_mode_file /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/mode/pseudomonadota.yml
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test6_medley_results_EM.tsv /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test6_medley_results_EM.tsv
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test6_medley_detected_SP_withICEIMEIds.tsv /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test6_medley_detected_SP_withICEIMEIds.tsv
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test6_medley_results_EM.summary /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test6_medley_results_EM.summary
+# rm -rf /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/*
 
 : '
  - Test 7 : 
@@ -160,7 +196,13 @@ value="7"
 if [[ ${performAllTests} == "true" ]] || [[ " ${array[*]} " =~ " ${value} " ]]; then
 	performTest ${value} "test7_NC_015977.1" "bacillota"
 fi
-
+# run manually
+# rm -rf /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/*
+# python3 /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/src/icescreen_OO.py -c /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/icescreen.conf -i /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/test7_NC_015977.1_detected_SP.tsv -o /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test7_NC_015977.1_results_EM.tsv -m /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test7_NC_015977.1_detected_SP_withICEIMEIds.tsv -l /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test7_NC_015977.1_results_EM.log --gb_input /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/test7_NC_015977.1.gb --taxo_mode_file /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/mode/bacillota.yml
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test7_NC_015977.1_results_EM.tsv /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test7_NC_015977.1_results_EM.tsv
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test7_NC_015977.1_detected_SP_withICEIMEIds.tsv /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test7_NC_015977.1_detected_SP_withICEIMEIds.tsv
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test7_NC_015977.1_results_EM.summary /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test7_NC_015977.1_results_EM.summary
+# rm -rf /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/*
 
 
 : '
@@ -172,7 +214,13 @@ value="8"
 if [[ ${performAllTests} == "true" ]] || [[ " ${array[*]} " =~ " ${value} " ]]; then
 	performTest ${value} "test8_medley" "bacillota"
 fi
-
+# run manually
+# rm -rf /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/*
+# python3 /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/src/icescreen_OO.py -c /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/icescreen.conf -i /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/test8_medley_detected_SP.tsv -o /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test8_medley_results_EM.tsv -m /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test8_medley_detected_SP_withICEIMEIds.tsv -l /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test8_medley_results_EM.log --gb_input /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/test8_medley.gb --taxo_mode_file /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/mode/bacillota.yml
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test8_medley_results_EM.tsv /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test8_medley_results_EM.tsv
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test8_medley_detected_SP_withICEIMEIds.tsv /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test8_medley_detected_SP_withICEIMEIds.tsv
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test8_medley_results_EM.summary /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test8_medley_results_EM.summary
+# rm -rf /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/*
 
 
 : '
@@ -184,7 +232,13 @@ value="9"
 if [[ ${performAllTests} == "true" ]] || [[ " ${array[*]} " =~ " ${value} " ]]; then
 	performTest ${value} "test9_NZ_LT635479.1" "bacillota"
 fi
-
+# run manually
+# rm -rf /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/*
+# python3 /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/src/icescreen_OO.py -c /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/icescreen.conf -i /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/test9_NZ_LT635479.1_detected_SP.tsv -o /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test9_NZ_LT635479.1_results_EM.tsv -m /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test9_NZ_LT635479.1_detected_SP_withICEIMEIds.tsv -l /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test9_NZ_LT635479.1_results_EM.log --gb_input /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/test9_NZ_LT635479.1.gb --taxo_mode_file /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/mode/bacillota.yml
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test9_NZ_LT635479.1_results_EM.tsv /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test9_NZ_LT635479.1_results_EM.tsv
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test9_NZ_LT635479.1_detected_SP_withICEIMEIds.tsv /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test9_NZ_LT635479.1_detected_SP_withICEIMEIds.tsv
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test9_NZ_LT635479.1_results_EM.summary /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test9_NZ_LT635479.1_results_EM.summary
+# rm -rf /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/*
 
 
 
@@ -196,7 +250,13 @@ value="10"
 if [[ ${performAllTests} == "true" ]] || [[ " ${array[*]} " =~ " ${value} " ]]; then
 	performTest ${value} "test10_fragmented_SPs" "bacillota"
 fi
-
+# run manually
+# rm -rf /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/*
+# python3 /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/src/icescreen_OO.py -c /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/icescreen.conf -i /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/test10_fragmented_SPs_detected_SP.tsv -o /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test10_fragmented_SPs_results_EM.tsv -m /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test10_fragmented_SPs_detected_SP_withICEIMEIds.tsv -l /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test10_fragmented_SPs_results_EM.log --gb_input /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/test10_fragmented_SPs.gb --taxo_mode_file /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_files/mode/bacillota.yml
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test10_fragmented_SPs_results_EM.tsv /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test10_fragmented_SPs_results_EM.tsv
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test10_fragmented_SPs_detected_SP_withICEIMEIds.tsv /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test10_fragmented_SPs_detected_SP_withICEIMEIds.tsv
+# diff /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/test10_fragmented_SPs_results_EM.summary /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/tests/test_results/test10_fragmented_SPs_results_EM.summary
+# rm -rf /home/${USER}/Projects/ICE_IME_analysis/icescreen_dev/icescreen_detection_ME/results/*
 
 
 

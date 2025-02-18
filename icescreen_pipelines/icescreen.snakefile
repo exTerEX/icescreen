@@ -70,9 +70,29 @@ for gbname in gbnames:
 # Rule all
 rule all:
     input:
-        expand(os.path.join(outdir, "results/{gbname}/visualization_files/{gbname}_icescreen.gff"), gbname=gbnames),
-        expand(os.path.join(outdir, "results/{gbname}/icescreen.conf"), gbname=gbnames)
+        expand(os.path.join(outdir, "{gbname}/detected_mobile_elements/standard_genome_annotation_formats/{gbname}_icescreen.gff.gz"), gbname=gbnames),
+        expand(os.path.join(outdir, "{gbname}/param.conf.gz"), gbname=gbnames)
 
+# final organize output files
+rule final_organize_output_files:
+    input:
+        resgff_ori = os.path.join(outdir, "results", "{gbname}", "visualization_files", "{gbname}_icescreen.gff")
+    params:
+        main_outdir = outdir,
+        gb_name = "{gbname}"
+    output:
+        resgff_reorganized = os.path.join(outdir, "{gbname}", "detected_mobile_elements", "standard_genome_annotation_formats", "{gbname}_icescreen.gff.gz"),
+        icescreen_conf_reorganized = os.path.join(outdir, "{gbname}", "param.conf.gz")
+    shell:
+        """
+        # lauch final_organize_output_files.sh
+        bash {rootdir}/icescreen_pipelines/final_organize_output_files.sh \
+                                                    --resgff_ori {input.resgff_ori} \
+                                                    --main_outdir {params.main_outdir} \
+                                                    --gb_name {params.gb_name} \
+                                                    --resgff_reorganized {output.resgff_reorganized} \
+                                                    --icescreen_conf_reorganized {output.icescreen_conf_reorganized}
+        """
 
 # Create annotation files for the visualization of ICEscreen results
 rule create_annotation_files:

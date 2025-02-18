@@ -1,15 +1,18 @@
-name: icescreen_env_1-3-2
+name: icescreen_env_1-3-3
 channels:
     - conda-forge
     - bioconda
 dependencies:
     - python
-    - pandas >=2.1.0
-    - snakemake-minimal >=8.4
-    - biopython =1.83
-    - blast =2.15
+    - pandas >=2.2
+    - snakemake-minimal >=8
+    - biopython =1.85
+    - blast =2.16
     - hmmer =3.4
     - pyarrow
+    - bash
+    - decorator
+    - scipy
 
 # Remarks:
 # april 2023, python 3.11 not yet supported by other packages. Specifying a specific version of python may lead to error while processed by conda build.

@@ -115,6 +115,7 @@ def get_XerS_annotation(data, tyr):
 
         # Reannotate data
         for cds_num in xers_streptococcal:
+
             idx = data[data["CDS_num"] == cds_num].index
             data.loc[idx, "False_positives"] = "Streptococcal XerS"
             data.loc[idx, "Possible_SP"] = "no"
@@ -188,30 +189,49 @@ def reannot_XerS(df, tyr):
         return(df)
 
     # Get 2nd hit of CDS which have ACO17137 as 1st Blast hit
-    sec_annot = tyr.loc[tyr["CDS_num"].isin(
-            data.iloc[idx]["CDS_num"].values)]
+    # sec_annot = tyr.loc[tyr["CDS_num"].isin(data.iloc[idx]["CDS_num"].values)]
+    sec_annot = tyr.loc[tyr["CDS_num"].isin(df.iloc[idx]["CDS_num"].values)]
+    
     sec_annot = sec_annot.groupby("CDS_num").nth(1)
+
+    # print(sec_annot)
 
     # Replace annotation of ACO17137 blast hit by 2nd best hit if possible
     # Get names of columns to replace
     cols = list(set(sec_annot.columns).intersection(set(df.columns)))
 
-    for i in sec_annot.index:
+    # for i in sec_annot.index:
+    for i, CDS_numTarget in sec_annot['CDS_num'].items():
+        # print("idx i:"+str(i))
+        # print("CDS_numTarget:"+str(CDS_numTarget))
+            
+        # print(df.loc[df["CDS_num"] == CDS_numTarget, :].to_string())
         for c in cols:
-            df.loc[df["CDS_num"] == i, c] = sec_annot.loc[i, c]
+            # df.loc[df["CDS_num"] == i, c] = sec_annot.loc[i, c] # WRONG df["CDS_num"] == i
+            df.loc[df["CDS_num"] == CDS_numTarget, c] = sec_annot.loc[i, c]
+        # print(df.loc[df["CDS_num"] == CDS_numTarget, :].to_string())
 
     return(df)
 
 
 if __name__ == "__main__":
     # Parse script arguments
-    sppath, tyrpath, conffile, outall, outfiltered = parse_arguments()
+    ( sppath, tyrpath, conffile, outall, outfiltered ) = parse_arguments()
+
+    # print("sppath : "+sppath)
+    # print("tyrpath : "+tyrpath)
+    # print("conffile : "+conffile)
+    # print("outall : "+outall)
+    # print("outfiltered : "+outfiltered)
 
     # Import detected SP results
     data = pd.read_csv(sppath, sep="\t")
 
     # Import Tyrosine Integrase hits results
     tyrint_df = pd.read_csv(tyrpath, sep="\t")
+
+    # sort tyrint_df by CDS_num asc and Blast_ali_bitscore desc
+    tyrint_df.sort_values(by=['CDS_num', 'Blast_ali_bitscore'], ascending=[True, False])
 
     # If there is no hits
     if len(tyrint_df.index) == 0:

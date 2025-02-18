@@ -19,7 +19,7 @@
 # import specific class OO for this script
 import icescreen_OO
 import commonMethods
-# import hit
+import hit
 
 # return true if the EM structure already contains sibling of this fragmented SP
 def isSPtoTestForAddSiblingFragmentOfASPAlreadyInEMStructureSent(EMStructureSent, SPtoTestForFragmentSibling):
@@ -35,13 +35,15 @@ def tryAddingSPToConjugaisonModuleEMStructure(
         SPtoTestForAdd,
         setAllowCheckingForMultipleDistantSameSPType
         ):
+    
     debugtryAddingSPToConjugaisonModuleEMStructure = False
 
     # consider testing SPtoTestForAdd no matter if it is in conflict or not
     # WARNING there can be some SP that are in conflict in EMStructureSent.listXXX (could be attributed to 2 ICE IME struct), treat them as not there
 
     if isSPtoTestForAddSiblingFragmentOfASPAlreadyInEMStructureSent(EMStructureSent, SPtoTestForAdd):
-        # print("isSPtoTestForAddSiblingFragmentOfASPAlreadyInEMStructureSent {} ({}) for SP {}".format(EMStructureSent.internalIdentifier, hit.ListSPs.GetListProtIdsFromListSP(EMStructureSent.listOrderedSPs), SPtoTestForAdd.locusTag))
+        if debugtryAddingSPToConjugaisonModuleEMStructure:
+            print("isSPtoTestForAddSiblingFragmentOfASPAlreadyInEMStructureSent {} ({}) for SP {}".format(EMStructureSent.internalIdentifier, hit.ListSPs.GetListProtIdsFromListSP(EMStructureSent.listOrderedSPs), SPtoTestForAdd.locusTag))
         return True
     
 
@@ -59,6 +61,8 @@ def tryAddingSPToConjugaisonModuleEMStructure(
             # get the last SP added to this list that is not in conflict
             for lastSPAdded in reversed(EMStructureSent.TypeSPConjModule2listSP[SPtoTestForAdd.SPType]):
                 if len(lastSPAdded.setICEsIMEsStructureInConflict) != 0:  # in conflict, continue loop
+                    if debugtryAddingSPToConjugaisonModuleEMStructure:
+                        print("in conflict, continue loop")
                     continue
                 else:
                     if (abs(lastSPAdded.CDSPositionInGenome - SPtoTestForAdd.CDSPositionInGenome) > icescreen_OO.distanceCDSPositionInGenomeForSPToBeConsideredNotAdjacentInTheGenome[SPtoTestForAdd.SPType]):  # SPs are not adjacent in the genome
@@ -76,9 +80,7 @@ def tryAddingSPToConjugaisonModuleEMStructure(
             SPtoTestForAdd
             , EMStructureSent
             )
-    if greenLightFamilyInfoTest:
-        pass
-    else:
+    if not greenLightFamilyInfoTest:
         return False
 
     return True
@@ -162,6 +164,9 @@ def testSPFamilyInfoCompatibilityWithICEsIMEsStructure(
             raise RuntimeError(
                     "Error in testSPFamilyInfoCompatibilityWithICEsIMEsStructure: SPToTest.SPDetectedByBlast and SPToTest.SPDetectedByHMM are both 0 for SPToTest.locusTag = {}".format(SPToTest.locusTag))
     elif (commonMethods.ConfigParams.groupListSPintoICEsIMEsUsingFamilyInfo == "NO"):  # "NO" means that the SP of the conjugaison module can be be affilitated with any family
+
+        if debugtestSPFamilyInfoCompatibilityWithICEsIMEsStructure:
+            print("testSPFamilyInfoCompatibilityWithICEsIMEsStructure for {}: the SP of the conjugaison module can be be affilitated with any family")
         return True  # do nothing
     else:
         raise RuntimeError(

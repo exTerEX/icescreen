@@ -7,33 +7,32 @@
 # Usage function (show help).
 
 function version(){
-    printf "1.3.2\n"
+    printf "1.3.3\n"
 }
 
 function usage(){
-    printf "\nICEscreen version 1.3.2\n\n"
-    printf "Usage for running an analysis with ICEscreen: icescreen [-o OUTDIR] [-n DATASET_NAME] [-j NB_JOBS] -p TAXONMIC_PHYLUM -g GBDIR\n"
+    printf "\nICEscreen version 1.3.3\n\n"
+    printf "* Command line for running an analysis with ICEscreen:\n\ticescreen [-o OUTDIR] [-n ANALYSIS_NAME] [-j NB_JOBS] -p TAXONMIC_PHYLUM -g GBDIR\n"
 
-    printf "\nShow help:\n"
-    printf "\t-h, --help                  : Show this message and exit.\n"
-
-    printf "\nMandatory arguments for running icescreen:\n"
+    printf "\n* Mandatory arguments for running icescreen:\n"
     printf "\t-g, --gbdir                 : Path to the folder containing the genbank files (Mandatory). Multigenbank files are supported. Each Genbank file must include the ORIGIN nucleotide sequence at the end.\n"
     
-    printf "\nSoon to be mandatory arguments for running icescreen:\n"
+    printf "\n* Soon to be mandatory arguments for running icescreen:\n"
     printf "\t-p, --phylum                : Phylum of the organisms to analyse. Supported phylum: \"bacillota\".\n"
 
-    printf "\nOptional arguments for running an analysis:\n"
+    printf "\n* Optional arguments for running icescreen:\n"
     printf "\t-o, --outdir                : Path to where ICEscreen results will be written (default "${HOME}").\n"
     printf "\t-n, --name                  : Name of the analysis (default None).\n"
     printf "\t-j, --jobs                  : Maximum number of processes running in parallel (default 1).\n"
+    printf "\t--galaxy                    : Do not try to activate the default icescreen_env Conda environment before running icescreen. This option allows to run ICEscreen on a Galaxy instance.\n"
 
-    printf "\nArguments for admin:\n"
-    printf "\t--galaxy                    : [Galaxy admin] Activate parameters to run ICEscreen on Galaxy.\n"
-    printf "\t--install_dependencies      : [Tool admin] Install or re-install the dependencies of ICEscreen via Conda.\n"
-    printf "\t--print_version_dependencies: [Tool admin] show the version of the dependencies for ICEscreen.\n"
-    printf "\t--index_genomic_resources   : [Tool admin] Index or re-index the genomic resources related to the signature proteins used by ICEscreen (proteins fasta via makeblastdb and HMM profiles via hmmpress).\n"
-    printf "\t--test_installation         : [Tool admin] test whether the process of installing ICEscreen was successful. If so, the sentence \"The installation of ICEscreen is successful\" will appear.\n"
+    printf "\n* Other arguments (admin, settings, help, etc.):\n"
+    printf "\t-h, --help                  : Show this message and exit.\n"
+    printf "\t-v, --version               : Show the version of ICEscreen and exit.\n"
+    printf "\t--install_dependencies      : Uninstall and re-install the dependencies of ICEscreen via Conda.\n"
+    printf "\t--print_version_dependencies: Show the version of the dependencies for ICEscreen and exit.\n"
+    printf "\t--index_genomic_resources   : Index or re-index the genomic resources related to the signature proteins used by ICEscreen (proteins fasta via makeblastdb and HMM profiles via hmmpress) and exit.\n"
+    printf "\t--test_installation         : Test whether the process of installing ICEscreen was successful and exit. If so, the sentence \"The installation of ICEscreen is successful\" will appear.\n"
 
 
 }
@@ -65,8 +64,8 @@ function get_abs_filename(){
 
 function install_dependencies(){
 	# Installation of ICEscreen conda environement from YAML
-	conda env remove -n icescreen_env_1-3-2
-	conda env create -f "$(dirname $(readlink -f $0))"/icescreen_envs/icescreen_env_1-3-2.yml
+	conda env remove -n icescreen_env_1-3-3
+	conda env create -f "$(dirname $(readlink -f $0))"/icescreen_envs/icescreen_env_1-3-3.yml
 	exit_if_error $? "conda env create failed"
 }
 
@@ -152,21 +151,21 @@ function conda_activate_icescreen_env(){
         if [[ "${galaxy_code_sent}" -eq 0 ]]
         then
 		# if [ -d "${CONDA_BASE}/envs/icescreen_env" ]
-		if [[ $(conda info --envs | grep 'icescreen_env_1-3-2') ]]
+		if [[ $(conda info --envs | grep 'icescreen_env_1-3-3') ]]
 		then
 		    ## Then source conda.sh
 		    CONDA_BASE=$(conda info --base)
 		    source "${CONDA_BASE}/etc/profile.d/conda.sh"
 
 		    ## Now activate environments
-		    printf "\nconda activate icescreen_env_1-3-2\n"
-		    conda activate icescreen_env_1-3-2
+		    printf "\nconda activate icescreen_env_1-3-3\n"
+		    conda activate icescreen_env_1-3-3
 		    exit_if_error $? "conda activate failed"
 		else
-		    printf "\nWARNING: not automatically activating icescreen_env_1-3-2 via conda because it is not found via conda info --envs.\n"
+		    printf "\nWARNING: not automatically activating icescreen_env_1-3-3 via conda because it is not found via conda info --envs.\n"
 		fi
 	else
-		printf "\nWARNING: not automatically activating icescreen_env_1-3-2 via conda because galaxy_code_sent is ${galaxy_code_sent}.\n"
+		printf "\nWARNING: not automatically activating icescreen_env_1-3-3 via conda because galaxy_code_sent is ${galaxy_code_sent}.\n"
         fi
 }
     
@@ -176,7 +175,7 @@ function conda_deactivate_icescreen_env(){
         if [[ "${galaxy_code_sent}" -eq 0 ]]
         then
 		# if [ -d "${CONDA_BASE}/envs/icescreen_env" ]
-		if [[ $(conda info --envs | grep 'icescreen_env_1-3-2') ]]
+		if [[ $(conda info --envs | grep 'icescreen_env_1-3-3') ]]
 		then
 		    ## Then source conda.sh
 		    CONDA_BASE=$(conda info --base)
@@ -187,10 +186,10 @@ function conda_deactivate_icescreen_env(){
 		    conda deactivate
 		    exit_if_error $? "conda deactivate failed"
 		else
-		    printf "\nWARNING: not automatically deactivating icescreen_env_1-3-2 via conda because it is not found via conda info --envs.\n"
+		    printf "\nWARNING: not automatically deactivating icescreen_env_1-3-3 via conda because it is not found via conda info --envs.\n"
 		fi
 	else
-		printf "\nWARNING: not automatically deactivating icescreen_env_1-3-2 via conda because galaxy_code_sent is ${galaxy_code_sent}.\n"
+		printf "\nWARNING: not automatically deactivating icescreen_env_1-3-3 via conda because galaxy_code_sent is ${galaxy_code_sent}.\n"
         fi
 }
 
@@ -522,6 +521,8 @@ then
 
         # Remove genbank folder
         rm -rf "${outdir}/genbank"
+        rm -rf "${outdir}/results"
+        rm -rf "${outdir}/faa"
 
 	conda_deactivate_icescreen_env "${galaxy}"
         # if [[ "${galaxy}" -eq 0 ]]

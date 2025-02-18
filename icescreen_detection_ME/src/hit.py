@@ -55,7 +55,12 @@ class CDS():
             # don't attempt to compare against unrelated types
             return NotImplemented
         return not(self == other)
-
+    
+    def __lt__(self, other):
+        if not isinstance(other, CDS):
+            # don't attempt to compare against unrelated types
+            return NotImplemented
+        return self.start < other.start
     
 
 # The SP object class extends CDS and add extra attributes to mimic the biological object signature protein
@@ -106,6 +111,12 @@ class SP(CDS):
         # Not strictly necessary, but to avoid having both x==y and x!=y
         # True at the same time
         return super(SP, self).__ne__(other)
+
+    def __lt__(self, other):
+        if not isinstance(other, SP):
+            # don't attempt to compare against unrelated types
+            return NotImplemented
+        return super(SP, self).__lt__(other)
 
 
     def GetObjectAsJson(self):
@@ -535,13 +546,19 @@ class ListSPs():
             , SPsInSameFamilyMergeStructures2SameFamilyMergeStructure
             , listSameFamilyMergeStructures
             ):
+        
+        debug_seedICEsIMEsStructure = False
 
         def registerCurrentICEsIMEsStructureIfNeeded(
                 currentICEsIMEsStructure
                 , listICEsIMEsStructures
                 , idxCurrentSP
                 ):
+            if debug_seedICEsIMEsStructure:
+                print(" - registerCurrentICEsIMEsStructureIfNeeded")
             if currentICEsIMEsStructure.listOrderedSPs:
+                if debug_seedICEsIMEsStructure:
+                    print("\tcurrentICEsIMEsStructure.listOrderedSPs")
                 currentICEsIMEsStructure.idxInSeedList = len(listICEsIMEsStructures)
 
                 listICEsIMEsStructures.append(currentICEsIMEsStructure) # was after addPotentialUpstreamSPInConflict initially
@@ -550,6 +567,8 @@ class ListSPs():
                 currentICEsIMEsStructure = EMStructure.ICEsIMEsStructure(True)
                 return currentICEsIMEsStructure
             else:
+                if debug_seedICEsIMEsStructure:
+                    print("\tNOT currentICEsIMEsStructure.listOrderedSPs")
                 return currentICEsIMEsStructure
     
         listICEsIMEsStructures = []
@@ -557,50 +576,102 @@ class ListSPs():
         sameFamilyMergeStructureToCheck = None
         for idxCurrentSP, currentSP in enumerate(self.list):
 
+            if debug_seedICEsIMEsStructure:
+                print("** Dealing with idxCurrentSP: {}, currentSP: {}".format(str(idxCurrentSP), currentSP.locusTag))
+                print(" - first step")
+
             greenLightAddSPConjugaisonModule = False
             transfertCommentFromSameFamilyMergeStructure = False
             if currentSP in SPsInSameFamilyMergeStructures2SameFamilyMergeStructure:
-                # print("\ncurrentSP: {}".format(currentSP.locusTag))
+
+                if debug_seedICEsIMEsStructure:
+                    print("\tcurrentSP in SPsInSameFamilyMergeStructures2SameFamilyMergeStructure")
+
                 sameFamilyMergeStructureToCheck = SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[currentSP]
                 greenLightAddSPConjugaisonModule = currentICEsIMEsStructure.listSPsIsContainedWithinOtherStructure(
-                    currentSP,
-                    sameFamilyMergeStructureToCheck)
+                    currentSP
+                    , sameFamilyMergeStructureToCheck
+                    , True
+                    )
                 if greenLightAddSPConjugaisonModule:
+
+                    if debug_seedICEsIMEsStructure:
+                        print("\tgreenLightAddSPConjugaisonModule 1")
                     setAllowCheckingForMultipleDistantSameSPType = set()
                     greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
                         currentICEsIMEsStructure,
                         currentSP,
                         setAllowCheckingForMultipleDistantSameSPType
                         )
+                    if debug_seedICEsIMEsStructure:
+                        if greenLightAddSPConjugaisonModule:
+                            print("\tgreenLightAddSPConjugaisonModule 2")
+                        else:
+                            print("\tNOT greenLightAddSPConjugaisonModule 2")
+                else:
+                    if debug_seedICEsIMEsStructure:
+                        print("\tNOT greenLightAddSPConjugaisonModule")
+
                 transfertCommentFromSameFamilyMergeStructure = True
             else:
+
+                if debug_seedICEsIMEsStructure:
+                    print("\tcurrentSP NOT in SPsInSameFamilyMergeStructures2SameFamilyMergeStructure")
+
                 if sameFamilyMergeStructureToCheck is None:
+                    if debug_seedICEsIMEsStructure:
+                        print("\tsameFamilyMergeStructureToCheck is None")
                     setAllowCheckingForMultipleDistantSameSPType = set()
                     greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
                         currentICEsIMEsStructure,
                         currentSP,
                         setAllowCheckingForMultipleDistantSameSPType
                         )
+                    if debug_seedICEsIMEsStructure:
+                        if greenLightAddSPConjugaisonModule:
+                            print("\tgreenLightAddSPConjugaisonModule 3")
+                        else:
+                            print("\tNOT greenLightAddSPConjugaisonModule 3")
                 else:
-                    # print("\ncurrentSP: {}".format(currentSP.locusTag))
+                    if debug_seedICEsIMEsStructure:
+                        print("\tNOT sameFamilyMergeStructureToCheck is None")
                     greenLightAddSPConjugaisonModule = currentICEsIMEsStructure.listSPsIsContainedWithinOtherStructure(
-                            currentSP,
-                            sameFamilyMergeStructureToCheck)
+                            currentSP
+                            , sameFamilyMergeStructureToCheck
+                            , True
+                            )
                     if greenLightAddSPConjugaisonModule:
+                        if debug_seedICEsIMEsStructure:
+                            print("\tgreenLightAddSPConjugaisonModule 4")
                         setAllowCheckingForMultipleDistantSameSPType = set()
                         greenLightAddSPConjugaisonModule = rulesSeedSPExtension.tryAddingSPToConjugaisonModuleEMStructure(
                             currentICEsIMEsStructure,
                             currentSP,
                             setAllowCheckingForMultipleDistantSameSPType
                             )
+                        if debug_seedICEsIMEsStructure:
+                            if greenLightAddSPConjugaisonModule:
+                                print("\tgreenLightAddSPConjugaisonModule 5")
+                            else:
+                                print("\tNOT greenLightAddSPConjugaisonModule 5")
+                    else:
+                        if debug_seedICEsIMEsStructure:
+                            print("\tNOT greenLightAddSPConjugaisonModule 4")
+
+            if debug_seedICEsIMEsStructure:
+                print(" - second step")
 
             if greenLightAddSPConjugaisonModule:
+                if debug_seedICEsIMEsStructure:
+                    print("\tgreenLightAddSPConjugaisonModule")
                 currentICEsIMEsStructure.addSPToConjugaisonModule(currentSP)
                 if transfertCommentFromSameFamilyMergeStructure:
                     # transfer comment from merge structure to structure being built if yes
                     if SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[currentSP].comment not in currentICEsIMEsStructure.comment:
                         currentICEsIMEsStructure.comment += SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[currentSP].comment
             else:
+                if debug_seedICEsIMEsStructure:
+                    print("\tNOT greenLightAddSPConjugaisonModule")
                 # start new ICEsIMEsStructure and continue main loop
                 # print("start new ICEsIMEsStructure and continue main loop")
                 currentICEsIMEsStructure = registerCurrentICEsIMEsStructureIfNeeded(
@@ -617,6 +688,8 @@ class ListSPs():
                     setAllowCheckingForMultipleDistantSameSPType
                     )
                 if greenLightAddSPConjugaisonModule:
+                    if debug_seedICEsIMEsStructure:
+                        print("\tgreenLightAddSPConjugaisonModule 6")
                     currentICEsIMEsStructure.addSPToConjugaisonModule(currentSP)
                     if currentSP in SPsInSameFamilyMergeStructures2SameFamilyMergeStructure:
                         sameFamilyMergeStructureToCheck = SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[currentSP]
@@ -626,6 +699,9 @@ class ListSPs():
                         # transfer comment from merge structure to structure being built if yes
                         if SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[currentSP].comment not in currentICEsIMEsStructure.comment:
                             currentICEsIMEsStructure.comment += SPsInSameFamilyMergeStructures2SameFamilyMergeStructure[currentSP].comment
+                else:
+                    if debug_seedICEsIMEsStructure:
+                        print("\tNOT greenLightAddSPConjugaisonModule 6")
 
         # last iteration
         registerCurrentICEsIMEsStructureIfNeeded(
@@ -633,7 +709,9 @@ class ListSPs():
                 , listICEsIMEsStructures
                 , len(self.list) - 1
                 )
-        
+
+        if debug_seedICEsIMEsStructure:
+            print(" - do backtracking adding SP toward upstream only after completion of the first pass toward downstream")
         # do backtracking adding SP toward upstream only after completion of the first pass toward downstream, not every time after a structure has just been stopped toward downstream
         for ICEsIMEsStructuresToCheckForConflictSPUpstream in reversed(listICEsIMEsStructures):
                 ICEsIMEsStructuresToCheckForConflictSPUpstream.addPotentialUpstreamSPInConflict(
@@ -641,6 +719,11 @@ class ListSPs():
                         , listICEsIMEsStructures
                         , SPsInSameFamilyMergeStructures2SameFamilyMergeStructure
                         )
+
+        if debug_seedICEsIMEsStructure:
+            print(" - final listICEsIMEsStructures")
+            for idx_ICEsIMEsStructuresDebug, ICEsIMEsStructuresDebug in enumerate(listICEsIMEsStructures):
+                print("idx_ICEsIMEsStructuresDebug = {}: ICEsIMEsStructuresDebug = {} (list genes = {})".format(str(idx_ICEsIMEsStructuresDebug), ICEsIMEsStructuresDebug.internalIdentifier, ListSPs.GetListProtIdsFromListSP(ICEsIMEsStructuresDebug.listOrderedSPs)))
 
         return listICEsIMEsStructures
 
