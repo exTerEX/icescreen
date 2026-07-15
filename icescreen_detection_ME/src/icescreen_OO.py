@@ -25,12 +25,12 @@ import datetime
 from datetime import timedelta
 import csv
 # import specific class OO for this script
-import hit
-import EMStructure
-import rulesAddIntegrases
-from EMTypeStructure import printOverallStatsToSummaryFile
-import rulesMergeICEIMEStructures
-import commonMethods
+from icescreen_detection_ME.src import hit
+from icescreen_detection_ME.src import EMStructure
+from icescreen_detection_ME.src import rulesAddIntegrases
+from icescreen_detection_ME.src.EMTypeStructure import printOverallStatsToSummaryFile
+from icescreen_detection_ME.src import rulesMergeICEIMEStructures
+from icescreen_formatting import commonMethods
 from pathlib import Path
 
 ########

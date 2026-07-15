@@ -12,7 +12,7 @@ from Bio.SeqRecord import SeqRecord
 #from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 import yaml
-import commonMethods
+from icescreen_detection_SP.src import commonMethods
 
 
 def translate_sequence(input_seq, translation_tableSend, isCDSTrueSend, locus_tagIT):
@@ -274,8 +274,7 @@ def gb_to_faa(record, sequence_type, feature_type, codon_table_if_unspecified_in
 ##############
     
 
-if __name__ == '__main__':
-
+def main():
     parser = argparse.ArgumentParser(description="Create multifasta protein "
                                                  "from a genbank file")
     # Group of mandatory arguments
@@ -385,3 +384,6 @@ if __name__ == '__main__':
         
         in_file_handle.close()
         out_file_handle.close()
+
+if __name__ == '__main__':
+    main()

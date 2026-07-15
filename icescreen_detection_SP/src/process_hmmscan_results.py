@@ -20,7 +20,7 @@ import argparse
 import yaml
 import numpy as np
 import pandas as pd
-from process_SP_hits import split_identifier, breakdown_filtering_rule
+from icescreen_detection_SP.src.process_SP_hits import split_identifier, breakdown_filtering_rule
 
 
 def parse_arguments():
@@ -410,8 +410,7 @@ def reorder_columns(df):
 
 
 # %%
-if __name__ == "__main__":
-
+def main():
     # Parse script arguments
     tsvpath, conffile, outall, outfiltered, outbest = parse_arguments()
 
@@ -508,3 +507,6 @@ if __name__ == "__main__":
     data = reorder_columns(data)
     data.loc[:, data.columns != "Possible_SP"]\
         .to_csv(outbest, index=False, sep="\t", decimal=".", na_rep="NA")
+
+if __name__ == "__main__":
+    main()

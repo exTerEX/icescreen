@@ -22,7 +22,7 @@ import yaml
 import numpy as np
 import pandas as pd
 import sqlite3
-from process_SP_hits import split_identifier, breakdown_filtering_rule
+from icescreen_detection_SP.src.process_SP_hits import split_identifier, breakdown_filtering_rule
 
 
 def parse_arguments():
@@ -728,7 +728,7 @@ def get_description(df, cds_type, col):
                            df[col])
 
 
-if __name__ == "__main__":
+def main():
     # Parse script arguments
     tsvpath, conffile, annotdb, outall, outfiltered,\
         outbest, detailed = parse_arguments()
@@ -817,3 +817,6 @@ if __name__ == "__main__":
     data = reorder_columns(data, detailed)
     data.loc[:, data.columns != "Possible_SP"]\
         .to_csv(outbest, index=False, sep="\t", decimal=".", na_rep="NA")
+
+if __name__ == "__main__":
+    main()

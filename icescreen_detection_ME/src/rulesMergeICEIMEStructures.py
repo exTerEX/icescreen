@@ -17,10 +17,10 @@
 @author: thomas Lacroix
 """
 # import specific class OO for this script
-import EMStructure
-import rulesSeedSPExtension
-import hit
-import icescreen_OO
+from icescreen_detection_ME.src import EMStructure
+from icescreen_detection_ME.src import rulesSeedSPExtension
+from icescreen_detection_ME.src import hit
+from icescreen_detection_ME.src import icescreen_OO
 
 # SP of similar family are preferrably grouped in an anchor of conj module
 def buildSameFamilyMergeStructures(

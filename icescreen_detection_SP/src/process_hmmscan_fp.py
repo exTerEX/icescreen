@@ -15,8 +15,7 @@
 # along with ICEscreen.
 # If not, see <https://www.gnu.org/licenses/>.
 
-from process_hmmscan_results import get_hmmscan_df, get_params_set_hmmscan
-from process_hmmscan_results import filter_df, pretty_df, reorder_columns
+from icescreen_detection_SP.src.process_hmmscan_results import get_hmmscan_df, get_params_set_hmmscan, filter_df, pretty_df, reorder_columns
 import argparse
 import yaml
 import pandas as pd
@@ -83,8 +82,7 @@ def pretty_df_sp(df):
     return(df)
 
 
-if __name__ == "__main__":
-
+def main():
     # Parse script arguments
     insp, infp, conffile, outfp, outfiltered = parse_arguments_fp()
 
@@ -179,3 +177,7 @@ if __name__ == "__main__":
 
     data_sp.to_csv(outfiltered, index=False, sep="\t", decimal=".",
                    na_rep="NA")
+
+
+if __name__ == "__main__":
+    main()

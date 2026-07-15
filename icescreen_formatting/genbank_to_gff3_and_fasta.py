@@ -18,7 +18,7 @@
 import argparse
 from Bio import SeqIO
 # import BCBio.GFF as GFF
-import GFF3_Module
+from icescreen_formatting import GFF3_Module
 
 
 def parse_arguments():
@@ -47,7 +47,7 @@ def parse_arguments():
     return(args.input, args.gff, args.fasta)
 
 
-if __name__ == "__main__":
+def main():
     gb_file, gff_file, fasta_file = parse_arguments()
 
     with open(gff_file, "w") as gff_out:
@@ -67,3 +67,6 @@ if __name__ == "__main__":
             listRecordsToWrite.append(gbdata)
         SeqIO.write(listRecordsToWrite, fasta_out, "fasta")
 
+
+if __name__ == "__main__":
+    main()

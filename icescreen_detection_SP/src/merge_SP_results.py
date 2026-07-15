@@ -145,8 +145,7 @@ def merge_results(blpath, hmmpath):
     return(merged_df)
 
 
-if __name__ == "__main__":
-
+def main():
     # Parse script arguments
     blastres, hmmres, outtsv = parse_arguments()
 
@@ -158,3 +157,7 @@ if __name__ == "__main__":
 
     merged_results.to_csv(outtsv, index=False, sep="\t", decimal=".",
                           na_rep="NA")
+
+
+if __name__ == "__main__":
+    main()

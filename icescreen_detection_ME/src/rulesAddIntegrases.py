@@ -17,10 +17,10 @@
 @author: thomas Lacroix
 """
 # import specific class OO for this script
-import icescreen_OO
-import EMStructure
-import hit
-import commonMethods
+from icescreen_detection_ME.src import icescreen_OO
+from icescreen_detection_ME.src import EMStructure
+from icescreen_detection_ME.src import hit
+from icescreen_formatting import commonMethods
 import re
 
 ########

@@ -24,8 +24,8 @@ from Bio.SeqFeature import SeqFeature, FeatureLocation
 from Bio.SeqRecord import SeqRecord
 from Bio import Seq
 # from requests.utils import quote
-import commonMethods
-import GFF3_Module
+from icescreen_formatting import GFF3_Module
+from icescreen_formatting import commonMethods
 import os
 
 def parse_arguments():
@@ -623,7 +623,7 @@ def write_GFF3(listRecordsToWrite, outfile):
     filout.close()
 
 
-if __name__ == "__main__":
+def main():
     spPath, mePath, gbPath, outPath = parse_arguments()
 
 
@@ -787,3 +787,6 @@ if __name__ == "__main__":
     # Save as genbank
     with open(outPath + ".gb", "w") as output_handle:
         SeqIO.write(listRecordsToWrite_gb, output_handle, "gb")
+
+if __name__ == "__main__":
+    main()

@@ -53,7 +53,7 @@ def parse_arguments():
 
     return(args.input, args.output)
 
-if __name__ == "__main__":
+def main():
     # Parse script arguments
     (input_file, output_file) = parse_arguments()
 
@@ -64,3 +64,6 @@ if __name__ == "__main__":
     blast_df=blast_df.drop_duplicates(subset=["Genome_accession", "CDS_num", "CDS_locus_tag"], keep='first')
 
     blast_df.to_csv(output_file, index=False, sep="\t", decimal=".", na_rep="NA")
+
+if __name__ == "__main__":
+    main()

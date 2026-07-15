@@ -214,7 +214,7 @@ def reannot_XerS(df, tyr):
     return(df)
 
 
-if __name__ == "__main__":
+def main():
     # Parse script arguments
     ( sppath, tyrpath, conffile, outall, outfiltered ) = parse_arguments()
 
@@ -250,3 +250,6 @@ if __name__ == "__main__":
         data.loc[:, data.columns != "Possible_SP"]\
             .to_csv(outfiltered, index=False, sep="\t", decimal=".",
                     na_rep="NA")
+
+if __name__ == "__main__":
+    main()

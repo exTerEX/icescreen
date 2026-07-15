@@ -17,11 +17,11 @@
 @author: thomas Lacroix
 """
 # import specific class OO for this script
-import EMStructure
-import icescreen_OO
-import rulesSeedSPExtension
-import rulesAddIntegrases
-import commonMethods
+from icescreen_detection_ME.src import EMStructure
+from icescreen_detection_ME.src import icescreen_OO
+from icescreen_detection_ME.src import rulesSeedSPExtension
+from icescreen_detection_ME.src import rulesAddIntegrases
+from icescreen_formatting import commonMethods
 import itertools
 import traceback
 

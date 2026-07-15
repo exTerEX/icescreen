@@ -17,13 +17,13 @@
 @author: thomas Lacroix
 """
 # import specific class OO for this script
-import hit
-import icescreen_OO
-from EMTypeStructure import assignPutativeTypeStructure
-import rulesSeedSPExtension
+from icescreen_detection_ME.src import hit
+from icescreen_detection_ME.src import icescreen_OO
+from icescreen_detection_ME.src.EMTypeStructure import assignPutativeTypeStructure
+from icescreen_detection_ME.src import rulesSeedSPExtension
 import re
-import rulesAddIntegrases
-import commonMethods
+from icescreen_detection_ME.src import rulesAddIntegrases
+from icescreen_formatting import commonMethods
 
 def returnDashIfEmptyStringOrNone(stringTocheck):
     if len(stringTocheck) == 0 or stringTocheck is None :
