@@ -18,10 +18,10 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 include = [
-    "icescreen_pipelines",
-    "icescreen_formatting",
-    "icescreen_detection_ME",
-    "icescreen_detection_SP"
+    "icescreen_pipelines*",
+    "icescreen_formatting*",
+    "icescreen_detection_ME*",
+    "icescreen_detection_SP*"
 ]
 
 [project.scripts]
