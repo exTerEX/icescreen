@@ -23,7 +23,7 @@ from icescreen_detection_ME.src.EMTypeStructure import assignPutativeTypeStructu
 from icescreen_detection_ME.src import rulesSeedSPExtension
 import re
 from icescreen_detection_ME.src import rulesAddIntegrases
-from icescreen_formatting import commonMethods
+from icescreen_detection_ME.src import commonMethods
 
 def returnDashIfEmptyStringOrNone(stringTocheck):
     if len(stringTocheck) == 0 or stringTocheck is None :

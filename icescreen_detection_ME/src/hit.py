@@ -21,7 +21,7 @@ from icescreen_detection_ME.src import EMStructure
 from icescreen_detection_ME.src import icescreen_OO
 from icescreen_detection_ME.src import rulesSeedSPExtension
 from icescreen_detection_ME.src import rulesAddIntegrases
-from icescreen_formatting import commonMethods
+from icescreen_detection_ME.src import commonMethods
 import itertools
 import traceback
 

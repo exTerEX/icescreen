@@ -20,7 +20,7 @@
 from icescreen_detection_ME.src import icescreen_OO
 from icescreen_detection_ME.src import EMStructure
 from icescreen_detection_ME.src import hit
-from icescreen_formatting import commonMethods
+from icescreen_detection_ME.src import commonMethods
 import re
 
 ########

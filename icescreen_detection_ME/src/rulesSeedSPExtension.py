@@ -18,7 +18,7 @@
 """
 # import specific class OO for this script
 from icescreen_detection_ME.src import icescreen_OO
-from icescreen_formatting import commonMethods
+from icescreen_detection_ME.src import commonMethods
 from icescreen_detection_ME.src import hit
 
 # return true if the EM structure already contains sibling of this fragmented SP
