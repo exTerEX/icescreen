@@ -30,7 +30,7 @@ from icescreen_detection_ME.src import EMStructure
 from icescreen_detection_ME.src import rulesAddIntegrases
 from icescreen_detection_ME.src.EMTypeStructure import printOverallStatsToSummaryFile
 from icescreen_detection_ME.src import rulesMergeICEIMEStructures
-from icescreen_formatting import commonMethods
+from icescreen_detection_ME.src import commonMethods
 from pathlib import Path
 
 ########
